@@ -5,6 +5,7 @@ from numpy import sin, cos
 import sys
 sys.path.append('../src')
 sys.path.append('src')
+import pyarrow as pa
 from astropy.time import Time
 import astropy.units as u
 from astropy.coordinates import EarthLocation, get_body_barycentric_posvel, solar_system_ephemeris 
@@ -224,6 +225,35 @@ def to_keplerian_adam(r_helio, v_helio, obstime):
     return a_val, e_val, i_val
 
 
+def score_from_elements(a_AU, e, H0, i0, array4D): #without interpolation
+    # checks if orbit is bound right
+    if (a_AU <= 0) or (e >= 1.0) or (e < 0):
+        
+        return 0.0
+
+    # clip to model box
+    a_cl = np.clip(a_AU, 0.0, 4.2 - 1e-9)
+    e_cl = np.clip(e,    0.0, 1.0 - 1e-9)
+    i_cl = np.clip(i0,  0.0, 88.0 - 1e-9)
+
+    log_w = float(array4D([[H0, a_cl, e_cl, i_cl]])[0])
+    return 0.0 if not np.isfinite(log_w) else float(np.exp(log_w))
+
+def score_from_elements_interp(a_AU, e, H0, i0, interp4D):
+    # checks if orbit is bound right
+    if (a_AU <= 0) or (e >= 1.0) or (e < 0):
+        
+        return 0.0
+
+    # clip gently to model box
+    a_cl = np.clip(a_AU, 0.0, 4.2 - 1e-9)
+    e_cl = np.clip(e,      0.0, 1.0 - 1e-9)
+    i_cl = np.clip(i0,  0.0, 88.0 - 1e-9)
+
+    log_w = float(interp4D([[H0, a_cl, e_cl, i_cl]])[0])
+    return 0.0 if not np.isfinite(log_w) else float(np.exp(log_w))
+
+
 def compute_nd3_Weight(array4D, H_center, a_center, e_center, i_center,
                            d_au, ddot_kms, 
                            ra_deg=10.0, dec_deg=20.0, 
@@ -237,7 +267,7 @@ def compute_nd3_Weight(array4D, H_center, a_center, e_center, i_center,
     obstime, rE, vE, r_obs = get_Earth_and_observer(obstime_str)  
     r_geo, v_geo = observables_to_geocentric_state(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day, d_au, ddot_kms)
     # heliocentric position and velocity for the object
-    r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
+    r_helio, v_helio = Geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
 
     ## now use ADAM to get Keplerian orbital elements from observed object's position and velocity vectors
     obstime = Time([obstime_str], scale="tdb")  # Note converted this to a list 
@@ -245,13 +275,30 @@ def compute_nd3_Weight(array4D, H_center, a_center, e_center, i_center,
 
 
     # WILL THIS WORK ??
+    #to calc center of bins
+    n_H, H_min, H_max = 52, 15.0, 28.0
+    n_a, a_min, a_max = 42, 0.0, 4.2
+    n_e, e_min, e_max = 25, 0.0, 1.0
+    n_i, i_min, i_max = 22, 0.0, 88.0
+
     Na, Ne = 200, 200
     a_grid = np.linspace(a_min, a_max, Na)
     e_grid = np.linspace(e_min, e_max, Ne)
     A, E = np.meshgrid(a_grid, e_grid, indexing="xy")
-     
-    score = score_from_elements_interp(a_val, e_val, 19.0, i_val, interp4D)
 
+    interpolate = False
+    if (interpolate):
+        # so that log(0) doesn't happen
+        _eps = 1e-300
+        log_grid = np.log(array4D + _eps)
+        interp4D = RegularGridInterpolator(
+            (H_center, a_center, e_center, i_center),
+            log_grid, bounds_error=False, fill_value=-np.inf
+        )
+        score = score_from_elements_interp(a_val, e_val, 19.0, i_val, interp4D)
+    else:
+        score = score_from_elements(a_val, e_val, 19.0, i_val, array4D)
+ 
     print('score:', score) 
     return score, a_val, e_val, i_val
 
