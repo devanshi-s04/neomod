@@ -6,6 +6,7 @@ import sys
 sys.path.append('../src')
 sys.path.append('src')
 import pyarrow as pa
+from scipy.interpolate import RegularGridInterpolator
 from astropy.time import Time
 import astropy.units as u
 from astropy.coordinates import EarthLocation, get_body_barycentric_posvel, solar_system_ephemeris 
@@ -286,7 +287,7 @@ def compute_nd3_Weight(array4D, H_center, a_center, e_center, i_center,
     e_grid = np.linspace(e_min, e_max, Ne)
     A, E = np.meshgrid(a_grid, e_grid, indexing="xy")
 
-    interpolate = False
+    interpolate = True
     if (interpolate):
         # so that log(0) doesn't happen
         _eps = 1e-300
@@ -299,7 +300,7 @@ def compute_nd3_Weight(array4D, H_center, a_center, e_center, i_center,
     else:
         score = score_from_elements(a_val, e_val, 19.0, i_val, array4D)
  
-    print('score:', score) 
+    # print('score:', score) 
     return score, a_val, e_val, i_val
 
 
