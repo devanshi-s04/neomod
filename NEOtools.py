@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import sin, cos
 
 ## automatically reload any modules read below that might have changed (e.g. plots)
 import sys
@@ -103,6 +104,19 @@ def weight_marg_over_d_and_ddot(array4D, H_center, a_center, e_center, i_center,
 
 
 
+#converts geocentric vectors to heliocentric vectors 
+def Geo_to_topo(r_geo_km, v_geo_kms, rE, vE, r_obs, obstime):
+        # convert r_geo, v_geo for obj to heliocentric r_topo, v_topo for an observer at rubin
+        # from center of earth to an observer now at rubin
+        obstime = Time(obstime)
+        # earth's barycentric (heliocentric) state was done in previous step
+        # so was observer's offset from center of earth
+        # adding the offsets
+        r_topo = rE + r_obs + r_geo_km
+        v_topo = vE + v_geo_kms
+        return r_topo, v_topo # asteroid position, vec going from sun to asteroid assuming youre at rubin
+
+
 # converts vectors to geocentric state vectors 
 def observables_to_geocentric_state(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day,
                                     d_au, ddot_kms, ra_rate_is_plain_dalpha=False):
@@ -113,7 +127,7 @@ def observables_to_geocentric_state(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_p
         # converting from degrees to radians
         ra  = np.deg2rad(ra_deg) 
         dec = np.deg2rad(dec_deg)
-        l_hat, e_ra, e_dec = sky_basis(ra, dec)
+        l_hat, e_ra, e_dec = Sky_basis(ra, dec)
          # angular rate conversion from deg/day to rad/s
         dra  = np.deg2rad(dra_deg_per_day)  / 86400.0
         ddec = np.deg2rad(ddec_deg_per_day) / 86400.0
@@ -163,6 +177,18 @@ def get_Earth_and_observer(obstime_str):
     return obstime, rE, vE, r_obs
 
 
+# creates a right-handed vector basis that points to object from observer
+def Sky_basis(ra_rad, dec_rad):
+        l_hat = np.array([cos(dec_rad)*cos(ra_rad), # vector that points to object's pos on sky from observer
+                          cos(dec_rad)*sin(ra_rad),
+                          sin(dec_rad)])
+        e_ra  = np.array([-sin(ra_rad),  cos(ra_rad), 0.0]) # vector towards increasing RA - points east, 90 deg to l_hat
+        e_dec = np.array([-sin(dec_rad)*cos(ra_rad), # vector towards increasing dec - points north
+                          -sin(dec_rad)*sin(ra_rad),
+                          cos(dec_rad)])
+        return l_hat, e_ra, e_dec # turning angular rates into linear velocities
+
+
 def to_keplerian_adam(r_helio, v_helio, obstime):
     r_vec = np.array(r_helio, dtype=float)
     v_vec = np.array(v_helio, dtype=float)
@@ -208,7 +234,7 @@ def compute_nd3_Weight(array4D, H_center, a_center, e_center, i_center,
     score, a_val, e_val, i_val = 0.1, 1.0, 0.01, 10.0 
 
     ## do coordinate transformations for the observer and the object
-    obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str)  
+    obstime, rE, vE, r_obs = get_Earth_and_observer(obstime_str)  
     r_geo, v_geo = observables_to_geocentric_state(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day, d_au, ddot_kms)
     # heliocentric position and velocity for the object
     r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
