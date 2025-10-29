@@ -1,0 +1,283 @@
+import numpy as np
+from numpy import sin, cos
+
+## automatically reload any modules read below that might have changed (e.g. plots)
+import sys
+sys.path.append('../src')
+sys.path.append('src')
+import pyarrow as pa
+from scipy.interpolate import RegularGridInterpolator
+from astropy.time import Time
+import astropy.units as u
+from astropy.coordinates import EarthLocation, get_body_barycentric_posvel, solar_system_ephemeris
+from astropy.coordinates import SkyCoord, get_sun, GCRS, GeocentricTrueEcliptic
+from adam_core.time import Timestamp
+from adam_core.coordinates import CartesianCoordinates, Origin
+from adam_core.constants import KM_P_AU, S_P_DAY
+from adam_core.orbits import Orbits
+from adam_core.utils import get_perturber_state
+from adam_core.coordinates.origin import OriginCodes
+import NEOMOD3 as nm3  
+
+
+df, array4D, H_center, a_center, e_center, i_center = nm3.getNEOMOD3orbits()
+
+AU_km = 149_597_870.7
+mu_sun = 1.32712440018e11  # [km^3/s^2] gm of the sun
+ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day = 10.0, 20.0, 0.12, 0.22
+
+
+# creates a right-handed vector basis that points to object from observer
+def sky_basis(ra_rad, dec_rad): #its already fast w 5.32 us
+        l_hat = np.array([np.cos(dec_rad)*np.cos(ra_rad), # vector that points to object's pos on sky from observer
+                          np.cos(dec_rad)*np.sin(ra_rad),
+                          np.sin(dec_rad)])
+        e_ra  = np.array([-np.sin(ra_rad), np.cos(ra_rad), 0.0]) # vector towards increasing RA - points east, 90 deg to l_hat
+        e_dec = np.array([-np.sin(dec_rad)*np.cos(ra_rad), # vector towards increasing dec - points north
+                          -np.sin(dec_rad)*np.sin(ra_rad),
+                          np.cos(dec_rad)])
+        return l_hat, e_ra, e_dec # turning angular rates into linear velocities
+
+
+    
+# ---------- angular-rate converter: (dra, ddec) -> (v_lambda, v_beta) ----------
+def radec_rates_to_ecliptic_rates1(ra_deg, dec_deg, dra_deg_day, ddec_deg_day):
+
+    
+    sc_eq = SkyCoord(
+        ra=ra_deg * u.deg,
+        dec=dec_deg * u.deg,
+        pm_ra_cosdec=dra_deg_day * u.deg / u.day,
+        pm_dec=ddec_deg_day * u.deg / u.day,
+        frame="icrs"
+    )
+
+    
+    sc_ecl = sc_eq.transform_to(GeocentricTrueEcliptic())
+
+    
+    vlam  = sc_ecl.pm_lon_coslat.to(u.deg / u.day).value
+    vbeta = sc_ecl.pm_lat.to(u.deg / u.day).value
+
+    return vlam, vbeta
+
+
+
+def makeddotgrids():
+    d_min, d_max, Nd = 0.05, 5.0, 10          # AU  
+    v_min, v_max, Nv = -60.0, 60.0, 10         # km/s
+
+    d_grid   = np.linspace(d_min, d_max, Nd)
+    ddot_grid= np.linspace(v_min, v_max, Nv)
+    return d_grid, ddot_grid
+
+
+def weight_marginalized_over_d_and_ddot(array4D, H_center, a_center, e_center, i_center,
+                                        ra_deg, dec_deg, dra_deg_day, ddec_deg_day,
+                                        H0=19.0, i0=25.9, obstime_str="2025-09-23T00:00:00"):
+    w_sum = 0.0
+    d_grid, ddot_grid = makeddotgrids()
+    # loop 
+    for d in d_grid:
+        for vlos in ddot_grid:
+            out = compute_neomod3_weight(d_au=d, ddot_kms=vlos, array4D=array4D, H_center=H_center, a_center=a_center,
+                            e_center=e_center,i_center=i_center,
+                            ra_deg=ra_deg, dec_deg=dec_deg,
+                            dra_deg_per_day=dra_deg_day, ddec_deg_per_day=ddec_deg_day,
+                            H0=H0, i0=i0, obstime_str=obstime_str)
+            w = out[0] if isinstance(out, tuple) else float(out)
+            w_sum += w
+    return w_sum
+
+
+
+#converts geocentric vectors to heliocentric vectors 
+def geo_to_topo(r_geo_km, v_geo_kms, rE, vE, r_obs, obstime):
+        # convert r_geo, v_geo for obj to heliocentric r_topo, v_topo for an observer at rubin
+        # from center of earth to an observer now at rubin
+        obstime = Time(obstime)
+        # earth's barycentric (heliocentric) state was done in previous step
+        # so was observer's offset from center of earth
+        # adding the offsets
+        r_topo = rE + r_obs + r_geo_km
+        v_topo = vE + v_geo_kms
+        return r_topo, v_topo # asteroid position, vec going from sun to asteroid assuming youre at rubin
+
+
+# converts vectors to geocentric state vectors 
+def compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day): 
+        
+        # converting from degrees to radians
+        ra  = np.deg2rad(ra_deg) 
+        dec = np.deg2rad(dec_deg)
+        l_hat, e_ra, e_dec = sky_basis(ra, dec)
+         # angular rate conversion from deg/day to rad/s
+        dra  = np.deg2rad(dra_deg_per_day)  / 86400.0
+        ddec = np.deg2rad(ddec_deg_per_day) / 86400.0
+
+        v_hat = (dra * e_ra + ddec * e_dec)
+
+        return l_hat, v_hat
+
+# converts vectors to geocentric state vectors 
+def observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms): 
+    
+        
+
+        d_km = d_au * AU_km
+        # multiplying l_hat by the rand dist. value gives actual geocentric pos vector of obj
+        r_geo = np.outer(d_km, l_hat)  # vector from earth center to obj
+        #r_geo = (d_au * AU_km) * l_hat
+        #v_geo = ddot_kms * l_hat + (d_au * AU_km) * v_hat
+
+        # speed
+        v_rad = np.outer(ddot_kms, l_hat)
+        v_tan = np.outer(d_km, v_hat)
+        #v_tan = d_km * v_hat
+        v_geo = v_rad + v_tan
+        
+        return r_geo, v_geo
+
+#l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
+
+
+    
+rubin_location = EarthLocation.from_geodetic( 
+        lon=-70.7366*u.deg,   # longitude (west is negative)
+        lat=-30.2407*u.deg,   # latitude
+        height=2647*u.m       # elevation
+        
+    )
+
+def get_earth_and_observer(obstime_str): # 1.47 ms -> 1.27 ms
+    obstime = Time(obstime_str)
+    
+    obs_geo = rubin_location.get_gcrs(obstime)
+    r_obs =  obs_geo.cartesian.xyz.to_value(u.km).T
+    
+    # earth's barycentric vector rel to sun aka center of solsys to earth
+    with solar_system_ephemeris.set('de432s'): 
+        rE_bary, vE_bary = get_body_barycentric_posvel('earth', obstime)
+
+    # convert to km and km/s arrays in cartesian coordinate system
+    rE  = rE_bary.xyz.to_value(u.km).T #rE goes from sun to earth center
+    vE  = vE_bary.xyz.to_value(u.km/u.s).T
+
+      #vE goes from sun to earth center
+
+    return obstime, rE, vE, r_obs
+
+
+
+def to_keplerian_adam(r_helio, v_helio, obstime):
+    r_vec = np.array(r_helio, dtype=float)
+    v_vec = np.array(v_helio, dtype=float)
+
+    if r_vec.ndim == 1:
+        r_vec = r_vec[np.newaxis, :]
+        v_vec = v_vec[np.newaxis, :]
+
+    cartesian_coordinates = CartesianCoordinates.from_kwargs(
+    x=r_vec[:, 0] / KM_P_AU,
+    y=r_vec[:, 1] / KM_P_AU,
+    z=r_vec[:, 2] / KM_P_AU,
+    vx=v_vec[:, 0] / KM_P_AU * S_P_DAY,
+    vy=v_vec[:, 1] / KM_P_AU * S_P_DAY,
+    vz=v_vec[:, 2] / KM_P_AU * S_P_DAY,
+    time=Timestamp.from_astropy(obstime),
+    origin=Origin.from_kwargs(code=pa.repeat("SUN", len(r_vec))),
+    frame="equatorial" # ecliptic is the other choice
+    )
+
+    keplerian_coordinates = cartesian_coordinates.to_keplerian()
+
+
+    # Might be useful to store them into an orbits object:
+    orbits = Orbits.from_kwargs(
+        orbit_id=[f"orbit_{i:08d}" for i in range(len(cartesian_coordinates))],
+        coordinates=cartesian_coordinates,
+    )
+
+    a_val = keplerian_coordinates.a[0].as_py()
+    e_val = keplerian_coordinates.e[0].as_py()
+    i_val = keplerian_coordinates.i[0].as_py()
+    return a_val, e_val, i_val
+# The Orbits class expects cartesian coordinates but its trivial to convert
+
+
+def score_from_elements(a_AU, e, H0, i0, grid4D, H_center, a_center, e_center, i_center): #without interpolation
+    # checks if orbit is bound right
+    if (a_AU <= 0) or (e >= 1.0) or (e < 0):
+        
+        return 0.0
+
+    # clip to model box
+    a_cl = np.clip(a_AU, 0.0, 4.2 - 1e-9)
+    e_cl = np.clip(e,    0.0, 1.0 - 1e-9)
+    i_cl = np.clip(i0,  0.0, 88.0 - 1e-9)
+    
+    iH = int(np.argmin(np.abs(H_center - H0)))
+    ia = int(np.argmin(np.abs(a_center - a_cl)))
+    ie = int(np.argmin(np.abs(e_center - e_cl)))
+    ii = int(np.argmin(np.abs(i_center - i_cl)))
+
+    w=grid4D[iH, ia, ie, ii]
+    if not np.isfinite(w) or w <= 0:
+        return 0.0
+    return float(w)
+     
+def score_from_elements_interp(a_AU, e, H0, i0, interp4D):
+    # checks if orbit is bound right
+    if (a_AU <= 0) or (e >= 1.0) or (e < 0):
+        
+        return 0.0
+
+    # clip gently to model box
+    a_cl = np.clip(a_AU, 0.0, 4.2 - 1e-9)
+    e_cl = np.clip(e,      0.0, 1.0 - 1e-9)
+    i_cl = np.clip(i0,  0.0, 88.0 - 1e-9)
+
+    log_w = float(interp4D([[H0, a_cl, e_cl, i_cl]])[0])
+    return 0.0 if not np.isfinite(log_w) else float(np.exp(log_w))
+
+
+def compute_neomod3_weight(d_au, ddot_kms,array4D=array4D, H_center=H_center,
+                           a_center=a_center, e_center=e_center, i_center=i_center,
+                           l_hat = None, v_hat = None, 
+                           ra_deg=0.0, dec_deg=0.0, 
+                           dra_deg_per_day=0.12, ddec_deg_per_day=0.22,
+                           H0=19.0, i0=25.9, obstime_str="2025-09-16T00:00:00"):
+    
+    if (l_hat is None) or (v_hat is None):
+        l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
+    
+    
+      
+    obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str) # first part, moved to start of cell
+
+
+    r_geo, v_geo = observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
+
+    r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
+
+    
+
+
+    
+    obstime = Time([obstime_str], scale="tdb")  # Note converted this to a list 
+    a_val, e_val, i_val = to_keplerian_adam(r_helio, v_helio, obstime)
+    
+    
+
+
+    
+    
+    #score = score_from_elements_interp(a_val, e_val, 19.0, i_val, interp4D)
+    score = score_from_elements(
+        a_val, e_val, H0, i_val,
+        array4D, H_center, a_center, e_center, i_center
+    )
+    return score,a_val,e_val,i_val
+
+
+    
