@@ -20,11 +20,10 @@ from adam_core.coordinates.origin import OriginCodes
 import NEOMOD3 as nm3  
 
 
-df, array4D, H_center, a_center, e_center, i_center = nm3.getNEOMOD3orbits()
 
 AU_km = 149_597_870.7
 mu_sun = 1.32712440018e11  # [km^3/s^2] gm of the sun
-ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day = 10.0, 20.0, 0.12, 0.22
+#ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day = 10.0, 20.0, 0.12, 0.22
 
 
 # creates a right-handed vector basis that points to object from observer
@@ -73,21 +72,23 @@ def makeddotgrids():
 
 
 def weight_marginalized_over_d_and_ddot(array4D, H_center, a_center, e_center, i_center,
-                                        ra_deg, dec_deg, dra_deg_day, ddec_deg_day,
+                                        ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day,
                                         H0=19.0, i0=25.9, obstime_str="2025-09-23T00:00:00"):
     w_sum = 0.0
     d_grid, ddot_grid = makeddotgrids()
     # loop 
+    obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str) 
+    l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
     for d in d_grid:
         for vlos in ddot_grid:
-            out = compute_neomod3_weight(d_au=d, ddot_kms=vlos, array4D=array4D, H_center=H_center, a_center=a_center,
+            out = compute_neomod3_weight(d,vlos,l_hat, v_hat, rE=rE, vE=vE, r_obs=r_obs, array4D=array4D, H_center=H_center, a_center=a_center,
                             e_center=e_center,i_center=i_center,
-                            ra_deg=ra_deg, dec_deg=dec_deg,
-                            dra_deg_per_day=dra_deg_day, ddec_deg_per_day=ddec_deg_day,
-                            H0=H0, i0=i0, obstime_str=obstime_str)
+                            H0=H0, i0=i0, obstime=obstime)
             w = out[0] if isinstance(out, tuple) else float(out)
             w_sum += w
+    #print(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day, l_hat, v_hat,w_sum)
     return w_sum
+    
 
 
 
@@ -95,7 +96,7 @@ def weight_marginalized_over_d_and_ddot(array4D, H_center, a_center, e_center, i
 def geo_to_topo(r_geo_km, v_geo_kms, rE, vE, r_obs, obstime):
         # convert r_geo, v_geo for obj to heliocentric r_topo, v_topo for an observer at rubin
         # from center of earth to an observer now at rubin
-        obstime = Time(obstime)
+        
         # earth's barycentric (heliocentric) state was done in previous step
         # so was observer's offset from center of earth
         # adding the offsets
@@ -170,6 +171,7 @@ def get_earth_and_observer(obstime_str): # 1.47 ms -> 1.27 ms
 
 
 def to_keplerian_adam(r_helio, v_helio, obstime):
+    obstime=obstime.tdb
     r_vec = np.array(r_helio, dtype=float)
     v_vec = np.array(v_helio, dtype=float)
 
@@ -241,19 +243,16 @@ def score_from_elements_interp(a_AU, e, H0, i0, interp4D):
     return 0.0 if not np.isfinite(log_w) else float(np.exp(log_w))
 
 
-def compute_neomod3_weight(d_au, ddot_kms,array4D=array4D, H_center=H_center,
-                           a_center=a_center, e_center=e_center, i_center=i_center,
-                           l_hat = None, v_hat = None, 
-                           ra_deg=0.0, dec_deg=0.0, 
-                           dra_deg_per_day=0.12, ddec_deg_per_day=0.22,
-                           H0=19.0, i0=25.9, obstime_str="2025-09-16T00:00:00"):
+def compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, obstime, rE, vE, r_obs,array4D, H_center,
+                           a_center, e_center, i_center, 
+                           H0=19.0, i0=25.9):
     
-    if (l_hat is None) or (v_hat is None):
-        l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
+    #if (l_hat is None) or (v_hat is None):
+        #l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
     
     
       
-    obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str) # first part, moved to start of cell
+     # first part, moved to start of cell
 
 
     r_geo, v_geo = observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
@@ -264,7 +263,7 @@ def compute_neomod3_weight(d_au, ddot_kms,array4D=array4D, H_center=H_center,
 
 
     
-    obstime = Time([obstime_str], scale="tdb")  # Note converted this to a list 
+      # Note converted this to a list 
     a_val, e_val, i_val = to_keplerian_adam(r_helio, v_helio, obstime)
     
     
