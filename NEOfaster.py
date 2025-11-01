@@ -1,10 +1,6 @@
 import numpy as np
 from numpy import sin, cos
-
-## automatically reload any modules read below that might have changed (e.g. plots)
 import sys
-sys.path.append('../src')
-sys.path.append('src')
 import pyarrow as pa
 from scipy.interpolate import RegularGridInterpolator
 from astropy.time import Time
@@ -20,10 +16,10 @@ from adam_core.coordinates.origin import OriginCodes
 import NEOMOD3 as nm3  
 
 
-
+#constants
 AU_km = 149_597_870.7
 mu_sun = 1.32712440018e11  # [km^3/s^2] gm of the sun
-#ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day = 10.0, 20.0, 0.12, 0.22
+
 
 
 # creates a right-handed vector basis that points to object from observer
@@ -59,6 +55,37 @@ def radec_rates_to_ecliptic_rates1(ra_deg, dec_deg, dra_deg_day, ddec_deg_day):
     vbeta = sc_ecl.pm_lat.to(u.deg / u.day).value
 
     return vlam, vbeta
+from astropy.coordinates import SkyCoord, GeocentricTrueEcliptic
+import astropy.units as u
+
+def ecliptic_rates_to_radec_rates(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, obstime_str=None):
+
+    
+    if obstime_str is not None:
+        sc_ecl = SkyCoord(
+            lon=ra_deg * u.deg,   
+            lat=dec_deg * u.deg,
+            pm_lon_coslat=vlam_deg_day * u.deg/u.day,
+            pm_lat=vbeta_deg_day * u.deg/u.day,
+            frame=GeocentricTrueEcliptic(obstime=obstime_str)
+        )
+    else:
+        sc_ecl = SkyCoord(
+            lon=ra_deg * u.deg, lat=dec_deg * u.deg,
+            pm_lon_coslat=vlam_deg_day * u.deg/u.day,
+            pm_lat=vbeta_deg_day * u.deg/u.day,
+            frame="geocentrictrueecliptic"
+        )
+
+    
+    sc_eq = sc_ecl.transform_to("icrs")
+
+    dra  = sc_eq.pm_ra_cosdec.to(u.deg/u.day).value
+    ddec = sc_eq.pm_dec.to(u.deg/u.day).value
+
+    return dra, ddec
+
+
 
 
 
@@ -72,18 +99,18 @@ def makeddotgrids():
 
 
 def weight_marginalized_over_d_and_ddot(array4D, H_center, a_center, e_center, i_center,
-                                        ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day,
-                                        H0=19.0, i0=25.9, obstime_str="2025-09-23T00:00:00"):
+                                        ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day, obstime_str
+                                        ):
     w_sum = 0.0
     d_grid, ddot_grid = makeddotgrids()
     # loop 
     obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str) 
     l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
-    for d in d_grid:
-        for vlos in ddot_grid:
-            out = compute_neomod3_weight(d,vlos,l_hat, v_hat, rE=rE, vE=vE, r_obs=r_obs, array4D=array4D, H_center=H_center, a_center=a_center,
-                            e_center=e_center,i_center=i_center,
-                            H0=H0, i0=i0, obstime=obstime)
+    for d_au in d_grid:
+        for ddot_kms in ddot_grid:
+            out = compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, obstime,
+                           rE, vE, r_obs,
+                           array4D, H_center, a_center, e_center, i_center,)
             w = out[0] if isinstance(out, tuple) else float(out)
             w_sum += w
     #print(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day, l_hat, v_hat,w_sum)
@@ -139,10 +166,7 @@ def observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms):
         
         return r_geo, v_geo
 
-#l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
-
-
-    
+   
 rubin_location = EarthLocation.from_geodetic( 
         lon=-70.7366*u.deg,   # longitude (west is negative)
         lat=-30.2407*u.deg,   # latitude
@@ -242,35 +266,28 @@ def score_from_elements_interp(a_AU, e, H0, i0, interp4D):
     log_w = float(interp4D([[H0, a_cl, e_cl, i_cl]])[0])
     return 0.0 if not np.isfinite(log_w) else float(np.exp(log_w))
 
+def compute_h0_from_distance(d_au, mag):
+    # Use the formulas from https://adsabs.harvard.edu/full/2007JBAA..117..342D 
+    # using G = 0.15 
+    
+    return H0
 
-def compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, obstime, rE, vE, r_obs,array4D, H_center,
-                           a_center, e_center, i_center, 
-                           H0=19.0, i0=25.9):
+def compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, obstime,
+                           rE, vE, r_obs,
+                           array4D, H_center, a_center, e_center,i_center, 
+                           ):
     
-    #if (l_hat is None) or (v_hat is None):
-        #l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
-    
-    
-      
-     # first part, moved to start of cell
-
 
     r_geo, v_geo = observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
 
     r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
 
-    
 
-
-    
-      # Note converted this to a list 
     a_val, e_val, i_val = to_keplerian_adam(r_helio, v_helio, obstime)
     
-    
+#    H0 = compute_h0_from_distance(d_au, mag)
+    H0 = 19.0
 
-
-    
-    
     #score = score_from_elements_interp(a_val, e_val, 19.0, i_val, interp4D)
     score = score_from_elements(
         a_val, e_val, H0, i_val,
