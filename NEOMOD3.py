@@ -7,11 +7,15 @@ import numpy as np
 
 def getNEOMOD3orbits():
     
-    url = "https://www2.boulder.swri.edu/~davidn/NEOMOD_Simulator/input_neomod3.dat"
+    #url = "https://www2.boulder.swri.edu/~davidn/NEOMOD_Simulator/input_neomod3.dat"
+    #r = requests.get(url, timeout=30, verify=certifi.where())
+    #r.raise_for_status()
+    #text = r.text
 
-    text = urlopen(url).read().decode("utf-8", errors="ignore")
-    lines = text.splitlines()
-
+    #text = urlopen(url).read().decode("utf-8", errors="ignore")
+    #lines = text.splitlines()
+    with open("input_neomod3.dat") as fp:
+        lines = fp.readlines()
     # to find the header row
     header_idx = next(
         i for i, ln in enumerate(lines)
