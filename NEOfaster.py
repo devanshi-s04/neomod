@@ -192,6 +192,17 @@ def get_earth_and_observer(obstime_str): # 1.47 ms -> 1.27 ms
 
     return obstime, rE, vE, r_obs
 
+def equatorial_to_ecliptic(r_vec, v_vec):
+    eps = np.deg2rad(23.439291)  # mean obliquity
+    # rotation matrix about x-axis
+    R = np.array([
+        [1,          0,           0],
+        [0,  np.cos(eps), np.sin(eps)],
+        [0, -np.sin(eps), np.cos(eps)],
+    ])
+    r_ecl = r_vec @ R.T
+    v_ecl = v_vec @ R.T
+    return r_ecl, v_ecl
 
 
 def to_keplerian_adam(r_helio, v_helio, obstime):
@@ -212,7 +223,7 @@ def to_keplerian_adam(r_helio, v_helio, obstime):
     vz=v_vec[:, 2] / KM_P_AU * S_P_DAY,
     time=Timestamp.from_astropy(obstime),
     origin=Origin.from_kwargs(code=pa.repeat("SUN", len(r_vec))),
-    frame="equatorial" # ecliptic is the other choice
+    frame="ecliptic" # ecliptic is the other choice
     )
 
     keplerian_coordinates = cartesian_coordinates.to_keplerian()
@@ -311,9 +322,11 @@ def compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, mag, obstime,
     r_geo, v_geo = observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
 
     r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
+    r_ecl, v_ecl = equatorial_to_ecliptic(r_helio, v_helio)
 
 
-    a_val, e_val, i_val = to_keplerian_adam(r_helio, v_helio, obstime)
+
+    a_val, e_val, i_val = to_keplerian_adam(r_ecl, v_ecl, obstime)
     
     H0 = compute_h0_from_distance(r_helio, r_geo, r_obs, d_au, mag)
     #H0 = 19.0

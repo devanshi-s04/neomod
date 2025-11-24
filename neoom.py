@@ -192,6 +192,18 @@ def get_earth_and_observer(obstime_str): # 1.47 ms -> 1.27 ms
 
     return obstime, rE, vE, r_obs
 
+def equatorial_to_ecliptic(r_vec, v_vec):
+    eps = np.deg2rad(23.439291)  # mean obliquity
+    # rotation matrix about x-axis
+    R = np.array([
+        [1,          0,           0],
+        [0,  np.cos(eps), np.sin(eps)],
+        [0, -np.sin(eps), np.cos(eps)],
+    ])
+    r_ecl = r_vec @ R.T
+    v_ecl = v_vec @ R.T
+    return r_ecl, v_ecl
+
 
 
 def to_keplerian_adam(r_helio, v_helio, obstime):
@@ -212,7 +224,7 @@ def to_keplerian_adam(r_helio, v_helio, obstime):
     vz=v_vec[:, 2] / KM_P_AU * S_P_DAY,
     time=Timestamp.from_astropy(obstime),
     origin=Origin.from_kwargs(code=pa.repeat("SUN", len(r_vec))),
-    frame="equatorial" # ecliptic is the other choice
+    frame="ecliptic" # ecliptic is the other choice
     )
 
     keplerian_coordinates = cartesian_coordinates.to_keplerian()
@@ -269,9 +281,34 @@ def score_from_elements_interp(a_AU, e, H0, i0, interp4D):
     log_w = float(interp4D([[H0, a_cl, e_cl, i_cl]])[0])
     return 0.0 if not np.isfinite(log_w) else float(np.exp(log_w))
 
-def compute_h0_from_distance(d_au, mag):
+def compute_h0_from_distance(r_helio, r_geo, r_obs, d_au, mag):
     # Use the formulas from https://adsabs.harvard.edu/full/2007JBAA..117..342D 
-    # using G = 0.15 
+    # using G = 0.015 
+    # calculating reduced magnitude H(alpha) = mag - 5log(r*delta)
+    #dist in AU
+    r_AU = np.linalg.norm(r_helio, axis = -1) / AU_km
+    delta_AU = np.linalg.norm(r_geo + r_obs, axis = -1) / AU_km
+    # vectors from object to Sun and Earth
+    u_hat = r_helio / np.linalg.norm(r_helio, axis=-1, keepdims=True)
+    v_hat = (r_geo + r_obs) / np.linalg.norm(r_geo + r_obs, axis=-1, keepdims=True)
+    
+    # phase angle 
+    cos_alpha = np.sum(u_hat * v_hat, axis=-1)
+    cos_alpha = np.clip(cos_alpha, -1.0, 1.0)
+    alpha_rad = np.arccos(cos_alpha)
+    alpha_deg = np.degrees(alpha_rad)
+    
+    # reduced magnitude
+    H_alpha = mag - 5.0 * np.log10(r_AU * delta_AU)
+    # HG phase correction 
+    A1, A2, B1, B2 = 3.33, 1.87, 0.63, 1.22
+    phi1 = np.exp(-A1 * np.tan(0.5 * alpha_rad)**B1)
+    phi2 = np.exp(-A2 * np.tan(0.5 * alpha_rad)**B2)
+    G = 0.15
+    phi = (1 - G) * phi1 + G * phi2
+    
+    # absolute magnitude
+    H0 = H_alpha + 2.5 * np.log10(phi)
     
     return H0
 
@@ -283,13 +320,15 @@ def compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, obstime,
 
     r_geo, v_geo = observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
 
-    r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
+    r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime)
+    r_ecl, v_ecl = equatorial_to_ecliptic(r_helio, v_helio)
 
 
-    a_val, e_val, i_val = to_keplerian_adam(r_helio, v_helio, obstime)
+    a_val, e_val, i_val = to_keplerian_adam(r_ecl, v_ecl, obstime)
+    #a_val, e_val, i_val = to_keplerian_adam(r_helio, v_helio, obstime)
     
-#    H0 = compute_h0_from_distance(d_au, mag)
-    H0 = 22.0
+#    H0 = compute_h0_from_distance(r_helio, r_geo, r_obs, d_au, mag)
+    H0 = 20.0
 
     #score = score_from_elements_interp(a_val, e_val, 19.0, i_val, interp4D)
     score = score_from_elements(
