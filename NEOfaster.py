@@ -104,12 +104,12 @@ def weight_marginalized_over_d_and_ddot(array4D, H_center, a_center, e_center, i
     w_sum = 0.0
     d_grid, ddot_grid = makeddotgrids()
     # loop 
-    obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str) 
+    obstime, rE, vE, r_tele = get_earth_and_observer(obstime_str) 
     l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
     for d_au in d_grid:
         for ddot_kms in ddot_grid:
             out = compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, mag, obstime,
-                           rE, vE, r_obs,
+                           rE, vE, r_tele,
                            array4D, H_center, a_center, e_center, i_center)
             w = out[0] if isinstance(out, tuple) else float(out)
             w_sum += w
@@ -120,14 +120,14 @@ def weight_marginalized_over_d_and_ddot(array4D, H_center, a_center, e_center, i
 
 
 #converts geocentric vectors to heliocentric vectors 
-def geo_to_topo(r_geo_km, v_geo_kms, rE, vE, r_obs, obstime):
+def geo_to_topo(r_geo_km, v_geo_kms, rE, vE, r_tele, obstime):
         # convert r_geo, v_geo for obj to heliocentric r_topo, v_topo for an observer at rubin
         # from center of earth to an observer now at rubin
         
         # earth's barycentric (heliocentric) state was done in previous step
         # so was observer's offset from center of earth
         # adding the offsets
-        r_topo = rE + r_obs + r_geo_km
+        r_topo = rE + r_tele + r_geo_km
         v_topo = vE + v_geo_kms
         return r_topo, v_topo # asteroid position, vec going from sun to asteroid assuming youre at rubin
 
@@ -178,7 +178,7 @@ def get_earth_and_observer(obstime_str): # 1.47 ms -> 1.27 ms
     obstime = Time(obstime_str)
     
     obs_geo = rubin_location.get_gcrs(obstime)
-    r_obs =  obs_geo.cartesian.xyz.to_value(units.km).T
+    r_tele =  obs_geo.cartesian.xyz.to_value(units.km).T
     
     # earth's barycentric vector rel to sun aka center of solsys to earth
     with solar_system_ephemeris.set('de432s'): 
@@ -190,7 +190,7 @@ def get_earth_and_observer(obstime_str): # 1.47 ms -> 1.27 ms
 
       #vE goes from sun to earth center
 
-    return obstime, rE, vE, r_obs
+    return obstime, rE, vE, r_tele
 
 def equatorial_to_ecliptic(r_vec, v_vec):
     eps = np.deg2rad(23.439291)  # mean obliquity
@@ -282,16 +282,16 @@ def score_from_elements_interp(a_AU, e, H0, i0, interp4D):
     log_w = float(interp4D([[H0, a_cl, e_cl, i_cl]])[0])
     return 0.0 if not np.isfinite(log_w) else float(np.exp(log_w))
 
-def compute_h0_from_distance(r_helio, r_geo, r_obs, d_au, mag):
+def compute_h0_from_distance(r_helio, r_geo, r_tele, d_au, mag):
     # Use the formulas from https://adsabs.harvard.edu/full/2007JBAA..117..342D 
     # using G = 0.015 
     # calculating reduced magnitude H(alpha) = mag - 5log(r*delta)
     #dist in AU
     r_AU = np.linalg.norm(r_helio, axis = -1) / AU_km
-    delta_AU = np.linalg.norm(r_geo + r_obs, axis = -1) / AU_km
+    delta_AU = np.linalg.norm(r_geo + r_tele, axis = -1) / AU_km
     # vectors from object to Sun and Earth
     u_hat = r_helio / np.linalg.norm(r_helio, axis=-1, keepdims=True)
-    v_hat = (r_geo + r_obs) / np.linalg.norm(r_geo + r_obs, axis=-1, keepdims=True)
+    v_hat = (r_geo + r_tele) / np.linalg.norm(r_geo + r_tele, axis=-1, keepdims=True)
     
     # phase angle 
     cos_alpha = np.sum(u_hat * v_hat, axis=-1)
@@ -314,21 +314,21 @@ def compute_h0_from_distance(r_helio, r_geo, r_obs, d_au, mag):
     return H0
 
 def compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, mag, obstime,
-                           rE, vE, r_obs,
+                           rE, vE, r_tele,
                            array4D, H_center, a_center, e_center,i_center, 
                            ):
     
 
     r_geo, v_geo = observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
 
-    r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime) 
+    r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_tele, obstime) 
     r_ecl, v_ecl = equatorial_to_ecliptic(r_helio, v_helio)
 
 
 
     a_val, e_val, i_val = to_keplerian_adam(r_ecl, v_ecl, obstime)
     
-    H0 = compute_h0_from_distance(r_helio, r_geo, r_obs, d_au, mag)
+    H0 = compute_h0_from_distance(r_helio, r_geo, r_tele, d_au, mag)
     #H0 = 19.0
 
     #score = score_from_elements_interp(a_val, e_val, 19.0, i_val, interp4D)
