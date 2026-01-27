@@ -90,7 +90,7 @@ def ecliptic_rates_to_radec_rates(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, 
 
 
 def makeddotgrids():
-    d_min, d_max, Nd = 0.05, 5.0, 10          # AU  
+    d_min, d_max, Nd = 0.05, 7.0, 10          # AU  
     v_min, v_max, Nv = -60.0, 60.0, 10         # km/s
 
     d_grid   = np.linspace(d_min, d_max, Nd)
@@ -105,7 +105,8 @@ def weight_marginalized_over_d_and_ddot(array4D, H_center, a_center, e_center, i
     d_grid, ddot_grid = makeddotgrids()
     # loop 
     obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str) 
-    l_hat, v_hat = compute_unit_vectors(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
+    l_hat, v_hat = compute_unit_vectors_pm_ra_cosdec(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
+
     for d_au in d_grid:
         for ddot_kms in ddot_grid:
             out = compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, obstime,
@@ -250,7 +251,7 @@ def score_from_elements(a_AU, e, H0, i0, grid4D, H_center, a_center, e_center, i
         return 0.0
 
     # clip to model box
-    a_cl = np.clip(a_AU, 0.0, 4.2 - 1e-9)
+    a_cl = np.clip(a_AU, 0.0, 8.0 - 1e-9) #changed 4.2-->8.0
     e_cl = np.clip(e,    0.0, 1.0 - 1e-9)
     i_cl = np.clip(i0,  0.0, 88.0 - 1e-9)
     h_cl = np.clip(H0, 15.0, 28.0 - 1e-9)  # added h_cl
@@ -339,3 +340,111 @@ def compute_neomod3_weight(d_au, ddot_kms, l_hat, v_hat, obstime,
 
 
     
+def makeddotgrids_trojans():
+    """
+    Trojan-friendly (d, ddot) grid.
+    Keep it coarse at first so it runs fast.
+    """
+    d_min, d_max, Nd = 2.0, 8.0, 25       # AU
+    v_min, v_max, Nv = -20.0, 20.0, 41    # km/s
+    return np.linspace(d_min, d_max, Nd), np.linspace(v_min, v_max, Nv)
+
+def compute_unit_vectors_pm_ra_cosdec(ra_deg, dec_deg, pm_ra_cosdec_deg_per_day, pm_dec_deg_per_day):
+    """
+    Like compute_unit_vectors(), but expects dra input to be pm_ra_cosdec (deg/day),
+    i.e. dRA/dt * cos(dec), which is what SkyCoord uses.
+    Converts to true dRA/dt internally.
+    """
+    ra  = np.deg2rad(ra_deg)
+    dec = np.deg2rad(dec_deg)
+
+    l_hat, e_ra, e_dec = sky_basis(ra, dec)
+
+    # Convert pm_ra_cosdec -> true dRA/dt (handle poles safely)
+    cosdec = np.cos(dec)
+    if np.abs(cosdec) < 1e-12:
+        dra_true_deg_per_day = 0.0
+    else:
+        dra_true_deg_per_day = pm_ra_cosdec_deg_per_day / cosdec
+
+    # deg/day -> rad/s
+    dra  = np.deg2rad(dra_true_deg_per_day) / 86400.0
+    ddec = np.deg2rad(pm_dec_deg_per_day)  / 86400.0
+
+    v_hat = dra * e_ra + ddec * e_dec
+    return l_hat, v_hat
+
+def weight_marginalized_over_d_and_ddot_trojan_filtered(
+    array4D, H_center, a_center, e_center, i_center,
+    ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day, obstime_str,
+    # filters (tune later)
+    rhel_window=(4.7, 5.7),      # heliocentric distance AU
+    vhel_window=(11.0, 15.0),    # heliocentric speed km/s  (Jupiter ~13)
+    debug=False
+):
+    
+    """
+    Minimal-change Trojan marginalization:
+    - Uses the existing compute_neomod3_weight() for scoring
+    - Filters (d,ddot) by heliocentric distance/speed so solutions are Trojan-like
+    """
+    w_sum = 0.0
+
+    d_grid, ddot_grid = makeddotgrids_trojans()
+
+    # precompute geometry once
+    obstime, rE, vE, r_obs = get_earth_and_observer(obstime_str)
+    l_hat, v_hat = compute_unit_vectors_pm_ra_cosdec(ra_deg, dec_deg, dra_deg_per_day, ddec_deg_per_day)
+
+    kept = 0
+    total = 0
+    nz = 0
+
+    # loop
+    for d_au in d_grid:
+        for ddot_kms in ddot_grid:
+            total += 1
+
+            # Build state vectors (same as compute_neomod3_weight)
+            r_geo, v_geo = observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
+            r_helio, v_helio = geo_to_topo(r_geo, v_geo, rE, vE, r_obs, obstime)
+
+            # Trojan filters
+            rhel_au = float(np.linalg.norm(r_helio) / AU_km)
+            vhel = float(np.linalg.norm(v_helio))  # km/s
+
+            if not (rhel_window[0] <= rhel_au <= rhel_window[1]):
+                continue
+            if not (vhel_window[0] <= vhel <= vhel_window[1]):
+                continue
+
+            kept += 1
+
+            # Now call the existing scoring function
+            out = compute_neomod3_weight(
+                d_au, ddot_kms, l_hat, v_hat, obstime,
+                rE, vE, r_obs,
+                array4D, H_center, a_center, e_center, i_center
+            )
+
+            # Your compute_neomod3_weight returns (score, a, e, i)
+            w = out[0] if isinstance(out, tuple) else float(out)
+            if w != 0.0 and np.isfinite(w):
+                nz += 1
+
+            w_sum += w
+
+            if debug and kept <= 5:
+                # show a few accepted samples
+                try:
+                    _, a_val, e_val, i_val = out
+                    print(f"kept sample: d={d_au:.2f} ddot={ddot_kms:.2f}  rhel={rhel_au:.2f}AU vhel={vhel:.2f}km/s  a={a_val:.2f} e={e_val:.2f} i={i_val:.2f} w={w:.3g}")
+                except Exception:
+                    print(f"kept sample: d={d_au:.2f} ddot={ddot_kms:.2f}  rhel={rhel_au:.2f}AU vhel={vhel:.2f}km/s  w={w:.3g}")
+
+    if debug:
+        print(f"kept/total = {kept}/{total} ; nonzero kept = {nz} ; w_sum={w_sum}")
+
+    return w_sum
+
+

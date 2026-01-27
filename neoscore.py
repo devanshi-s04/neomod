@@ -119,59 +119,37 @@ class NEOMODScorer:
             'i': i_val,
             'H': H0
         }
-    
+    #original Nd = 60, original Nv = 120
     def marginalize_over_distance(self, obstime_str, ra_deg, dec_deg,
                                   dra_deg_per_day, ddec_deg_per_day, mag,
-                                  d_min=0.0, d_max=0.4, Nd=60,
-                                  v_min=-40.0, v_max=40.0, Nv=120):
+                                  d_min=0.0, d_max=0.4, Nd=50,
+                                  v_min=-40.0, v_max=40.0, Nv=100):
         """
-        Compute marginalized score by integrating over distance and rate.
-        
-        Parameters
-        ----------
-        obstime_str : str
-            Observation time in ISO format
-        ra_deg : float
-            Right ascension in degrees
-        dec_deg : float
-            Declination in degrees
-        dra_deg_per_day : float
-            Change in RA in degrees per day
-        ddec_deg_per_day : float
-            Change in Dec in degrees per day
-        mag : float
-            Apparent visual magnitude
-        d_min, d_max : float (optional)
-            Distance range in AU (defaults to: 0.0 to 0.4)
-        Nd : int (optional)
-            Number of distance grid points (defaults to: 60)
-        v_min, v_max : float (optional)
-            Range rate range in km/s (defaults to: -40.0 to 40.0)
-        Nv : int (optional)
-            Number of range rate grid points (defaults to: 120)
-        
-        Returns
-        -------
-        float
-            Sum of weights marginalized over distance and range rate
+        Compute marginalized score by integrating over distance and range rate.
         """
         d_grid = np.linspace(d_min, d_max, Nd)
         ddot_grid = np.linspace(v_min, v_max, Nv)
         
-        # Pre compute states that don't depend on d, ddot
+        # Pre-compute states that don't depend on d, ddot (ONLY ONCE!)
         l_hat, v_hat = self._compute_unit_vectors(ra_deg, dec_deg,
                                                    dra_deg_per_day, ddec_deg_per_day)
         obstime, rE, vE, r_tele = self._get_earth_and_observer(obstime_str)
         
         w_sum = 0.0
+        n = 0
         for d_au in d_grid:
             for ddot_kms in ddot_grid:
-                result = self.compute_score(obstime_str, ra_deg, dec_deg,
-                                           dra_deg_per_day, ddec_deg_per_day,
-                                           mag, d_au, ddot_kms)
-                w_sum += result['score']
+                # without calling compute_score()
+                r_geo, v_geo = self._observables_to_geocentric_state(l_hat, v_hat, d_au, ddot_kms)
+                r_helio, v_helio = self._geo_to_helio(r_geo, v_geo, rE, vE, r_tele)
+                r_ecl, v_ecl = self._equatorial_to_ecliptic(r_helio, v_helio)
+                a_val, e_val, i_val = self._to_keplerian_adam(r_ecl, v_ecl, obstime)
+                H0 = self._compute_h0_from_distance(r_helio, r_geo, r_tele, d_au, mag)
+                score = self._score_from_elements(a_val, e_val, H0, i_val)
+                w_sum += score
+                n += 1
         
-        return w_sum
+        return w_sum / max(n,1)
     
     
     
@@ -374,4 +352,35 @@ def ecliptic_rates_to_radec_rates(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, 
     dra = sc_eq.pm_ra_cosdec.to(units.deg/units.day).value
     ddec = sc_eq.pm_dec.to(units.deg/units.day).value
     
+    return dra, ddec
+# added after the error that messed up sides
+def ecliptic_rates_to_radec_rates1(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, obstime_str):
+    """
+    Convert ecliptic rates (pm_lon_coslat, pm_lat) at the sky position (ra,dec)
+    into ICRS rates (pm_ra_cosdec, pm_dec).
+
+    IMPORTANT: vlam_deg_day here is pm_lon_coslat (dλ/dt * cosβ), consistent with astropy.
+    """
+    t = Time(obstime_str)
+
+    # 1) True sky position in ICRS
+    sc_icrs = SkyCoord(ra=ra_deg*units.deg, dec=dec_deg*units.deg, frame="icrs", obstime=t)
+
+    # 2) Transform that position to geocentric true ecliptic to get lon/lat
+    sc_ecl_pos = sc_icrs.transform_to(GeocentricTrueEcliptic(obstime=t))
+
+    # 3) Rebuild ecliptic coord at same lon/lat, now with ecliptic proper motions
+    sc_ecl = SkyCoord(
+        lon=sc_ecl_pos.lon,
+        lat=sc_ecl_pos.lat,
+        pm_lon_coslat=vlam_deg_day * units.deg/units.day,
+        pm_lat=vbeta_deg_day * units.deg/units.day,
+        frame=GeocentricTrueEcliptic(obstime=t)
+    )
+
+    # 4) Transform back to ICRS and extract RA/Dec rates
+    sc_back = sc_ecl.transform_to("icrs")
+
+    dra  = sc_back.pm_ra_cosdec.to(units.deg/units.day).value
+    ddec = sc_back.pm_dec.to(units.deg/units.day).value
     return dra, ddec
