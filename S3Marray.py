@@ -15,8 +15,19 @@ def define_s3m():
     ]
     
     
-    files = sorted(glob.glob("S1_*.s3m"))
-    print(files)
+    try:
+        files = sorted(glob.glob("S1_*.s3m"))
+    except: 
+        print(err)
+    try:
+        files = sorted(glob.glob("S3Mdata/S1_*.s3m"))
+    except: 
+        print(err)
+
+    if len(files)>0:
+        print('input files:', files)
+    else:
+        raise Exception(f"Didn't find any data files, see define_s3m() in S3array.py")
     
     dfs = []
     
@@ -30,13 +41,12 @@ def define_s3m():
         )
         dfs.append(df)
         
-    
-    
     s3m = pd.concat(dfs, ignore_index=True)
     
     s3m["a"] = s3m["q"] / (1 - s3m["e"])
     print("The final df is done.")
     return s3m
+
 
 def s3m_array(s3m):
 # defining the min/max values for a,e,i,H
