@@ -122,8 +122,8 @@ class NEOMODScorer:
     #original Nd = 60, original Nv = 120
     def marginalize_over_distance(self, obstime_str, ra_deg, dec_deg,
                                   dra_deg_per_day, ddec_deg_per_day, mag,
-                                  d_min=0.0, d_max=0.4, Nd=50,
-                                  v_min=-40.0, v_max=40.0, Nv=100):
+                                  d_min=0.05, d_max=7.0, Nd=10, # was 0, 0.4!! Nd = 50
+                                  v_min=-60.0, v_max=60.0, Nv=10): # was -40,40!! -90,90,100
         """
         Compute marginalized score by integrating over distance and range rate.
         """
@@ -384,3 +384,19 @@ def ecliptic_rates_to_radec_rates1(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day,
     dra  = sc_back.pm_ra_cosdec.to(units.deg/units.day).value
     ddec = sc_back.pm_dec.to(units.deg/units.day).value
     return dra, ddec
+
+# added on 02/02/26 since i think the sun conversion to icrs is a problem :\
+
+def radec_rates_to_ecliptic_rates_at_obstime(ra_deg, dec_deg, dra_deg_day, ddec_deg_day, obstime_str):
+    t = Time(obstime_str)
+    sc_eq = SkyCoord(
+        ra=ra_deg * u.deg,
+        dec=dec_deg * u.deg,
+        pm_ra_cosdec=dra_deg_day * u.deg/u.day,
+        pm_dec=ddec_deg_day * u.deg/u.day,
+        frame=GCRS(obstime=t)
+    )
+    sc_ecl = sc_eq.transform_to(GeocentricTrueEcliptic(obstime=t))
+    vlam = sc_ecl.pm_lon_coslat.to(u.deg/u.day).value
+    vbeta = sc_ecl.pm_lat.to(u.deg/u.day).value
+    return vlam, vbeta
