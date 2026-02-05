@@ -44,7 +44,7 @@ def radec_rates_to_ecliptic_rates1(ra_deg, dec_deg, dra_deg_day, ddec_deg_day):
         dec=dec_deg * u.deg,
         pm_ra_cosdec=dra_deg_day * u.deg / u.day,
         pm_dec=ddec_deg_day * u.deg / u.day,
-        frame="icrs"
+        frame="gcrs"
     )
 
     
@@ -78,14 +78,14 @@ def ecliptic_rates_to_radec_rates(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, 
         )
 
     
-    sc_eq = sc_ecl.transform_to("icrs")
+    sc_eq = sc_ecl.transform_to("gcrs")
 
     dra  = sc_eq.pm_ra_cosdec.to(u.deg/u.day).value
     ddec = sc_eq.pm_dec.to(u.deg/u.day).value
 
     return dra, ddec
 
-
+# 02/02/26 changed icrs to gcrs if this fixes the problem istfg im going to throw my mac out of a window 
 
 
 
@@ -225,7 +225,7 @@ def to_keplerian_adam(r_helio, v_helio, obstime):
     vz=v_vec[:, 2] / KM_P_AU * S_P_DAY,
     time=Timestamp.from_astropy(obstime),
     origin=Origin.from_kwargs(code=pa.repeat("SUN", len(r_vec))),
-    frame="ecliptic" # ecliptic is the other choice
+    frame="equatorial" # ecliptic is the other choice
     )
 
     keplerian_coordinates = cartesian_coordinates.to_keplerian()

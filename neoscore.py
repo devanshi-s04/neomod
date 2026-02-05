@@ -317,7 +317,7 @@ def radec_rates_to_ecliptic_rates(ra_deg, dec_deg, dra_deg_day, ddec_deg_day):
         dec=dec_deg * units.deg,
         pm_ra_cosdec=dra_deg_day * units.deg / units.day,
         pm_dec=ddec_deg_day * units.deg / units.day,
-        frame="icrs"
+        frame="gcrs"
     )
     
     sc_ecl = sc_eq.transform_to(GeocentricTrueEcliptic())
@@ -347,7 +347,7 @@ def ecliptic_rates_to_radec_rates(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, 
             frame="geocentrictrueecliptic"
         )
     
-    sc_eq = sc_ecl.transform_to("icrs")
+    sc_eq = sc_ecl.transform_to("gcrs")
     
     dra = sc_eq.pm_ra_cosdec.to(units.deg/units.day).value
     ddec = sc_eq.pm_dec.to(units.deg/units.day).value
@@ -355,21 +355,17 @@ def ecliptic_rates_to_radec_rates(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, 
     return dra, ddec
 # added after the error that messed up sides
 def ecliptic_rates_to_radec_rates1(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day, obstime_str):
-    """
-    Convert ecliptic rates (pm_lon_coslat, pm_lat) at the sky position (ra,dec)
-    into ICRS rates (pm_ra_cosdec, pm_dec).
 
-    IMPORTANT: vlam_deg_day here is pm_lon_coslat (dλ/dt * cosβ), consistent with astropy.
-    """
+    
     t = Time(obstime_str)
 
-    # 1) True sky position in ICRS
-    sc_icrs = SkyCoord(ra=ra_deg*units.deg, dec=dec_deg*units.deg, frame="icrs", obstime=t)
+ 
+    sc_gcrs = SkyCoord(ra=ra_deg*units.deg, dec=dec_deg*units.deg, frame="gcrs", obstime=t)
 
-    # 2) Transform that position to geocentric true ecliptic to get lon/lat
-    sc_ecl_pos = sc_icrs.transform_to(GeocentricTrueEcliptic(obstime=t))
+    # Transform that position to geocentric true ecliptic to get lon/lat
+    sc_ecl_pos = sc_gcrs.transform_to(GeocentricTrueEcliptic(obstime=t))
 
-    # 3) Rebuild ecliptic coord at same lon/lat, now with ecliptic proper motions
+
     sc_ecl = SkyCoord(
         lon=sc_ecl_pos.lon,
         lat=sc_ecl_pos.lat,
@@ -378,8 +374,8 @@ def ecliptic_rates_to_radec_rates1(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day,
         frame=GeocentricTrueEcliptic(obstime=t)
     )
 
-    # 4) Transform back to ICRS and extract RA/Dec rates
-    sc_back = sc_ecl.transform_to("icrs")
+    # Transform back to GCRS and get RA/Dec rates
+    sc_back = sc_ecl.transform_to("gcrs")
 
     dra  = sc_back.pm_ra_cosdec.to(units.deg/units.day).value
     ddec = sc_back.pm_dec.to(units.deg/units.day).value
