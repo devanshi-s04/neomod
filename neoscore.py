@@ -4,7 +4,7 @@ import pyarrow as pa
 from astropy.time import Time
 import astropy.units as units
 from astropy.coordinates import EarthLocation, get_body_barycentric_posvel, solar_system_ephemeris
-from astropy.coordinates import SkyCoord, GeocentricTrueEcliptic
+from astropy.coordinates import SkyCoord, GeocentricTrueEcliptic, GCRS
 from adam_core.time import Timestamp
 from adam_core.coordinates import CartesianCoordinates, Origin
 from adam_core.constants import KM_P_AU, S_P_DAY
@@ -386,13 +386,13 @@ def ecliptic_rates_to_radec_rates1(ra_deg, dec_deg, vlam_deg_day, vbeta_deg_day,
 def radec_rates_to_ecliptic_rates_at_obstime(ra_deg, dec_deg, dra_deg_day, ddec_deg_day, obstime_str):
     t = Time(obstime_str)
     sc_eq = SkyCoord(
-        ra=ra_deg * u.deg,
-        dec=dec_deg * u.deg,
-        pm_ra_cosdec=dra_deg_day * u.deg/u.day,
-        pm_dec=ddec_deg_day * u.deg/u.day,
+        ra=ra_deg * units.deg,
+        dec=dec_deg * units.deg,
+        pm_ra_cosdec=dra_deg_day * units.deg/units.day,
+        pm_dec=ddec_deg_day * units.deg/units.day,
         frame=GCRS(obstime=t)
     )
     sc_ecl = sc_eq.transform_to(GeocentricTrueEcliptic(obstime=t))
-    vlam = sc_ecl.pm_lon_coslat.to(u.deg/u.day).value
-    vbeta = sc_ecl.pm_lat.to(u.deg/u.day).value
+    vlam = sc_ecl.pm_lon_coslat.to(units.deg/units.day).value
+    vbeta = sc_ecl.pm_lat.to(units.deg/units.day).value
     return vlam, vbeta
