@@ -538,21 +538,36 @@ def elements_to_helio_ecliptic_state(
     v_ecl_kms : (N,3) ndarray
     """
     method = str(method).lower()
-
     
-    a_AU = np.asarray(a_AU, dtype=float)
-    e = np.asarray(e, dtype=float)
-    inc_deg = np.asarray(inc_deg, dtype=float)
-    raan_deg = np.asarray(raan_deg, dtype=float)
-    argp_deg = np.asarray(argp_deg, dtype=float)
-    tp_mjd = np.asarray(tp_mjd, dtype=float)
-
-    N = len(a_AU)
+    # Accepts both scalars and arrays 
+    
+    scalar_input = np.isscalar(a_AU) and np.isscalar(e) and np.isscalar(inc_deg)
+    
+    a_AU     = np.atleast_1d(np.asarray(a_AU, dtype=float))
+    e        = np.atleast_1d(np.asarray(e, dtype=float))
+    inc_deg  = np.atleast_1d(np.asarray(inc_deg, dtype=float))
+    raan_deg = np.atleast_1d(np.asarray(raan_deg, dtype=float))
+    argp_deg = np.atleast_1d(np.asarray(argp_deg, dtype=float))
+    tp_mjd   = np.atleast_1d(np.asarray(tp_mjd, dtype=float))
+    
+    
+    N = a_AU.size
+    for arr, name in [
+        (e, "e"),
+        (inc_deg, "inc_deg"),
+        (raan_deg, "raan_deg"),
+        (argp_deg, "argp_deg"),
+        (tp_mjd, "tp_mjd"),
+    ]:
+        if arr.size != N:
+            raise ValueError(f"Size mismatch: {name}.size={arr.size} but a_AU.size={N}")
+    
     if chunk is None:
-        chunk = N  
-
+        chunk = N
+    
     r_out = np.empty((N, 3), dtype=float)
     v_out = np.empty((N, 3), dtype=float)
+
 
     
     t_obs = Time(obstime_str, scale="tdb")
@@ -615,4 +630,8 @@ def elements_to_helio_ecliptic_state(
         else:
             raise ValueError("method must be 'newton' or 'adam'")
 
-    return r_out, v_out
+            # If the caller passes scalars, returns (3,) instead of (1,3)
+        if scalar_input or N == 1:
+            return r_out[0], v_out[0]
+        
+        return r_out, v_out
