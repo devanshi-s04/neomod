@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord, GeocentricTrueEcliptic, GCRS
 from adam_core.time import Timestamp
 from adam_core.coordinates import CartesianCoordinates, Origin, KeplerianCoordinates
 from adam_core.constants import KM_P_AU, S_P_DAY
+from tqdm import tqdm
  
 
 # Constants
@@ -397,122 +398,173 @@ def radec_rates_to_ecliptic_rates_at_obstime(ra_deg, dec_deg, dra_deg_day, ddec_
     vbeta = sc_ecl.pm_lat.to(units.deg/units.day).value
     return vlam, vbeta
 
-def solve_kepler_newton(M, e, n_iter=10):
+
+def _propagate_chunk_newton(
+    a_AU_chunk,
+    e_chunk,
+    inc_deg_chunk,
+    raan_deg_chunk,
+    argp_deg_chunk,
+    M_rad_chunk,
+    AU_km_val=149_597_870.7,
+    mu_sun_km3_s2=1.32712440018e11,
+    n_iter=10,
+):
     """
-    Solve Kepler's equation M = E - e sin E for eccentric anomaly E
-    using Newton iterations.
+    Propagate one chunk of Keplerian elements with Newton.
 
     Parameters
     ----------
-    M : array_like
-        Mean anomaly [rad]
-    e : array_like
-        Eccentricity (0 <= e < 1)
-    n_iter : int
-        Number of Newton iterations
+    a_AU_chunk, e_chunk, inc_deg_chunk, raan_deg_chunk, argp_deg_chunk : ndarray
+        Chunked orbital elements.
+    M_rad_chunk : ndarray
+        Mean anomaly at observation time (in radians).
 
     Returns
     -------
-    E : ndarray
-        Eccentric anomaly [rad], same shape as M
+    r_chunk : (Nc, 3) ndarray
+        Heliocentric ecliptic positions in km.
+    v_chunk : (Nc, 3) ndarray
+        Heliocentric ecliptic velocities in km/s.
     """
-    M = np.asarray(M, dtype=float)
-    e = np.asarray(e, dtype=float)
+    a_km_chunk = a_AU_chunk * AU_km_val
+    inc_rad = np.deg2rad(inc_deg_chunk)
+    raan_rad = np.deg2rad(raan_deg_chunk)
+    argp_rad = np.deg2rad(argp_deg_chunk)
 
-    E = M.copy()
-    for _ in range(int(n_iter)):
-        f = E - e * np.sin(E) - M
-        fp = 1.0 - e * np.cos(E)
-        E = E - f / fp
-    return E
+    E_chunk = M_rad_chunk.copy()
+    for _ in range(n_iter):
+        E_chunk -= (
+            E_chunk - e_chunk * np.sin(E_chunk) - M_rad_chunk
+        ) / (1 - e_chunk * np.cos(E_chunk))
 
-def propagate_kepler_two_body_ecliptic(
-    a_AU, e, inc_deg, raan_deg, argp_deg, tp_mjd,
-    obstime_str,
-    mu_sun_km3_s2=mu_sun,
-    AU_km_val=AU_km,
-    n_iter=10
-):
-    """
-    Fast 2-body (heliocentric) Kepler propagation from elements to state vectors.
+    cosE = np.cos(E_chunk)
+    sinE = np.sin(E_chunk)
+    sqrt1me2 = np.sqrt(1 - e_chunk * e_chunk)
 
-    Elements are interpreted as:
-      (a, e, i, Omega, omega, tp)
-    where tp is time of perihelion passage in MJD.
+    cosf = (cosE - e_chunk) / (1 - e_chunk * cosE)
+    sinf = (sqrt1me2 * sinE) / (1 - e_chunk * cosE)
+    f_true = np.arctan2(sinf, cosf)
 
-    Returns heliocentric ecliptic Cartesian state at obstime:
-      r_ecl_km : (N,3) km
-      v_ecl_kms: (N,3) km/s
-    """
-
-  
-    t_obs = Time(obstime_str, scale="tdb")
-    a_AU = np.asarray(a_AU, dtype=float)
-    e = np.asarray(e, dtype=float)
-    inc = np.deg2rad(np.asarray(inc_deg, dtype=float))
-    raan = np.deg2rad(np.asarray(raan_deg, dtype=float))
-    argp = np.deg2rad(np.asarray(argp_deg, dtype=float))
-    tp_mjd = np.asarray(tp_mjd, dtype=float)
-
-    # mean anomaly from perihelion time 
-    a_km = a_AU * AU_km_val
-    n = np.sqrt(mu_sun_km3_s2 / (a_km**3))                # rad/s
-    dt_s = (t_obs.mjd - tp_mjd) * 86400.0                 # seconds
-    M = np.mod(n * dt_s, 2*np.pi)                         # [0,2pi)
-
-    # solve Kepler: M = E - e sin E 
-    E = solve_kepler_newton(M, e, n_iter=n_iter)
-
-    cosE = np.cos(E)
-    sinE = np.sin(E)
-    sqrt1me2 = np.sqrt(1.0 - e*e)
-
-    # true anomaly f
-    cosf = (cosE - e) / (1.0 - e*cosE)
-    sinf = (sqrt1me2 * sinE) / (1.0 - e*cosE)
-    f = np.arctan2(sinf, cosf)
-
-    # radius and angular momentum
-    r = a_km * (1.0 - e*cosE)
-    p = a_km * (1.0 - e*e)
+    r = a_km_chunk * (1 - e_chunk * cosE)
+    p = a_km_chunk * (1 - e_chunk * e_chunk)
     h = np.sqrt(mu_sun_km3_s2 * p)
 
-    # PQW position/velocity (km, km/s)
-    x_p = r * np.cos(f)
-    y_p = r * np.sin(f)
-    vx_p = -mu_sun_km3_s2/h * np.sin(f)
-    vy_p =  mu_sun_km3_s2/h * (e + np.cos(f))
+    # PQW position/velocity
+    x_p = r * np.cos(f_true)
+    y_p = r * np.sin(f_true)
+    vx_p = -mu_sun_km3_s2 / h * np.sin(f_true)
+    vy_p =  mu_sun_km3_s2 / h * (e_chunk + np.cos(f_true))
 
-    # rotation PQW -> ecliptic IJK : Rz(Omega) Rx(i) Rz(omega)
-    cO, sO = np.cos(raan), np.sin(raan)
-    ci, si = np.cos(inc),  np.sin(inc)
-    cw, sw = np.cos(argp), np.sin(argp)
+    # Rotation PQW to ecliptic IJK
+    cO, sO = np.cos(raan_rad), np.sin(raan_rad)
+    ci, si = np.cos(inc_rad), np.sin(inc_rad)
+    cw, sw = np.cos(argp_rad), np.sin(argp_rad)
 
-    R11 = cO*cw - sO*sw*ci
-    R12 = -cO*sw - sO*cw*ci
-    R21 = sO*cw + cO*sw*ci
-    R22 = -sO*sw + cO*cw*ci
-    R31 = sw*si
-    R32 = cw*si
+    R11 = cO * cw - sO * sw * ci
+    R12 = -cO * sw - sO * cw * ci
+    R21 = sO * cw + cO * sw * ci
+    R22 = -sO * sw + cO * cw * ci
+    R31 = sw * si
+    R32 = cw * si
 
-    rx = R11*x_p + R12*y_p
-    ry = R21*x_p + R22*y_p
-    rz = R31*x_p + R32*y_p
+    rx = R11 * x_p + R12 * y_p
+    ry = R21 * x_p + R22 * y_p
+    rz = R31 * x_p + R32 * y_p
 
-    vx = R11*vx_p + R12*vy_p
-    vy = R21*vx_p + R22*vy_p
-    vz = R31*vx_p + R32*vy_p
+    vx = R11 * vx_p + R12 * vy_p
+    vy = R21 * vx_p + R22 * vy_p
+    vz = R31 * vx_p + R32 * vy_p
 
-    r_ecl_km = np.column_stack([rx, ry, rz])
-    v_ecl_kms = np.column_stack([vx, vy, vz])
-    return r_ecl_km, v_ecl_kms
+    r_chunk = np.column_stack([rx, ry, rz])
+    v_chunk = np.column_stack([vx, vy, vz])
+
+    return r_chunk, v_chunk
+
+
+def _propagate_chunk_adam(
+    a_AU_chunk,
+    e_chunk,
+    inc_deg_chunk,
+    raan_deg_chunk,
+    argp_deg_chunk,
+    M_deg_chunk,
+    t_obs,
+):
+    """
+    Propagate one chunk of Keplerian elements with ADAM.
+
+    Parameters
+    ----------
+    a_AU_chunk, e_chunk, inc_deg_chunk, raan_deg_chunk, argp_deg_chunk : ndarray
+        Chunked orbital elements.
+    M_deg_chunk : ndarray
+        Mean anomaly at observation time (in degrees).
+    t_obs : astropy.time.Time
+        Observation time in TDB.
+
+    Returns
+    -------
+    r_chunk : (Nc, 3) ndarray
+        Heliocentric ecliptic positions in km.
+    v_chunk : (Nc, 3) ndarray
+        Heliocentric ecliptic velocities in km/s.
+    """
+    n_chunk = len(a_AU_chunk)
+
+    t_vec = Time(np.full(n_chunk, t_obs.jd), format="jd", scale="tdb")
+    ts = Timestamp.from_astropy(t_vec)
+
+    origin = Origin.from_kwargs(code=pa.repeat("SUN", n_chunk))
+
+    kep = KeplerianCoordinates.from_kwargs(
+        a=a_AU_chunk,
+        e=e_chunk,
+        i=inc_deg_chunk,
+        raan=raan_deg_chunk,
+        ap=argp_deg_chunk,
+        M=M_deg_chunk,
+        time=ts,
+        origin=origin,
+        frame="ecliptic",
+    )
+
+    if not hasattr(kep, "to_cartesian"):
+        raise AttributeError(
+            "KeplerianCoordinates has no to_cartesian() in this adam_core version."
+        )
+
+    cart = kep.to_cartesian()
+
+    r_chunk = np.column_stack([
+        cart.x.to_numpy(),
+        cart.y.to_numpy(),
+        cart.z.to_numpy(),
+    ]) * KM_P_AU
+
+    v_chunk = np.column_stack([
+        cart.vx.to_numpy(),
+        cart.vy.to_numpy(),
+        cart.vz.to_numpy(),
+    ]) * KM_P_AU / S_P_DAY
+
+    return r_chunk, v_chunk
+
 
 def elements_to_helio_ecliptic_state(
-    a_AU, e, inc_deg, raan_deg, argp_deg, tp_mjd,
+    a_AU,
+    e,
+    inc_deg,
+    raan_deg,
+    argp_deg,
+    tp_mjd,
     obstime_str,
     method="newton",
     n_iter=10,
-    chunk=None,
+    chunk=300_000,
+    show_progress=True,
+    AU_km_val=149_597_870.7,
+    mu_sun_km3_s2=1.32712440018e11,
 ):
     """
     Return heliocentric ecliptic Cartesian state at obstime.
@@ -522,35 +574,44 @@ def elements_to_helio_ecliptic_state(
     a_AU, e, inc_deg, raan_deg, argp_deg, tp_mjd : array_like
         Keplerian elements, where tp_mjd is time of perihelion passage (MJD).
         Angles are in degrees.
-    obstime_str : str
-        Observation time (ISO string).
-    method : {"newton","adam"}
-        - "newton": fast 2-body propagation using solve_kepler_newton (aka the simple version)
-        - "adam": build ADAM KeplerianCoordinates at obstime and convert to Cartesian
+    obstime_str : str or astropy.time.Time
+        Observation time.
+    method : {"newton", "adam"}
+        Propagation method.
     n_iter : int
-        Newton iterations (used by "newton" and also for computing M in a stable way).
-    chunk : int or None
-        If not None, process in chunks to reduce memory.
+        Number of Newton iterations for the newton branch.
+    chunk : int
+        Chunk size.
+    show_progress : bool
+        Whether to show tqdm progress bar.
 
     Returns
     -------
-    r_ecl_km : (N,3) ndarray
-    v_ecl_kms : (N,3) ndarray
+    r_out : (N, 3) ndarray
+        Heliocentric ecliptic positions in km.
+    v_out : (N, 3) ndarray
+        Heliocentric ecliptic velocities in km/s.
     """
     method = str(method).lower()
-    
-    # Accepts both scalars and arrays 
-    
-    scalar_input = np.isscalar(a_AU) and np.isscalar(e) and np.isscalar(inc_deg)
-    
-    a_AU     = np.atleast_1d(np.asarray(a_AU, dtype=float))
-    e        = np.atleast_1d(np.asarray(e, dtype=float))
-    inc_deg  = np.atleast_1d(np.asarray(inc_deg, dtype=float))
+    if method not in {"newton", "adam"}:
+        raise ValueError("method must be 'newton' or 'adam'")
+
+    scalar_input = (
+        np.isscalar(a_AU)
+        and np.isscalar(e)
+        and np.isscalar(inc_deg)
+        and np.isscalar(raan_deg)
+        and np.isscalar(argp_deg)
+        and np.isscalar(tp_mjd)
+    )
+
+    a_AU = np.atleast_1d(np.asarray(a_AU, dtype=float))
+    e = np.atleast_1d(np.asarray(e, dtype=float))
+    inc_deg = np.atleast_1d(np.asarray(inc_deg, dtype=float))
     raan_deg = np.atleast_1d(np.asarray(raan_deg, dtype=float))
     argp_deg = np.atleast_1d(np.asarray(argp_deg, dtype=float))
-    tp_mjd   = np.atleast_1d(np.asarray(tp_mjd, dtype=float))
-    
-    
+    tp_mjd = np.atleast_1d(np.asarray(tp_mjd, dtype=float))
+
     N = a_AU.size
     for arr, name in [
         (e, "e"),
@@ -561,77 +622,70 @@ def elements_to_helio_ecliptic_state(
     ]:
         if arr.size != N:
             raise ValueError(f"Size mismatch: {name}.size={arr.size} but a_AU.size={N}")
-    
-    if chunk is None:
-        chunk = N
-    
+
+    if isinstance(obstime_str, Time):
+        t_obs = obstime_str.tdb
+    else:
+        t_obs = Time(obstime_str, scale="tdb")
+
     r_out = np.empty((N, 3), dtype=float)
     v_out = np.empty((N, 3), dtype=float)
 
+    # Precompute mean anomaly once for all objects
+    if method == "newton":
+        a_km = a_AU * AU_km_val
+        n = np.sqrt(mu_sun_km3_s2 / (a_km**3))      # rad/s
+        dt_s = (t_obs.mjd - tp_mjd) * 86400.0
+        M_all = np.mod(n * dt_s, 2.0 * np.pi)       # radians
 
-    
-    t_obs = Time(obstime_str, scale="tdb")
+    else:  # method = "adam"
+        k_gauss = 0.01720209895
+        mu_AU3_day2 = k_gauss**2
+        n_rad_day = np.sqrt(mu_AU3_day2 / (a_AU**3))
+        dt_day = t_obs.mjd - tp_mjd
+        M_all = np.degrees(np.mod(n_rad_day * dt_day, 2.0 * np.pi))  # degrees
 
-    # Mean anomaly M at obstime for the ADAM branch (in degrees)
-    # M = n*(t - tp) mod 2pi)
-    # Using AU units for mu via Gauss k^2 to avoid km constants.
-    k = 0.01720209895  # AU^(3/2)/day
-    mu_AU3_day2 = k**2
-    n_rad_day = np.sqrt(mu_AU3_day2 / (a_AU**3))               # rad/day
-    dt_day = (t_obs.mjd - tp_mjd)                              # days
-    M_rad = np.mod(n_rad_day * dt_day, 2.0 * np.pi)            # rad
-    M_deg = np.degrees(M_rad)                                  # deg in [0,360)
+    iterator = range(0, N, chunk)
+    if show_progress:
+        iterator = tqdm(iterator, desc=f"Propagate with {method}")
 
-    for k0 in range(0, N, chunk):
+    for k0 in iterator:
         k1 = min(k0 + chunk, N)
 
+        a_c = a_AU[k0:k1]
+        e_c = e[k0:k1]
+        inc_c = inc_deg[k0:k1]
+        raan_c = raan_deg[k0:k1]
+        argp_c = argp_deg[k0:k1]
+        M_c = M_all[k0:k1]
+
         if method == "newton":
-            r_km, v_kms = propagate_kepler_two_body_ecliptic(
-                a_AU[k0:k1], e[k0:k1],
-                inc_deg[k0:k1], raan_deg[k0:k1], argp_deg[k0:k1], tp_mjd[k0:k1],
-                obstime_str,
-                mu_sun_km3_s2=mu_sun,
-                AU_km_val=AU_km,
-                n_iter=n_iter
+            r_chunk, v_chunk = _propagate_chunk_newton(
+                a_AU_chunk=a_c,
+                e_chunk=e_c,
+                inc_deg_chunk=inc_c,
+                raan_deg_chunk=raan_c,
+                argp_deg_chunk=argp_c,
+                M_rad_chunk=M_c,
+                AU_km_val=AU_km_val,
+                mu_sun_km3_s2=mu_sun_km3_s2,
+                n_iter=n_iter,
             )
-            r_out[k0:k1] = r_km
-            v_out[k0:k1] = v_kms
-
-        elif method == "adam":
-            # ADAM wants Keplerian elements at a given epoch so using obstime here
-            # but 'time' must be length = number of rows in this chunk.
-            n_chunk = k1 - k0
-        
-            # Make a vector Time of length n_chunk, all equal to t_obs
-            t_vec = Time(np.full(n_chunk, t_obs.tdb.jd), format="jd", scale="tdb")
-            ts = Timestamp.from_astropy(t_vec)
-        
-            origin = Origin.from_kwargs(code=pa.repeat("SUN", n_chunk))
-        
-            kep = KeplerianCoordinates.from_kwargs(
-                a=a_AU[k0:k1],
-                e=e[k0:k1],
-                i=inc_deg[k0:k1],
-                raan=raan_deg[k0:k1],
-                ap=argp_deg[k0:k1],
-                M=M_deg[k0:k1],
-                time=ts,          # length n_chunk
-                origin=origin,    
-                frame="ecliptic",
-            )
-        
-            if hasattr(kep, "to_cartesian"):
-                cart = kep.to_cartesian()
-            else:
-                raise AttributeError("KeplerianCoordinates has no to_cartesian() in this adam_core version.")
-        
-            r_out[k0:k1] = np.column_stack([cart.x.to_numpy(), cart.y.to_numpy(), cart.z.to_numpy()]) * KM_P_AU
-            v_out[k0:k1] = np.column_stack([cart.vx.to_numpy(), cart.vy.to_numpy(), cart.vz.to_numpy()]) * KM_P_AU / S_P_DAY
         else:
-            raise ValueError("method must be 'newton' or 'adam'")
+            r_chunk, v_chunk = _propagate_chunk_adam(
+                a_AU_chunk=a_c,
+                e_chunk=e_c,
+                inc_deg_chunk=inc_c,
+                raan_deg_chunk=raan_c,
+                argp_deg_chunk=argp_c,
+                M_deg_chunk=M_c,
+                t_obs=t_obs,
+            )
 
-            # If the caller passes scalars, returns (3,) instead of (1,3)
-        if scalar_input or N == 1:
-            return r_out[0], v_out[0]
-        
-        return r_out, v_out
+        r_out[k0:k1] = r_chunk
+        v_out[k0:k1] = v_chunk
+
+    if scalar_input or N == 1:
+        return r_out[0], v_out[0]
+
+    return r_out, v_out
