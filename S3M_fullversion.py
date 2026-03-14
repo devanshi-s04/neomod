@@ -14,20 +14,9 @@ def define_s3m():
         "t_p", "H", "t_0", "INDEX", "N_PAR", "MOID", "COMPCODE"
     ]
     
-    try:
-        files = sorted(glob.glob("S1_*.s3m"))
-    except: 
-        print(err)
-    try:
-        files = sorted(glob.glob("S3Mdata/S1_*.s3m"))
-    except: 
-        print(err)
-
-    if len(files)>0:
-        print('input files:', files)
-    else:
-        raise Exception(f"Didn't find any data files, see define_s3m() in S3array.py")
-
+    
+    files = sorted(glob.glob("S*.s3m"))
+    print(files)
     
     dfs = []
     
@@ -86,5 +75,3 @@ def s3m_array(s3m):
     i_center = 0.5 * (i_edges[1:] + i_edges[:-1])
 
     return s3m, array4D, H_center, a_center, e_center, i_center
-
-
