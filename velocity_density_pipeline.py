@@ -1414,6 +1414,9 @@ class ProbMapSet:
         self.mask_radius_deg_per_day = float(mask_radius_deg_per_day)
 
         # precompute per-bin probability maps {label -> {pop -> prob_map}}
+        # _prob_maps_raw: unmasked (pure density ratio) — use for ROC scoring
+        # _prob_maps:     masked with mask_radius      — use for visualization
+        self._prob_maps_raw = {}
         self._prob_maps = {}
         for mb in self.mag_bins:
             label = mb["label"]
@@ -1421,15 +1424,19 @@ class ProbMapSet:
             nearest = self.results[label]["nearest_dist_maps"]
             density_total = sum(density.values())
 
-            prob_for_label = {}
+            raw_for_label = {}
+            masked_for_label = {}
             for pop in self.population_names:
                 frac = np.zeros_like(density[pop], dtype=np.float64)
                 good = density_total > 0
                 frac[good] = density[pop][good] / density_total[good]
+                raw_for_label[pop] = frac.copy()
+                masked = frac.copy()
                 too_far = nearest[pop] > self.mask_radius_deg_per_day
-                frac[too_far] = 0.0
-                prob_for_label[pop] = frac
-            self._prob_maps[label] = prob_for_label
+                masked[too_far] = 0.0
+                masked_for_label[pop] = masked
+            self._prob_maps_raw[label] = raw_for_label
+            self._prob_maps[label] = masked_for_label
 
         # mag-bin lookup table
         self._mag_mins = np.asarray([mb["mag_min"] for mb in self.mag_bins], dtype=float)
@@ -1543,6 +1550,7 @@ class ProbMapSet:
         vbeta,
         mag_app,
         return_bin_labels=False,
+        apply_mask=True,
     ):
         """Score already-propagated visible objects against the maps.
 
@@ -1552,6 +1560,13 @@ class ProbMapSet:
         mag_app : array-like, apparent magnitude
         return_bin_labels : bool
             If True, also return the assigned mag-bin label per object.
+        apply_mask : bool, default True
+            If True, uses the masked probability maps (0.2 deg/day nearest-
+            object mask applied — correct for visualization and single-object
+            scoring where you want P=0 in empty velocity-space regions).
+            If False, uses the raw unmasked density ratios — use this for ROC
+            curve analysis so that sparse but non-zero NEO regions still
+            contribute positive P(NEO) values rather than being zeroed out.
 
         Returns
         -------
@@ -1567,6 +1582,8 @@ class ProbMapSet:
         if not (len(vlam) == len(vbeta) == len(mag_app)):
             raise ValueError("vlam, vbeta, mag_app must be the same length.")
 
+        prob_source = self._prob_maps if apply_mask else self._prob_maps_raw
+
         probs = {pop: np.zeros(len(vlam), dtype=float) for pop in self.population_names}
         bin_labels = self._pick_bin_label(mag_app)
 
@@ -1577,7 +1594,7 @@ class ProbMapSet:
             if len(idx) == 0:
                 continue
             for pop in self.population_names:
-                pmap = self._prob_maps[label][pop]
+                pmap = prob_source[label][pop]
                 probs[pop][idx] = self._lookup_in_map(pmap, vlam[idx], vbeta[idx])
 
         if return_bin_labels:
@@ -1594,21 +1611,29 @@ class ProbMapSet:
         dra_deg_day,
         ddec_deg_day,
         mag_app,
-        scorer,
         obstime_str=None,
         return_intermediates=False,
     ):
-        """Convert RA/Dec/rates to (vlam, vbeta), then score.
+        """Convert RA/Dec/rates to (vlam, vbeta), then look up probability.
 
-        Uses the manual equatorial->ecliptic rotation (no astropy
-        differential). Requires a `scorer` only because we need the
-        observer state at obstime.
+        Uses the manual equatorial->ecliptic rotation — no scorer or
+        external package needed. Just the measured sky position, rates,
+        and apparent magnitude.
 
-        Notes
-        -----
-        Strictly speaking the obstime should match the obstime the maps
-        were generated for. If `obstime_str` is None, uses self.obstime_str.
-        Mixing different obstimes is not recommended.
+        Parameters
+        ----------
+        ra_deg, dec_deg : float or array-like, degrees
+        dra_deg_day, ddec_deg_day : float or array-like, degrees/day
+        mag_app : float or array-like, apparent V magnitude
+        obstime_str : str or None
+            Stored in return_intermediates for bookkeeping only.
+            Defaults to self.obstime_str.
+        return_intermediates : bool
+            If True, returns dict with probs, vlam, vbeta, bin_labels.
+
+        Returns
+        -------
+        probs : dict  {pop_name: ndarray shape (N,)} with P in [0,1].
         """
         if obstime_str is None:
             obstime_str = self.obstime_str
@@ -1648,65 +1673,177 @@ class ProbMapSet:
         chunk=100_000,
         show_progress=True,
         return_visible=True,
+        apply_mask=False,
     ):
         """Propagate orbital elements at obstime, sky-cut, score visible objects.
 
-        Workflow:
-          1) compute_apparent_magnitude_for_population on full df
-          2) build_visible_subset_dataframe (sky cut at the map's center)
-          3) realign mag_app to the surviving rows
-          4) score_visible(vlam, vbeta, mag_app)
+        Single propagation pass: computes apparent magnitude, sky position,
+        vlam, and vbeta all in one call to avoid propagating 13M+ objects twice.
 
         Parameters
         ----------
         df : pandas.DataFrame
             Must have columns: a, e, i, node, argperi, t_p, H.
         scorer : nsc.NEOMODScorer
-            Any population's scorer (used only for observer state).
+            Used for observer state (Earth position/velocity).
         obstime_str : str or None
             Defaults to self.obstime_str.
         max_sep_deg : float or None
             Defaults to self.max_sep_deg.
+        chunk : int
+            Propagation chunk size. Increase (e.g. 500_000) to speed up
+            large populations like MBA.
         return_visible : bool
-            If True, returns (probs_dict, visible_df). visible_df has
-            vlam/vbeta/mag_app and the original orbital columns.
+            If True, returns (probs_dict, visible_df).
+        apply_mask : bool, default False
+            Whether to apply the nearest-object mask. False (default) gives
+            raw density-ratio probabilities suitable for ROC analysis.
+            Set True for visualization-consistent scoring.
         """
         if obstime_str is None:
             obstime_str = self.obstime_str
         if max_sep_deg is None:
             max_sep_deg = self.max_sep_deg
 
-        # apparent mag for the whole input df
-        mag_app_full = compute_apparent_magnitude_for_population(
-            df=df, obstime_str=obstime_str, scorer=scorer,
+        t_obs = Time(obstime_str, scale="tdb")
+
+        a_AU   = df["a"].to_numpy(dtype=float)
+        e      = df["e"].to_numpy(dtype=float)
+        inc    = df["i"].to_numpy(dtype=float)
+        raan   = df["node"].to_numpy(dtype=float)
+        argp   = df["argperi"].to_numpy(dtype=float)
+        tp_mjd = df["t_p"].to_numpy(dtype=float)
+        H_full = df["H"].to_numpy(dtype=float)
+
+        # ── single propagation pass ────────────────────────────────────────
+        r_ecl, v_ecl = nsc.elements_to_helio_ecliptic_state(
+            a_AU=a_AU, e=e, inc_deg=inc,
+            raan_deg=raan, argp_deg=argp, tp_mjd=tp_mjd,
+            obstime_str=obstime_str,
+            method="newton", n_iter=10,
             chunk=chunk, show_progress=show_progress,
         )
 
-        # to align apparent mag with the visible subset, re-run the full
-        # propagation inside build_visible_subset_dataframe and recover
-        # the surviving original-row indices via merge on a temp key.
-        df_aug = df.copy().reset_index(drop=True)
-        df_aug["__orig_idx"] = np.arange(len(df_aug), dtype=int)
-        df_aug["__mag_app_full"] = mag_app_full
+        eps = np.deg2rad(ECLIPTIC_OBLIQUITY_DEG)
+        c, s = np.cos(eps), np.sin(eps)
 
-        visible_df = build_visible_subset_dataframe(
-            df_aug, obstime_str=obstime_str, scorer=scorer,
-            max_sep_deg=max_sep_deg,
-            chunk=chunk, show_progress=show_progress,
-            center_mode="custom_ecliptic",
-            center_lon_deg=self.center_lon_deg,
-            center_lat_deg=self.center_lat_deg,
+        # ecliptic -> equatorial position + velocity
+        r_eq = np.column_stack([
+            r_ecl[:, 0],
+            c * r_ecl[:, 1] - s * r_ecl[:, 2],
+            s * r_ecl[:, 1] + c * r_ecl[:, 2],
+        ])
+        v_eq = np.column_stack([
+            v_ecl[:, 0],
+            c * v_ecl[:, 1] - s * v_ecl[:, 2],
+            s * v_ecl[:, 1] + c * v_ecl[:, 2],
+        ])
+
+        _, rE, vE, r_tele = scorer._get_earth_and_observer(obstime_str)
+
+        r_rel = r_eq - (rE + r_tele)   # topocentric equatorial position
+        v_rel = v_eq - vE               # topocentric equatorial velocity
+
+        # ── apparent magnitude (full population, before sky cut) ───────────
+        r_helio = r_eq
+        r_sun_vec = np.linalg.norm(r_helio, axis=1)
+        r_obs_vec = np.linalg.norm(r_rel, axis=1)
+
+        r_sun_au = r_sun_vec / AU_KM if np.nanmedian(r_sun_vec) > 1000 else r_sun_vec
+        Delta_au = r_obs_vec / AU_KM if np.nanmedian(r_obs_vec) > 1000 else r_obs_vec
+
+        u_sun = -r_helio / np.linalg.norm(r_helio, axis=1, keepdims=True)
+        u_obs = -r_rel   / np.linalg.norm(r_rel,   axis=1, keepdims=True)
+
+        cos_alpha = np.clip(np.sum(u_sun * u_obs, axis=1), -1.0, 1.0)
+        alpha = np.arccos(cos_alpha)
+
+        G = 0.15
+        A1, A2, B1, B2 = 3.33, 1.87, 0.63, 1.22
+        phi1 = np.exp(-A1 * np.tan(0.5 * alpha) ** B1)
+        phi2 = np.exp(-A2 * np.tan(0.5 * alpha) ** B2)
+        Phi  = np.maximum((1 - G) * phi1 + G * phi2, 1e-30)
+
+        mag_app_full = H_full + 5.0 * np.log10(r_sun_au * Delta_au) - 2.5 * np.log10(Phi)
+
+        # ── sky cut ────────────────────────────────────────────────────────
+        x, y, z   = r_rel[:, 0], r_rel[:, 1], r_rel[:, 2]
+        vx, vy, vz = v_rel[:, 0], v_rel[:, 1], v_rel[:, 2]
+
+        rho2 = x*x + y*y
+        r2   = rho2 + z*z
+        rho  = np.sqrt(rho2)
+
+        ra  = np.arctan2(y, x)
+        dec = np.arctan2(z, rho)
+        dra  = (x*vy - y*vx) / rho2
+        ddec = (vz*rho2 - z*(x*vx + y*vy)) / (r2 * rho)
+
+        good = (
+            np.isfinite(ra) & np.isfinite(dec) &
+            np.isfinite(dra) & np.isfinite(ddec) &
+            np.isfinite(rho2) & (rho2 > 0) &
+            np.isfinite(r2) & (r2 > 0) &
+            np.isfinite(rho) & (rho > 0)
         )
 
-        mag_app_vis = visible_df["__mag_app_full"].to_numpy(dtype=float)
-        visible_df = visible_df.drop(columns=["__orig_idx", "__mag_app_full"])
-        visible_df["mag_app"] = mag_app_vis
+        ra_deg_g   = np.rad2deg(ra[good]) % 360.0
+        dec_deg_g  = np.rad2deg(dec[good])
 
+        sc = SkyCoord(ra=ra_deg_g * u.deg, dec=dec_deg_g * u.deg,
+                      frame=GCRS(obstime=t_obs))
+
+        center_ecl = SkyCoord(
+            lon=self.center_lon_deg * u.deg,
+            lat=self.center_lat_deg * u.deg,
+            distance=1.0 * u.AU,
+            frame=GeocentricTrueEcliptic(obstime=t_obs),
+        )
+        center_sc = center_ecl.transform_to(GCRS(obstime=t_obs))
+        sky_sep = sc.separation(center_sc).deg
+        m = sky_sep <= max_sep_deg
+
+        # original indices of survivors
+        good_idx = np.flatnonzero(good)
+        sel_idx  = good_idx[m]
+
+        # ── ecliptic rates for survivors (manual rotation) ─────────────────
+        r_rel_sel = r_rel[good][m]
+        v_rel_sel = v_rel[good][m]
+
+        x_ecl  = r_rel_sel[:, 0]
+        y_ecl  =  c * r_rel_sel[:, 1] + s * r_rel_sel[:, 2]
+        z_ecl  = -s * r_rel_sel[:, 1] + c * r_rel_sel[:, 2]
+        vx_ecl =  v_rel_sel[:, 0]
+        vy_ecl =  c * v_rel_sel[:, 1] + s * v_rel_sel[:, 2]
+        vz_ecl = -s * v_rel_sel[:, 1] + c * v_rel_sel[:, 2]
+
+        rho2_ecl = x_ecl*x_ecl + y_ecl*y_ecl
+        r2_ecl   = rho2_ecl + z_ecl*z_ecl
+        rho_ecl  = np.sqrt(rho2_ecl)
+
+        dlam  = (x_ecl*vy_ecl - y_ecl*vx_ecl) / rho2_ecl
+        dbeta = (vz_ecl*rho2_ecl - z_ecl*(x_ecl*vx_ecl + y_ecl*vy_ecl)) / (r2_ecl * rho_ecl)
+
+        vlam_vis  = np.rad2deg(dlam)  * 86400.0
+        vbeta_vis = np.rad2deg(dbeta) * 86400.0
+
+        mag_app_vis = mag_app_full[sel_idx]
+
+        # ── build visible_df ───────────────────────────────────────────────
+        visible_df = df.iloc[sel_idx].copy().reset_index(drop=True)
+        visible_df["ra_deg"]      = ra_deg_g[m]
+        visible_df["dec_deg"]     = dec_deg_g[m]
+        visible_df["sky_sep_deg"] = sky_sep[m]
+        visible_df["vlam"]        = vlam_vis
+        visible_df["vbeta"]       = vbeta_vis
+        visible_df["mag_app"]     = mag_app_vis
+
+        # ── score ──────────────────────────────────────────────────────────
         probs, bin_labels = self.score_visible(
-            vlam=visible_df["vlam"].to_numpy(dtype=float),
-            vbeta=visible_df["vbeta"].to_numpy(dtype=float),
-            mag_app=mag_app_vis,
+            vlam=vlam_vis, vbeta=vbeta_vis, mag_app=mag_app_vis,
             return_bin_labels=True,
+            apply_mask=apply_mask,
         )
         visible_df["mag_bin_label"] = bin_labels
         for pop, p in probs.items():
