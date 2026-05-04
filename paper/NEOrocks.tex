@@ -82,7 +82,7 @@ What is needed is a new classification framework: one that uses the observed sky
 
 
 
-\section{Methods: AKA everything you did over the past few months}
+\section{Methods}
 
 \label{sec:methods}
 
@@ -99,7 +99,7 @@ so the 4 panel d ddot plots for mj, re do them but for cloned orbital elements m
 also include s3m population red berry candy looking plot
 
 
-\subsection{How to: Pick an Population Model to be used by NEOOM (Solar System Model and Population Selection)}
+\subsection{Solar System Model and Population Selection}
 \label{sec:popmodel}
 
 Our starting point is the Pan-STARRS Synthetic Solar System Model (S3M; Grav et al. 2011), which serves as the baseline model of the Solar System used throughout this work. S3M contains about 14 million simulated Keplerian orbits spanning the major dynamical populations of small bodies. For each of the four populations of interest, NEOs, MBAs, Jupiter Trojans, and TNOs, we construct dataframes from S3M using four orbital parameters as our primary axes: absolute magnitude H, semi-major axis a, eccentricity e, and inclination i.
@@ -123,7 +123,7 @@ Positions are derived from K$|$M cloned S3M orbits with no ecliptic latitude fil
 \end{figure*}
 
 
-\subsection{How to: compute apparent mag for a full population on the whole sky (and why it matters?) (Sky-Plane Cuts and Observation Geometry)}
+\subsection{Sky-Plane Cuts and Observation Geometry}
 \label{sec:compappmag}
 
 We adopt an observation epoch of March 21st 2025, corresponding to the Spring Equinox, and simulate observations in the anti-sun direction which is the point on the sky approximately \( 180^\circ \) opposite to the Sun. This is a good pointing direction for NEO surveys, including LSST, as it places the opposition surge in a favorable location and maximises the sky-plane rates of motion for main-belt objects.
@@ -202,7 +202,7 @@ We adopt the standard parameter values
 \end{table}
 
 
-\subsection{How to: clone your asteroids (Population Cloning)}
+\subsection{Population Cloning}
 \label{sec:cloneast}
 
 After applying the sky and magnitude cuts described above, we found that the resulting object counts, particularly for NEOs, were too sparse to support a reliable density estimation. To address this, we cloned each population by generating synthetic objects that statistically represent the same orbital family while filling in the phase space more densely.
@@ -232,7 +232,7 @@ After propagation, the same $30^\circ$ sky-patch cut is reapplied to the full cl
 This ``clone then cut'' order is essential: generating $\mathrm{clone\_factor}$ times more orbits before the sky cut ensures adequate density across the velocity grid even in sparsely populated dynamical regions.
 
 
-\subsection{How to: Convince ppl the Cloned population Model works! and characteristics of said model}
+\subsection{Validation and Characteristics of Cloned Population}
 \label{sec:clonepop}
 
 We validate the conditional K$|$M cloner on three independent grounds: (1) recovery of the empirical mean-anomaly distribution, (2) preservation of the Jupiter Trojan L4/L5 resonant structure, and (3) physically consistent ecliptic-strip diagnostics for all four populations.
@@ -302,7 +302,7 @@ TNOs cluster near $v_\lambda \approx v_\beta \approx 0$~deg/day across all eclip
 \end{figure*}
 
 
-\subsection{How to: Bayesian your nearest neighbours (Bayesian Density Estimation and Probability Maps)}
+\subsection{Bayesian Density Estimation and Probability Maps}
 \label{sec:bayesian}
 
 With the cloned populations propagated and visible subsets selected, we estimate the local number density of each population across a uniform $161 \times 161$ grid in $(v_\lambda, v_\beta)$ space, spanning $[-0.8, +0.8]$~deg/day in each axis at a spacing of $0.01$~deg/day (25,921 evaluation points total).
@@ -378,7 +378,7 @@ These maps form the lookup table used by the classifier at runtime.
 \label{fig:prob_bins}
 \end{figure*}
 
-\subsection{How to: get to an ROC curve? ( Classifier Evaluation and ROC Analysis)}
+\subsection{Classifier Evaluation and ROC Analysis}
 \label{sec:ROC}
 
 \subsubsection*{Scoring the S3M sample}
