@@ -111,7 +111,7 @@ Figure~\ref{fig:helio_map} shows the heliocentric ecliptic-plane distribution of
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=\textwidth]{helio_map_all_populations.pdf}
+\includegraphics[width=\textwidth]{helio_map_all_populations.png}
 \caption{
 Heliocentric ecliptic-plane distribution of the four asteroid populations at the Spring Equinox epoch (2025 March 21), projected onto the $X$--$Y$ plane.
 \textit{Left:} Inner solar system (0--6.5~au) showing Main Belt Asteroids (MBA, orange), Near-Earth Objects (NEO, blue), and Jupiter Trojans (purple) clustered at the Jovian L4 and L5 Lagrange points.
@@ -132,7 +132,7 @@ For each population, we apply a series of observability cuts: we restrict object
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.75\textwidth]{ecliptic_strip_MBA_NEO.pdf}
+\includegraphics[width=0.75\textwidth]{ecliptic_strip_MBA_NEO.png}
 \caption{
 Three-panel ecliptic-strip diagnostic for Main Belt Asteroids (MBA, orange) and Near-Earth Objects (NEO, blue) at the Spring Equinox epoch (2025 March 21) with $|\beta| < 3^\circ$, computed using K$|$M cloned orbits from S3M.
 \textit{Top:} Ecliptic latitude $\beta$ versus longitude $\lambda$.
@@ -246,7 +246,7 @@ A uniform-$M$ cloner would flatten these distributions by construction, introduc
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{comparison_M_distribution.pdf}
+\includegraphics[width=0.85\textwidth]{comparison_M_distribution.png}
 \caption{
 Comparison of mean anomaly $M$ distributions between raw S3M objects (blue) and K$|$M cloned objects (orange dashed) for each of the four asteroid populations.
 In all cases the conditional cloner reproduces the empirical $M$ distribution of the visible input sample rather than imposing uniformity, confirming that the cloning procedure does not introduce artificial biases in orbital phase.
@@ -263,7 +263,7 @@ The K$|$M cloner, by contrast, reproduces both clumps at the correct mean longit
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=\textwidth]{trojan_L4L5_comparison.pdf}
+\includegraphics[width=\textwidth]{trojan_L4L5_comparison.png}
 \caption{
 Jupiter Trojan L4/L5 clump preservation under three cloning approaches, showing the distribution of mean longitude $\mathcal{L} = M + \Omega + \omega$.
 \textit{Left:} Raw S3M catalogue, exhibiting the two characteristic clumps near the Jovian L4 ($60^\circ$) and L5 ($300^\circ$) Lagrange points (dashed lines).
@@ -282,7 +282,7 @@ Figures~\ref{fig:ecliptic_strip_trojans} and~\ref{fig:ecliptic_strip_tno} extend
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.75\textwidth]{ecliptic_strip_Trojans.pdf}
+\includegraphics[width=0.75\textwidth]{ecliptic_strip_Trojans.png}
 \caption{
 Three-panel ecliptic-strip diagnostic for Jupiter Trojans at the Spring Equinox epoch (2025 March 21) with $|\beta| < 3^\circ$, using K$|$M cloned orbits.
 The two distinct clumps correspond to the L4 (leading, $\lambda \approx 300^\circ$ in the anti-solar frame) and L5 (trailing, $\lambda \approx 60^\circ$) populations.
@@ -293,7 +293,7 @@ The narrow range in both $v_\lambda$ and $v_\beta$ reflects the Trojans' near-ci
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.75\textwidth]{ecliptic_strip_TNO.pdf}
+\includegraphics[width=0.75\textwidth]{ecliptic_strip_TNO.png}
 \caption{
 Three-panel ecliptic-strip diagnostic for Trans-Neptunian Objects (TNOs) at the Spring Equinox epoch (2025 March 21) with $|\beta| < 3^\circ$, using K$|$M cloned orbits.
 TNOs cluster near $v_\lambda \approx v_\beta \approx 0$~deg/day across all ecliptic longitudes, reflecting their large heliocentric distances (30--100~au) which produce extremely slow apparent sky-plane velocities relative to the inner-belt populations.
@@ -354,7 +354,7 @@ Figures~\ref{fig:density_bins} and~\ref{fig:prob_bins} show, for three represent
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=\textwidth]{density_comparison_three_bins.pdf}
+\includegraphics[width=\textwidth]{density_comparison_three_bins.png}
 \caption{
 Velocity-space log-density maps ($v_\lambda$--$v_\beta$) for the four asteroid populations across three representative apparent magnitude bins: $m \in [16, 18]$ (\textit{left}), $m \in [21, 22]$ (\textit{centre}), and $m \geq 24$ (\textit{right}).
 Colour shows $\log_{10}\langle n_0 \rangle$, the kNN posterior-mean density within a 5-decade dynamic range below each panel's peak; regions more than five decades below the peak appear black.
@@ -367,7 +367,7 @@ TNOs (third row) are undetectable at bright magnitudes but emerge prominently at
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=\textwidth]{probability_comparison_three_bins.pdf}
+\includegraphics[width=\textwidth]{probability_comparison_three_bins.png}
 \caption{
 Population membership probability maps in $v_\lambda$--$v_\beta$ space for the four asteroid populations across three representative apparent magnitude bins: $m \in [16, 18]$ (\textit{left}), $m \in [21, 22]$ (\textit{centre}), and $m \geq 24$ (\textit{right}).
 The probability is $P(\mathrm{pop} \mid v_\lambda, v_\beta) = \rho_\mathrm{pop} / \sum_\mathrm{pops} \rho_\mathrm{pop}$, masked to zero wherever the nearest cloned object exceeds 0.2~deg/day (unsampled velocity space).
@@ -409,7 +409,7 @@ The classifier is most powerful for high-rate NEOs and those at large ecliptic l
 
 \begin{figure*}[ht!]
 \centering
-\includegraphics[width=\textwidth]{roc_curve.pdf}
+\includegraphics[width=\textwidth]{roc_curve.png}
 \caption{
 Receiver Operating Characteristic (ROC) analysis for the NEO classifier applied to the full four-population S3M sample visible in the anti-solar sky patch ($30^\circ$ radius, 2025 March 21).
 \textit{Left:} ROC curve showing completeness (fraction of true NEOs recovered) versus contamination (fraction of candidates that are impostors) as the classification threshold $x$ is varied from 0 to 1.
