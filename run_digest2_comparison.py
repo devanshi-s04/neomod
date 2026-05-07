@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Digest2 vs VDP ROC curve comparison.
 
-Propagates S3M objects to 2025-03-21, filters to the ecliptic strip
-(|beta| < 3 deg), then scores each object with both the VDP probability
-maps and the digest2 classifier.  Saves a side-by-side ROC comparison
-figure.
+Propagates S3M objects to 2025-03-21, filters to the same circular
+ecliptic sky patch used by the VDP probability maps, then scores each
+object with both the VDP maps and the digest2 classifier. Saves a
+side-by-side ROC comparison figure.
 
 Run:
     /path/to/venv/python3 run_digest2_comparison.py
@@ -18,19 +18,18 @@ import tempfile
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from astropy.time import Time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import neoscore as nsc
 import velocity_density_pipeline as vdp
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 OBSTIME_STR   = "2025-03-21T00:00:00"
-BETA_MAX_DEG  = 3.0
 DT_DAYS       = 30.0 / 1440.0          # 30-min tracklet baseline
-OBSCODE       = "568"                   # Mauna Kea
+OBSCODE       = "X05"                   # Vera C. Rubin Observatory
+DIGEST2_CHUNK_TRACKLETS = 5_000
+DIGEST2_TIMEOUT_SEC     = 1_800
 
 D2_DIR  = "/Users/devanshisingh/Downloads/research/SolSys/digest3/mpcdev-digest2-278a31e734e4"
 D2_EXEC = os.path.join(D2_DIR, "digest2")
@@ -39,6 +38,7 @@ _SELF = os.path.dirname(os.path.abspath(__file__))
 PROB_MAPS_PATH = os.path.join(_SELF, "prob_maps_2025-03-21.npz")
 OUT_FIG        = os.path.join(_SELF, "roc_comparison_vdp_digest2.png")
 OUT_PARQUET    = os.path.join(_SELF, "s3m_digest2_comparison.parquet")
+OUT_VDP_INPUT  = os.path.join(_SELF, "s3m_digest2_comparison_vdp_input.parquet")
 
 # Populations: label -> (s3m_pop_name, max_objects)
 POP_SETTINGS = {
@@ -51,162 +51,6 @@ POP_SETTINGS = {
 YEAR0, MONTH0 = 2025, 3
 DAY0 = 21.00000
 DAY1 = DAY0 + DT_DAYS                  # 21.02083…
-
-ECLIPTIC_OBL_DEG = 23.439291
-AU_KM = 149_597_870.7
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def propagate_strip(df, scorer, obstime_str, beta_max_deg, chunk_size=50_000,
-                    pop_label="?", verbose=True):
-    """Propagate orbital elements, apply ecliptic-strip filter, return DataFrame.
-
-    Avoids the SkyCoord.separation() call in build_visible_subset_dataframe
-    (that call is only needed for the circular sky-patch cut, which we don't
-    want here).  Instead we compute ecliptic beta directly and filter on that.
-
-    Returns a DataFrame with columns:
-        ra_deg, dec_deg, dra_deg_day, ddec_deg_day,
-        lam_deg, beta_deg, vlam, vbeta, mag_app (all float64)
-        + all original columns from df (a, e, i, node, argperi, t_p, H …)
-    """
-    eps   = np.deg2rad(ECLIPTIC_OBL_DEG)
-    ceps  = np.cos(eps)
-    seps  = np.sin(eps)
-
-    _, rE, vE, r_tele = scorer._get_earth_and_observer(obstime_str)
-
-    n_total  = len(df)
-    n_chunks = int(np.ceil(n_total / chunk_size))
-    chunks_out = []
-
-    for ci, start in enumerate(range(0, n_total, chunk_size)):
-        cdf = df.iloc[start : start + chunk_size].reset_index(drop=True)
-        n_c = len(cdf)
-        if verbose:
-            print(f"  Chunk {ci+1}/{n_chunks} ({n_c:,}) … ", end="", flush=True)
-
-        try:
-            r_ecl, v_ecl = nsc.elements_to_helio_ecliptic_state(
-                a_AU    = cdf["a"].to_numpy(float),
-                e       = cdf["e"].to_numpy(float),
-                inc_deg = cdf["i"].to_numpy(float),
-                raan_deg= cdf["node"].to_numpy(float),
-                argp_deg= cdf["argperi"].to_numpy(float),
-                tp_mjd  = cdf["t_p"].to_numpy(float),
-                obstime_str=obstime_str,
-                method="newton", n_iter=10,
-                chunk=min(chunk_size, n_c),
-                show_progress=False,
-            )
-        except Exception as exc:
-            print(f"SKIP (propagation error: {exc})")
-            continue
-
-        # r_ecl, v_ecl are in km, km/s — keep as-is; rE/vE/r_tele are also km/km/s
-
-        # heliocentric equatorial (ecliptic → equatorial rotation)
-        r_eq = np.column_stack([
-            r_ecl[:, 0],
-            ceps * r_ecl[:, 1] - seps * r_ecl[:, 2],
-            seps * r_ecl[:, 1] + ceps * r_ecl[:, 2],
-        ])
-        v_eq = np.column_stack([
-            v_ecl[:, 0],
-            ceps * v_ecl[:, 1] - seps * v_ecl[:, 2],
-            seps * v_ecl[:, 1] + ceps * v_ecl[:, 2],
-        ])
-
-        # geocentric relative position/velocity (km, km/s)
-        r_rel = r_eq - (rE + r_tele)
-        v_rel = v_eq - vE
-
-        x, y, z   = r_rel[:, 0], r_rel[:, 1], r_rel[:, 2]
-        vx, vy, vz = v_rel[:, 0], v_rel[:, 1], v_rel[:, 2]
-        rho2 = x*x + y*y
-        r2   = rho2 + z*z
-        rho  = np.sqrt(rho2)
-
-        good = (
-            np.isfinite(rho) & (rho > 0) &
-            np.isfinite(r2)  & (r2 > 0)
-        )
-
-        # geocentric ecliptic (for beta filter + vlam/vbeta)
-        xe = r_rel[:, 0]
-        ye =  ceps * r_rel[:, 1] + seps * r_rel[:, 2]
-        ze = -seps * r_rel[:, 1] + ceps * r_rel[:, 2]
-        vxe = v_rel[:, 0]
-        vye =  ceps * v_rel[:, 1] + seps * v_rel[:, 2]
-        vze = -seps * v_rel[:, 1] + ceps * v_rel[:, 2]
-
-        rho2e = xe*xe + ye*ye
-        r2e   = rho2e + ze*ze
-        rhoe  = np.sqrt(rho2e)
-
-        beta_rad = np.arctan2(ze, rhoe)
-        lam_rad  = np.arctan2(ye, xe)
-        beta_deg_arr = np.rad2deg(beta_rad)
-        lam_deg_arr  = np.rad2deg(lam_rad) % 360.0
-
-        dlam  = (xe*vye - ye*vxe) / np.maximum(rho2e, 1e-30)
-        dbeta = (vze*rho2e - ze*(xe*vxe + ye*vye)) / np.maximum(r2e * rhoe, 1e-30)
-        vlam  = np.rad2deg(dlam)  * 86400.0
-        vbeta = np.rad2deg(dbeta) * 86400.0
-
-        # equatorial RA/Dec and rates
-        ra_rad  = np.arctan2(y, x)
-        dec_rad = np.arctan2(z, rho)
-        dra     = (x*vy - y*vx) / np.maximum(rho2, 1e-30)
-        ddec    = (vz*rho2 - z*(x*vx + y*vy)) / np.maximum(r2 * rho, 1e-30)
-        ra_deg  = np.rad2deg(ra_rad) % 360.0
-        dec_deg = np.rad2deg(dec_rad)
-        dra_deg_day  = np.rad2deg(dra)  * 86400.0
-        ddec_deg_day = np.rad2deg(ddec) * 86400.0
-
-        # ecliptic-strip filter
-        m = good & (np.abs(beta_deg_arr) < beta_max_deg)
-        n_kept = m.sum()
-        if verbose:
-            print(f"{n_kept:,} kept in |β|<{beta_max_deg}°")
-
-        if n_kept == 0:
-            continue
-
-        out = cdf[m].copy().reset_index(drop=True)
-        out["ra_deg"]       = ra_deg[m]
-        out["dec_deg"]      = dec_deg[m]
-        out["dra_deg_day"]  = dra_deg_day[m]
-        out["ddec_deg_day"] = ddec_deg_day[m]
-        out["lam_deg"]      = lam_deg_arr[m]
-        out["beta_deg"]     = beta_deg_arr[m]
-        out["vlam"]         = vlam[m]
-        out["vbeta"]        = vbeta[m]
-
-        # apparent magnitude (uses H from orbital elements)
-        r_sun  = np.linalg.norm(r_eq[m], axis=1) / AU_KM   # km → AU
-        Delta  = np.linalg.norm(r_rel[m], axis=1) / AU_KM  # km → AU
-        u_sun  = -r_eq[m]  / np.linalg.norm(r_eq[m],  axis=1, keepdims=True)
-        u_obs  = -r_rel[m] / np.linalg.norm(r_rel[m], axis=1, keepdims=True)
-        cos_a  = np.clip(np.sum(u_sun * u_obs, axis=1), -1, 1)
-        alpha  = np.arccos(cos_a)
-        G = 0.15
-        phi1 = np.exp(-3.33 * np.tan(0.5 * alpha)**0.63)
-        phi2 = np.exp(-1.87 * np.tan(0.5 * alpha)**1.22)
-        Phi  = np.maximum((1 - G) * phi1 + G * phi2, 1e-30)
-        H_arr = out["H"].to_numpy(float)
-        mag_app = H_arr + 5.0 * np.log10(r_sun * Delta) - 2.5 * np.log10(Phi)
-        out["mag_app"]         = mag_app
-        out["true_population"] = pop_label
-
-        chunks_out.append(out)
-
-    if not chunks_out:
-        return pd.DataFrame()
-    return pd.concat(chunks_out, ignore_index=True)
-
 
 def format_mpc80(desig12, year, month, day_frac, ra_deg, dec_deg, mag):
     """Return exactly 80-character MPC 80-column observation line."""
@@ -232,6 +76,64 @@ def format_mpc80(desig12, year, month, day_frac, ra_deg, dec_deg, mag):
     return line
 
 
+def run_digest2_chunk(obs_lines, cfg_text, chunk_tracklets):
+    """Run digest2 on MPC 80-column lines in chunks and return stdout lines."""
+    if len(obs_lines) % 2 != 0:
+        raise ValueError("Expected exactly two observation lines per tracklet.")
+
+    n_tracklets = len(obs_lines) // 2
+    all_out_lines = []
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".config", delete=False) as cfg:
+        cfg.write(cfg_text)
+        cfg_path = cfg.name
+
+    try:
+        for start in range(0, n_tracklets, chunk_tracklets):
+            stop = min(start + chunk_tracklets, n_tracklets)
+            line_start = 2 * start
+            line_stop = 2 * stop
+
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".obs", delete=False) as tmp:
+                tmp.write("\n".join(obs_lines[line_start:line_stop]) + "\n")
+                obs_path = tmp.name
+
+            print(
+                f"  digest2 chunk {start // chunk_tracklets + 1}/"
+                f"{int(np.ceil(n_tracklets / chunk_tracklets))}: "
+                f"{stop - start:,} tracklets",
+                flush=True,
+            )
+
+            try:
+                result = subprocess.run(
+                    [D2_EXEC, "-p", D2_DIR, "-c", cfg_path, obs_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=DIGEST2_TIMEOUT_SEC,
+                )
+            finally:
+                os.unlink(obs_path)
+
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"digest2 failed on tracklets {start:,}:{stop:,} "
+                    f"with exit code {result.returncode}\n"
+                    f"stderr:\n{result.stderr[:1000]}"
+                )
+
+            if result.stderr.strip():
+                print(f"    stderr: {result.stderr[:300]}", flush=True)
+
+            out = result.stdout.splitlines()
+            print(f"    output lines: {len(out):,}", flush=True)
+            all_out_lines.extend(out)
+    finally:
+        os.unlink(cfg_path)
+
+    return all_out_lines
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -254,10 +156,19 @@ for pop_label, (s3m_pop, max_obj) in POP_SETTINGS.items():
         df  = df.iloc[idx].reset_index(drop=True)
         print(f"  Subsampled to {len(df):,}")
 
-    pop_df = propagate_strip(df, scorer, OBSTIME_STR, BETA_MAX_DEG,
-                             pop_label=pop_label, verbose=True)
+    _, pop_df = prob_map_set.score_orbital_df(
+        df=df,
+        scorer=scorer,
+        obstime_str=OBSTIME_STR,
+        max_sep_deg=prob_map_set.max_sep_deg,
+        chunk=50_000,
+        show_progress=False,
+        return_visible=True,
+    )
+
+    pop_df["true_population"] = pop_label
     if len(pop_df) > 0:
-        print(f"  → {len(pop_df):,} total in strip")
+        print(f"  → {len(pop_df):,} total in map sky patch")
         all_frames.append(pop_df)
 
 data = pd.concat(all_frames, ignore_index=True)
@@ -265,38 +176,31 @@ print(f"\nCombined dataset: {len(data):,} objects")
 print(data["true_population"].value_counts().to_string())
 
 # Filter to VDP map's operating region:
-#   - within max_sep_deg (30°) of opposition (geocentric ecliptic lon=180°)
+#   - within max_sep_deg of the map's ecliptic sky center
 #   - within the map's velocity and magnitude grid bounds
-#   - not masked as stationary (sky velocity >= mask_radius_deg_per_day)
-lam    = data["lam_deg"].to_numpy(float)
-v_sky  = np.sqrt(data["vlam"].to_numpy(float)**2 + data["vbeta"].to_numpy(float)**2)
 x_min, x_max = float(prob_map_set.x_grid.min()), float(prob_map_set.x_grid.max())
 y_min, y_max = float(prob_map_set.y_grid.min()), float(prob_map_set.y_grid.max())
 mag_min = min(b["mag_min"] for b in prob_map_set.mag_bins)
 mag_max = max(b["mag_max"] for b in prob_map_set.mag_bins)
 
 in_region = (
-    (np.abs(lam - 180.0) < prob_map_set.max_sep_deg)
+    (data["sky_sep_deg"].to_numpy(float) <= prob_map_set.max_sep_deg)
     & (data["mag_app"].to_numpy(float) >= mag_min)
     & (data["mag_app"].to_numpy(float) <  mag_max)
     & (data["vlam"].to_numpy(float)  >= x_min) & (data["vlam"].to_numpy(float)  <= x_max)
     & (data["vbeta"].to_numpy(float) >= y_min) & (data["vbeta"].to_numpy(float) <= y_max)
-    & (v_sky >= prob_map_set.mask_radius_deg_per_day)
 )
 data = data[in_region].reset_index(drop=True)
-print(f"\nFiltered to VDP operating region (opposition ±{prob_map_set.max_sep_deg}°, "
+print(f"\nFiltered to VDP operating region (center=({prob_map_set.center_lon_deg:.0f}°, "
+      f"{prob_map_set.center_lat_deg:.0f}°), radius={prob_map_set.max_sep_deg:.0f}°, "
       f"mag {mag_min:.0f}–{mag_max:.0f}): {len(data):,} objects")
 print(data["true_population"].value_counts().to_string())
 
-# VDP scoring
-print("\nScoring with VDP …")
-probs = prob_map_set.score_visible(
-    vlam    = data["vlam"].to_numpy(float),
-    vbeta   = data["vbeta"].to_numpy(float),
-    mag_app = data["mag_app"].to_numpy(float),
-)
-data["P_NEO_vdp"] = probs["NEO"]
+# VDP scoring was already done by ProbMapSet.score_orbital_df above.
+data["P_NEO_vdp"] = data["P_NEO"]
 print(f"  P_NEO range: [{data['P_NEO_vdp'].min():.4f}, {data['P_NEO_vdp'].max():.4f}]")
+data.to_parquet(OUT_VDP_INPUT, index=False)
+print(f"  Saved VDP-scored input checkpoint: {OUT_VDP_INPUT}")
 
 # Build MPC 80-column tracklets
 print("\nBuilding MPC tracklets …")
@@ -318,27 +222,12 @@ for i in range(len(data)):
 print(f"  {len(mpc_lines)//2:,} tracklets, {len(mpc_lines):,} obs lines")
 print(f"  Sample:\n    {mpc_lines[0]}\n    {mpc_lines[1]}")
 
-# Write digest2 config
-cfg_path = os.path.join(D2_DIR, "d2_roc_comparison.config")
-with open(cfg_path, "w") as fh:
-    fh.write("noheadings\nnorms\nNEO\n")
-
-# Run digest2
-with tempfile.NamedTemporaryFile(mode="w", suffix=".obs", delete=False) as tmp:
-    tmp.write("\n".join(mpc_lines) + "\n")
-    obs_path = tmp.name
-
-print(f"\nRunning digest2 on {len(mpc_lines)//2:,} tracklets …")
-result = subprocess.run(
-    [D2_EXEC, "-p", D2_DIR, "-c", cfg_path, obs_path],
-    capture_output=True, text=True, timeout=3600,
+print(f"\nRunning digest2 on {len(mpc_lines)//2:,} tracklets …", flush=True)
+out_lines = run_digest2_chunk(
+    obs_lines=mpc_lines,
+    cfg_text="noheadings\nnorms\nNEO\n",
+    chunk_tracklets=DIGEST2_CHUNK_TRACKLETS,
 )
-os.unlink(obs_path)
-print(f"  Exit code: {result.returncode}")
-if result.stderr.strip():
-    print(f"  stderr: {result.stderr[:300]}")
-
-out_lines = result.stdout.splitlines()
 print(f"  Output lines: {len(out_lines)}")
 if out_lines:
     print(f"  First 3: {out_lines[:3]}")
@@ -346,14 +235,27 @@ if out_lines:
 # Parse digest2 output
 print("\nParsing digest2 output …")
 d2_map = {}
+duplicate_ids = []
+unparsed_lines = []
 for line in out_lines:
     parts = line.strip().split()
     if len(parts) >= 2:
         try:
+            if parts[0] in d2_map:
+                duplicate_ids.append(parts[0])
             d2_map[parts[0]] = int(parts[1]) / 100.0
         except ValueError:
-            pass
+            unparsed_lines.append(line)
+    else:
+        unparsed_lines.append(line)
 print(f"  Parsed {len(d2_map):,} scores")
+if duplicate_ids:
+    print(f"  Warning: {len(duplicate_ids):,} duplicate digest2 IDs; first few: {duplicate_ids[:5]}")
+if unparsed_lines:
+    print(f"  Warning: {len(unparsed_lines):,} unparsed digest2 lines; first few: {unparsed_lines[:5]}")
+missing_ids = [f"D{i:06d}" for i in range(len(data)) if f"D{i:06d}" not in d2_map]
+if missing_ids:
+    print(f"  Warning: {len(missing_ids):,} missing digest2 IDs; first few: {missing_ids[:5]}")
 data["P_NEO_d2"] = [d2_map.get(f"D{i:06d}", 0.0) for i in range(len(data))]
 
 # ROC curves
@@ -407,7 +309,14 @@ ax.scatter([c_d2*100],  [n_d2*100],  color="tab:orange", s=100, zorder=5,
            marker="s", label=f"d2 best (F1={f_d2:.2f})")
 ax.set_xlabel("Completeness (%)", fontsize=12)
 ax.set_ylabel("Contamination (%)", fontsize=12)
-ax.set_title(f"ROC Comparison: VDP vs digest2\n(S3M, opposition ±30°, mag 14–26, 2025-03-21)\nN_NEO={N_neo:,}, N_non={N_non:,}", fontsize=10)
+ax.set_title(
+    f"ROC Comparison: VDP vs digest2\n"
+    f"(S3M, ecliptic center=({prob_map_set.center_lon_deg:.0f}°, "
+    f"{prob_map_set.center_lat_deg:.0f}°), radius={prob_map_set.max_sep_deg:.0f}°, "
+    f"mag 14–26, 2025-03-21)\n"
+    f"N_NEO={N_neo:,}, N_non={N_non:,}",
+    fontsize=10,
+)
 ax.legend(fontsize=10); ax.grid(alpha=0.3)
 ax.set_xlim(0, 100); ax.set_ylim(0, 100)
 
@@ -430,7 +339,8 @@ print(f"\nSaved ROC comparison: {OUT_FIG}")
 
 # Summary
 print("\n=== Summary ===")
-print(f"  Dataset: {len(data):,} objects  (|beta|<{BETA_MAX_DEG}°, 2025-03-21)")
+print(f"  Dataset: {len(data):,} objects  "
+      f"(map sky patch radius={prob_map_set.max_sep_deg:.1f}°, 2025-03-21)")
 print(f"  True NEO:     {N_neo:,} ({100*N_neo/len(data):.1f}%)")
 print(f"  True non-NEO: {N_non:,} ({100*N_non/len(data):.1f}%)")
 print()

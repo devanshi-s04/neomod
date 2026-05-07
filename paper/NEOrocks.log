@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.3)  4 MAY 2026 00:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.3)  5 MAY 2026 01:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -686,13 +686,13 @@ Package pdftex.def Info: Orcid-ID.png  used on input line 72.
 (pdftex.def)             Requested size: 9.0pt x 8.99997pt.
  [1{/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./Or
 cid-ID.png>]
-<../helio_map_all_populations.png, id=92, 1066.7052pt x 514.0806pt>
+<../helio_map_all_populations.png, id=85, 1066.7052pt x 514.0806pt>
 File: ../helio_map_all_populations.png Graphic file (type png)
 <use ../helio_map_all_populations.png>
 Package pdftex.def Info: ../helio_map_all_populations.png  used on input line 1
 14.
 (pdftex.def)             Requested size: 513.11743pt x 247.28929pt.
-<../ecliptic_strip_MBA_NEO.png, id=95, 580.0872pt x 677.8926pt>
+<../ecliptic_strip_MBA_NEO.png, id=88, 580.0872pt x 677.8926pt>
 File: ../ecliptic_strip_MBA_NEO.png Graphic file (type png)
 <use ../ecliptic_strip_MBA_NEO.png>
 Package pdftex.def Info: ../ecliptic_strip_MBA_NEO.png  used on input line 135.
@@ -700,25 +700,25 @@ Package pdftex.def Info: ../ecliptic_strip_MBA_NEO.png  used on input line 135.
 (pdftex.def)             Requested size: 384.83807pt x 449.73785pt.
 
 [2] [3 <../helio_map_all_populations.png>] [4 <../ecliptic_strip_MBA_NEO.png>]
-<../comparison_M_distribution.png, id=136, 875.4306pt x 586.3506pt>
+<../comparison_M_distribution.png, id=129, 875.4306pt x 586.3506pt>
 File: ../comparison_M_distribution.png Graphic file (type png)
 <use ../comparison_M_distribution.png>
 Package pdftex.def Info: ../comparison_M_distribution.png  used on input line 2
 49.
 (pdftex.def)             Requested size: 436.15294pt x 292.12778pt.
-<../trojan_L4L5_comparison.png, id=138, 1020.4524pt x 297.2706pt>
+<../trojan_L4L5_comparison.png, id=131, 1020.4524pt x 297.2706pt>
 File: ../trojan_L4L5_comparison.png Graphic file (type png)
 <use ../trojan_L4L5_comparison.png>
 Package pdftex.def Info: ../trojan_L4L5_comparison.png  used on input line 266.
 
 (pdftex.def)             Requested size: 513.11743pt x 149.47862pt.
-<../ecliptic_strip_Trojans.png, id=143, 580.0872pt x 677.8926pt>
+<../ecliptic_strip_Trojans.png, id=136, 580.0872pt x 677.8926pt>
 File: ../ecliptic_strip_Trojans.png Graphic file (type png)
 <use ../ecliptic_strip_Trojans.png>
 Package pdftex.def Info: ../ecliptic_strip_Trojans.png  used on input line 285.
 
 (pdftex.def)             Requested size: 384.83807pt x 449.73785pt.
-<../ecliptic_strip_TNO.png, id=144, 580.0872pt x 677.8926pt>
+<../ecliptic_strip_TNO.png, id=137, 580.0872pt x 677.8926pt>
 File: ../ecliptic_strip_TNO.png Graphic file (type png)
 <use ../ecliptic_strip_TNO.png>
 Package pdftex.def Info: ../ecliptic_strip_TNO.png  used on input line 296.
@@ -743,13 +743,13 @@ n/10 j \OML/cmm/m/it/10 d[]; [] ; d[]\OT1/cmr/m/n/10 ) = [] [] \OML/cmm/m/it/10
  []
 
 [5] [6 <../comparison_M_distribution.png> <../trojan_L4L5_comparison.png>]
-<../density_comparison_three_bins.png, id=171, 1199.682pt x 1309.0506pt>
+<../density_comparison_three_bins.png, id=163, 1199.682pt x 1309.0506pt>
 File: ../density_comparison_three_bins.png Graphic file (type png)
 <use ../density_comparison_three_bins.png>
 Package pdftex.def Info: ../density_comparison_three_bins.png  used on input li
 ne 357.
 (pdftex.def)             Requested size: 513.11743pt x 559.90459pt.
-<../probability_comparison_three_bins.png, id=172, 1199.682pt x 1309.0506pt>
+<../probability_comparison_three_bins.png, id=164, 1199.682pt x 1309.0506pt>
 File: ../probability_comparison_three_bins.png Graphic file (type png)
 <use ../probability_comparison_three_bins.png>
 Package pdftex.def Info: ../probability_comparison_three_bins.png  used on inpu
@@ -765,7 +765,7 @@ Overfull \vbox (2.8357pt too high) has occurred while \output is active []
 
 [9 <../density_comparison_three_bins.png>] [10 <../probability_comparison_three
 _bins.png>]
-<../roc_curve.png, id=201, 1004.0712pt x 422.5386pt>
+<../roc_curve.png, id=194, 1004.0712pt x 422.5386pt>
 File: ../roc_curve.png Graphic file (type png)
 <use ../roc_curve.png>
 Package pdftex.def Info: ../roc_curve.png  used on input line 412.
@@ -790,7 +790,7 @@ Here is how much of TeX's memory you used:
  45137 multiletter control sequences out of 15000+600000
  640519 words of font info for 90 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 90i,12n,93p,1216b,582s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,12n,93p,1216b,589s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 ></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb><
 /usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></u
@@ -818,10 +818,10 @@ fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2026/texmf-dist/fo
 nts/type1/public/amsfonts/cm/cmti9.pfb></usr/local/texlive/2026/texmf-dist/font
 s/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2026/texmf-dist/fonts
 /type1/public/amsfonts/symbols/msam10.pfb>
-Output written on NEOrocks.pdf (12 pages, 3257308 bytes).
+Output written on NEOrocks.pdf (12 pages, 3256927 bytes).
 PDF statistics:
- 340 PDF objects out of 1000 (max. 8388607)
- 258 compressed objects within 3 object streams
+ 333 PDF objects out of 1000 (max. 8388607)
+ 251 compressed objects within 3 object streams
  57 named destinations out of 1000 (max. 500000)
  163 words of extra memory for PDF output out of 10000 (max. 10000000)
 

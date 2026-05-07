@@ -72,6 +72,7 @@ from astropy.coordinates import (
 )
 from astropy.time import Time
 from astroML.density_estimation import EmpiricalDistribution
+from scipy.ndimage import gaussian_filter
 from scipy.spatial import cKDTree
 from tqdm import tqdm
 
@@ -122,6 +123,13 @@ DEFAULT_POPULATION_SETTINGS = {
 # default mask radius for probability map plotting (deg/day)
 DEFAULT_MASK_RADIUS_DEG_PER_DAY = 0.2
 
+# default density-map smoothing controls. Smoothing is applied to the
+# downweighted density maps before probability maps are derived.
+DEFAULT_SMOOTH_DENSITY_MAPS = True
+DEFAULT_SMOOTH_SUPPORT_THRESHOLD = 3.0
+DEFAULT_SMOOTH_SIGMA_PIXELS = 1.5
+DEFAULT_SMOOTH_TRUNCATE_SIGMA = 5.0
+
 
 # =============================================================================
 # Grid helpers
@@ -140,6 +148,91 @@ def make_default_grid(grid_lim=DEFAULT_GRID_LIM, grid_step=DEFAULT_GRID_STEP):
     X0, Y0 = np.meshgrid(x_grid, y_grid, indexing="xy")
     grid_points = np.column_stack((X0.ravel(), Y0.ravel()))
     return x_grid, y_grid, X0, Y0, grid_points
+
+
+def _grid_center_edges(grid):
+    """Return histogram bin edges for a regularly spaced center grid."""
+    grid = np.asarray(grid, dtype=float)
+    if grid.ndim != 1 or len(grid) < 2:
+        raise ValueError("Expected a 1D grid with at least two points.")
+    step = float(np.median(np.diff(grid)))
+    edges = np.empty(len(grid) + 1, dtype=float)
+    edges[1:-1] = 0.5 * (grid[:-1] + grid[1:])
+    edges[0] = grid[0] - 0.5 * step
+    edges[-1] = grid[-1] + 0.5 * step
+    return edges
+
+
+def make_support_count_map(vlam, vbeta, x_grid, y_grid, clone_factor=1):
+    """Histogram visible cloned points onto the velocity grid.
+
+    Counts are raw cloned-point support. The smoothing threshold is meant to
+    identify density pixels with enough sampled support to average locally.
+    """
+    x_edges = _grid_center_edges(x_grid)
+    y_edges = _grid_center_edges(y_grid)
+    counts, _, _ = np.histogram2d(vbeta, vlam, bins=[y_edges, x_edges])
+    return counts
+
+
+def smooth_density_map_by_support(
+    density_map,
+    support_count_map,
+    support_threshold=DEFAULT_SMOOTH_SUPPORT_THRESHOLD,
+    sigma_pixels=DEFAULT_SMOOTH_SIGMA_PIXELS,
+    truncate_sigma=DEFAULT_SMOOTH_TRUNCATE_SIGMA,
+    footprint_mask=None,
+):
+    """Gaussian-smooth density pixels with enough local object support.
+
+    The convolution is normalized over the eligible support mask. This keeps
+    sharp unsupported boundaries from being averaged with zeros outside the
+    population footprint while still damping high-support pixel granularity.
+    """
+    density_map = np.asarray(density_map, dtype=float)
+    support_count_map = np.asarray(support_count_map, dtype=float)
+    if density_map.shape != support_count_map.shape:
+        raise ValueError("density_map and support_count_map must have the same shape.")
+
+    finite = np.isfinite(density_map) & np.isfinite(support_count_map)
+    if footprint_mask is None:
+        footprint = finite & (density_map > 0)
+    else:
+        footprint_mask = np.asarray(footprint_mask, dtype=bool)
+        if footprint_mask.shape != density_map.shape:
+            raise ValueError("footprint_mask must have the same shape as density_map.")
+        footprint = finite & footprint_mask
+
+    local_support = gaussian_filter(
+        np.where(finite, support_count_map, 0.0),
+        sigma=sigma_pixels,
+        truncate=truncate_sigma,
+        mode="constant",
+        cval=0.0,
+    )
+    eligible = footprint & (local_support >= support_threshold)
+    if not np.any(eligible):
+        return density_map.copy()
+
+    weights = footprint.astype(float)
+    weighted_density = np.where(footprint, density_map, 0.0)
+    numerator = gaussian_filter(
+        weighted_density,
+        sigma=sigma_pixels,
+        truncate=truncate_sigma,
+        mode="nearest",
+    )
+    denominator = gaussian_filter(
+        weights,
+        sigma=sigma_pixels,
+        truncate=truncate_sigma,
+        mode="nearest",
+    )
+
+    smoothed = density_map.copy()
+    good = eligible & (denominator > 0)
+    smoothed[good] = numerator[good] / denominator[good]
+    return smoothed
 
 
 # =============================================================================
@@ -904,12 +997,18 @@ def build_cloned_maps_for_center_magbin(
     max_sep_deg,
     rng,
     overlay_max,
+    x_grid,
+    y_grid,
     grid_points,
     X0,
     k_map,
     n_d0_grid_map,
     mag_min=None,
     mag_max=None,
+    smooth_density_maps=DEFAULT_SMOOTH_DENSITY_MAPS,
+    smooth_support_threshold=DEFAULT_SMOOTH_SUPPORT_THRESHOLD,
+    smooth_sigma_pixels=DEFAULT_SMOOTH_SIGMA_PIXELS,
+    smooth_truncate_sigma=DEFAULT_SMOOTH_TRUNCATE_SIGMA,
 ):
     """Build per-population cloned density maps for one mag bin.
 
@@ -921,6 +1020,7 @@ def build_cloned_maps_for_center_magbin(
     clone_density_maps = {}
     clone_density_maps_downweighted = {}
     density_maps_downweighted_raw = {}
+    support_count_maps = {}
     nearest_dist_maps = {}
     magcut_counts = {}
 
@@ -953,6 +1053,7 @@ def build_cloned_maps_for_center_magbin(
             clone_density_maps[pop_name] = empty_map
             clone_density_maps_downweighted[pop_name] = empty_map
             density_maps_downweighted_raw[pop_name] = empty_map.copy()
+            support_count_maps[pop_name] = empty_map.copy()
             nearest_dist_maps[pop_name] = inf_map
             continue
 
@@ -977,6 +1078,7 @@ def build_cloned_maps_for_center_magbin(
                 clone_density_maps[pop_name] = empty_map
                 clone_density_maps_downweighted[pop_name] = empty_map
                 density_maps_downweighted_raw[pop_name] = empty_map.copy()
+                support_count_maps[pop_name] = empty_map.copy()
                 nearest_dist_maps[pop_name] = inf_map
                 continue
 
@@ -1042,6 +1144,7 @@ def build_cloned_maps_for_center_magbin(
             density_clone_map = np.zeros_like(X0, dtype=float)
             density_downweighted_map = np.zeros_like(X0, dtype=float)
             nearest_dist = np.full_like(X0, np.inf, dtype=float)
+            support_count_map = np.zeros_like(X0, dtype=float)
         else:
             k_eff = min(info.get("k_map", k_map), n_visible - 1)
             if k_eff < 2:
@@ -1049,6 +1152,7 @@ def build_cloned_maps_for_center_magbin(
                 density_clone_map = np.zeros_like(X0, dtype=float)
                 density_downweighted_map = np.zeros_like(X0, dtype=float)
                 nearest_dist = np.full_like(X0, np.inf, dtype=float)
+                support_count_map = np.zeros_like(X0, dtype=float)
             else:
                 print(f"  building density map with k_eff = {k_eff} (n_visible = {n_visible})")
                 tree_clone = cKDTree(pts_clone)
@@ -1059,6 +1163,18 @@ def build_cloned_maps_for_center_magbin(
                 )
                 density_clone_map = density_clone_flat.reshape(X0.shape)
                 density_downweighted_map = density_clone_map / f
+                support_count_map = make_support_count_map(
+                    vlam_clone, vbeta_clone, x_grid, y_grid, clone_factor=f,
+                )
+
+                if smooth_density_maps:
+                    density_downweighted_map = smooth_density_map_by_support(
+                        density_downweighted_map,
+                        support_count_map,
+                        support_threshold=smooth_support_threshold,
+                        sigma_pixels=smooth_sigma_pixels,
+                        truncate_sigma=smooth_truncate_sigma,
+                    )
 
                 nearest_dist_flat, _ = tree_clone.query(grid_points, k=1)
                 nearest_dist = nearest_dist_flat.reshape(X0.shape)
@@ -1069,6 +1185,7 @@ def build_cloned_maps_for_center_magbin(
         clone_density_maps[pop_name] = density_clone_map
         clone_density_maps_downweighted[pop_name] = density_downweighted_map
         density_maps_downweighted_raw[pop_name] = density_downweighted_map.copy()
+        support_count_maps[pop_name] = support_count_map.copy()
         nearest_dist_maps[pop_name] = nearest_dist.copy()
 
         print(f"{pop_name} done.")
@@ -1093,8 +1210,15 @@ def build_cloned_maps_for_center_magbin(
         "density_maps": clone_density_maps,
         "density_maps_downweighted": clone_density_maps_downweighted,
         "density_maps_downweighted_raw": density_maps_downweighted_raw,
+        "support_count_maps": support_count_maps,
         "nearest_dist_maps": nearest_dist_maps,
         "density_all_downweighted": density_all_clone_downweighted,
+        "smoothing": {
+            "enabled": bool(smooth_density_maps),
+            "support_threshold": float(smooth_support_threshold),
+            "sigma_pixels": float(smooth_sigma_pixels),
+            "truncate_sigma": float(smooth_truncate_sigma),
+        },
     }
 
 
@@ -1118,6 +1242,10 @@ def generate_probability_maps(
     overlay_max=200_000,
     seed=42,
     save_overlays=False,
+    smooth_density_maps=DEFAULT_SMOOTH_DENSITY_MAPS,
+    smooth_support_threshold=DEFAULT_SMOOTH_SUPPORT_THRESHOLD,
+    smooth_sigma_pixels=DEFAULT_SMOOTH_SIGMA_PIXELS,
+    smooth_truncate_sigma=DEFAULT_SMOOTH_TRUNCATE_SIGMA,
     verbose=True,
 ):
     """Generate density maps for every magnitude bin at one obstime, save as .npz.
@@ -1154,6 +1282,14 @@ def generate_probability_maps(
     save_overlays : bool
         If True, also save the cloned-object overlay subsamples
         (can produce a large file).
+    smooth_density_maps : bool
+        If True, Gaussian-smooth downweighted density pixels whose
+        raw cloned-point support count is at least smooth_support_threshold.
+    smooth_support_threshold : float
+        Minimum cloned points per velocity-grid pixel before
+        replacing that density value with the Gaussian-smoothed value.
+    smooth_sigma_pixels, smooth_truncate_sigma : float
+        Gaussian kernel width and truncation in grid pixels.
     verbose : bool
 
     Returns
@@ -1201,12 +1337,18 @@ def generate_probability_maps(
             max_sep_deg=max_sep_deg,
             rng=rng,
             overlay_max=overlay_max,
+            x_grid=x_grid,
+            y_grid=y_grid,
             grid_points=grid_points,
             X0=X0,
             k_map=k_map,
             n_d0_grid_map=n_d0_grid_map,
             mag_min=mbin["mag_min"],
             mag_max=mbin["mag_max"],
+            smooth_density_maps=smooth_density_maps,
+            smooth_support_threshold=smooth_support_threshold,
+            smooth_sigma_pixels=smooth_sigma_pixels,
+            smooth_truncate_sigma=smooth_truncate_sigma,
         )
 
     # save
@@ -1222,6 +1364,12 @@ def generate_probability_maps(
         mag_bins=mag_bins,
         population_names=population_names,
         save_overlays=save_overlays,
+        smoothing={
+            "enabled": bool(smooth_density_maps),
+            "support_threshold": float(smooth_support_threshold),
+            "sigma_pixels": float(smooth_sigma_pixels),
+            "truncate_sigma": float(smooth_truncate_sigma),
+        },
     )
     if verbose:
         print(f"\n[generate_probability_maps] wrote {output_path}")
@@ -1245,12 +1393,14 @@ def save_maps_to_npz(
     mag_bins,
     population_names,
     save_overlays=False,
+    smoothing=None,
 ):
     """Persist a generate_probability_maps() output dict to compressed .npz.
 
     Stored arrays (per population pop and per mag bin label B):
 
         density_raw__POP__B          (ny, nx) downweighted (raw) density map
+        support_count__POP__B        (ny, nx) raw cloned-point support count
         nearest_dist__POP__B         (ny, nx) nearest-cloned-object distance
         magcut_count__POP__B         scalar int
 
@@ -1280,15 +1430,32 @@ def save_maps_to_npz(
         "mag_bin_mins": np.asarray([mb["mag_min"] for mb in mag_bins], dtype=np.float64),
         "mag_bin_maxs": np.asarray([mb["mag_max"] for mb in mag_bins], dtype=np.float64),
     }
+    if smoothing is not None:
+        out.update({
+            "smooth_density_maps": np.asarray(bool(smoothing["enabled"])),
+            "smooth_support_threshold": np.asarray(
+                smoothing["support_threshold"], dtype=np.float64,
+            ),
+            "smooth_sigma_pixels": np.asarray(
+                smoothing["sigma_pixels"], dtype=np.float64,
+            ),
+            "smooth_truncate_sigma": np.asarray(
+                smoothing["truncate_sigma"], dtype=np.float64,
+            ),
+        })
 
     for mb in mag_bins:
         label = mb["label"]
         bin_res = results[label]
         for pop in population_names:
             density = bin_res["density_maps_downweighted_raw"][pop]
+            support = bin_res.get("support_count_maps", {}).get(
+                pop, np.zeros_like(density, dtype=float),
+            )
             nearest = bin_res["nearest_dist_maps"][pop]
             count = bin_res["magcut_counts"][pop]
             out[f"density_raw__{pop}__{label}"] = np.asarray(density, dtype=np.float32)
+            out[f"support_count__{pop}__{label}"] = np.asarray(support, dtype=np.float32)
             out[f"nearest_dist__{pop}__{label}"] = np.asarray(nearest, dtype=np.float32)
             out[f"magcut_count__{pop}__{label}"] = np.asarray(count, dtype=np.int64)
 
@@ -1321,16 +1488,37 @@ def load_maps_from_npz(path):
         mag_bin_labels = [str(s) for s in z["mag_bin_labels"]]
         mag_bin_mins = z["mag_bin_mins"]
         mag_bin_maxs = z["mag_bin_maxs"]
+        smoothing = {
+            "enabled": bool(z["smooth_density_maps"]) if "smooth_density_maps" in z else False,
+            "support_threshold": (
+                float(z["smooth_support_threshold"])
+                if "smooth_support_threshold" in z else None
+            ),
+            "sigma_pixels": (
+                float(z["smooth_sigma_pixels"])
+                if "smooth_sigma_pixels" in z else None
+            ),
+            "truncate_sigma": (
+                float(z["smooth_truncate_sigma"])
+                if "smooth_truncate_sigma" in z else None
+            ),
+        }
 
         results = {}
         for label, mn, mx in zip(mag_bin_labels, mag_bin_mins, mag_bin_maxs):
             density_raw = {}
+            support_count = {}
             nearest = {}
             magcut_count = {}
             for pop in population_names:
                 density_raw[pop] = np.asarray(
                     z[f"density_raw__{pop}__{label}"], dtype=np.float64,
                 )
+                support_key = f"support_count__{pop}__{label}"
+                if support_key in z:
+                    support_count[pop] = np.asarray(z[support_key], dtype=np.float64)
+                else:
+                    support_count[pop] = np.zeros_like(density_raw[pop], dtype=np.float64)
                 nearest[pop] = np.asarray(
                     z[f"nearest_dist__{pop}__{label}"], dtype=np.float64,
                 )
@@ -1342,7 +1530,9 @@ def load_maps_from_npz(path):
                 "mag_max": float(mx),
                 "magcut_counts": magcut_count,
                 "density_maps_downweighted_raw": density_raw,
+                "support_count_maps": support_count,
                 "nearest_dist_maps": nearest,
+                "smoothing": smoothing,
             }
 
     return {
@@ -1355,6 +1545,7 @@ def load_maps_from_npz(path):
         "mag_bins": [{"label": l, "mag_min": float(mn), "mag_max": float(mx)}
                      for l, mn, mx in zip(mag_bin_labels, mag_bin_mins, mag_bin_maxs)],
         "results": results,
+        "smoothing": smoothing,
     }
 
 
@@ -1398,6 +1589,7 @@ class ProbMapSet:
         population_names,
         mag_bins,
         results,
+        smoothing=None,
         mask_radius_deg_per_day=DEFAULT_MASK_RADIUS_DEG_PER_DAY,
     ):
         self.x_grid = np.asarray(x_grid, dtype=np.float64)
@@ -1410,6 +1602,7 @@ class ProbMapSet:
         self.population_names = list(population_names)
         self.mag_bins = list(mag_bins)
         self.results = results
+        self.smoothing = dict(smoothing or {})
         self.mask_radius_deg_per_day = float(mask_radius_deg_per_day)
 
         # precompute per-bin probability maps {label -> {pop -> prob_map}}
@@ -1451,6 +1644,7 @@ class ProbMapSet:
             population_names=d["population_names"],
             mag_bins=d["mag_bins"],
             results=d["results"],
+            smoothing=d.get("smoothing"),
             mask_radius_deg_per_day=mask_radius_deg_per_day,
         )
 
@@ -1882,8 +2076,10 @@ __all__ = [
     "DEFAULT_CENTER_LON_DEG", "DEFAULT_CENTER_LAT_DEG",
     "DEFAULT_MAG_BINS", "DEFAULT_POPULATION_SETTINGS",
     "DEFAULT_MASK_RADIUS_DEG_PER_DAY",
+    "DEFAULT_SMOOTH_DENSITY_MAPS", "DEFAULT_SMOOTH_SUPPORT_THRESHOLD",
+    "DEFAULT_SMOOTH_SIGMA_PIXELS", "DEFAULT_SMOOTH_TRUNCATE_SIGMA",
     # grid
-    "make_default_grid",
+    "make_default_grid", "make_support_count_map",
     # S3M loading
     "load_s3m_population", "load_all_populations",
     # geometry
@@ -1903,6 +2099,7 @@ __all__ = [
     "get_knn_distances",
     "estimate_density_full_posterior_2d",
     "evaluate_density_map_full_posterior_2d",
+    "smooth_density_map_by_support",
     # main pipeline
     "build_cloned_maps_for_center_magbin",
     "generate_probability_maps",
