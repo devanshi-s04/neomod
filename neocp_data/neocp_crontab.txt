@@ -1,0 +1,8 @@
+# NEOCP list + ephemeris collector: every 4 hours.
+# Installed with:
+# crontab /Users/devanshisingh/Downloads/research/NEO_probability/neomod/neocp_data/neocp_crontab.txt
+SHELL=/bin/bash
+PATH=/opt/anaconda3/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+PYTHON_BIN=/opt/anaconda3/bin/python
+
+0 */4 * * * /Users/devanshisingh/Downloads/research/NEO_probability/neomod/neocp_data/run_neocp_collect.sh

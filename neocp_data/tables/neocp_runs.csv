@@ -1,0 +1,6 @@
+snapshot_id,started_at_utc,finished_at_utc,status,object_count,active_ephemeris_object_count,ephemeris_row_count,error_message
+20260507T103919Z,2026-05-07T10:39:19.068594Z,2026-05-07T10:39:19.080883Z,error,0,0,0,"URLError: <urlopen error [Errno 8] nodename nor servname provided, or not known>"
+20260507T103929Z,2026-05-07T10:39:29.164993Z,2026-05-07T10:39:29.175940Z,error,0,0,0,"URLError: <urlopen error [Errno 8] nodename nor servname provided, or not known>"
+20260507T104043Z,2026-05-07T10:40:43.704608Z,2026-05-07T10:40:45.145853Z,ok,20,17,0,
+20260507T104124Z,2026-05-07T10:41:24.175987Z,2026-05-07T10:41:26.337975Z,ok,20,17,25,
+20260507T104242Z,2026-05-07T10:42:42.908094Z,2026-05-07T10:42:45.354166Z,ok,20,17,425,

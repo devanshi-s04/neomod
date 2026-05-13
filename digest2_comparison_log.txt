@@ -1,0 +1,80 @@
+Loading VDP probability maps …
+  populations: ['MBA', 'NEO', 'TNO', 'Trojans']
+
+=== NEO (neo) ===
+  Loaded 268,511 objects
+  Chunk 1/6 (50,000) … 9,266 kept in |β|<3.0°
+  Chunk 2/6 (50,000) … 9,136 kept in |β|<3.0°
+  Chunk 3/6 (50,000) … 9,115 kept in |β|<3.0°
+  Chunk 4/6 (50,000) … 9,198 kept in |β|<3.0°
+  Chunk 5/6 (50,000) … 9,186 kept in |β|<3.0°
+  Chunk 6/6 (18,511) … 3,461 kept in |β|<3.0°
+  → 49,362 total in strip
+
+=== MBA (mba) ===
+  Loaded 13,883,361 objects
+  Subsampled to 200,000
+  Chunk 1/4 (50,000) … 16,433 kept in |β|<3.0°
+  Chunk 2/4 (50,000) … 16,225 kept in |β|<3.0°
+  Chunk 3/4 (50,000) … 16,068 kept in |β|<3.0°
+  Chunk 4/4 (50,000) … 16,363 kept in |β|<3.0°
+  → 65,089 total in strip
+
+=== TNO (tno) ===
+  Loaded 48,682 objects
+  Chunk 1/1 (48,682) … 25,220 kept in |β|<3.0°
+  → 25,220 total in strip
+
+=== Trojans (trojan) ===
+  Loaded 179,882 objects
+  Subsampled to 100,000
+  Chunk 1/2 (50,000) … 10,307 kept in |β|<3.0°
+  Chunk 2/2 (50,000) … 10,448 kept in |β|<3.0°
+  → 20,755 total in strip
+
+Combined dataset: 160,426 objects
+true_population
+MBA        65089
+NEO        49362
+TNO        25220
+Trojans    20755
+
+Filtered to VDP operating region (opposition ±30.0°, mag 14–26): 2,658 objects
+true_population
+MBA    2296
+NEO     362
+
+Scoring with VDP …
+  P_NEO range: [0.0000, 0.9985]
+
+Building MPC tracklets …
+  2,658 tracklets, 5,316 obs lines
+  Sample:
+         D000000  C2025 03 21.00000 12 25 54.87 -05 11 34.6          20.3 V      568
+         D000000  C2025 03 21.02083 12 25 53.52 -05 11 25.3          20.3 V      568
+
+Running digest2 on 2,658 tracklets …
+  Exit code: 0
+  Output lines: 2658
+  First 3: ['D000005   1', 'D000000  10', 'D000007   8']
+
+Parsing digest2 output …
+  Parsed 2,658 scores
+
+Computing ROC curves …
+  N_NEO=362  N_non-NEO=2,296
+
+  VDP     optimal: t=0.020  completeness=75.4%  contamination=3.5%  F1=0.847
+  Digest2 optimal: t=0.090  completeness=75.4%  contamination=6.8%  F1=0.834
+
+Saved ROC comparison: /Users/devanshisingh/Downloads/research/NEO_probability/neomod/roc_comparison_vdp_digest2.png
+
+=== Summary ===
+  Dataset: 2,658 objects  (|beta|<3.0°, 2025-03-21)
+  True NEO:     362 (13.6%)
+  True non-NEO: 2,296 (86.4%)
+
+  VDP    best F1=0.847: completeness=75.4%, purity=96.5%
+  Digest2 best F1=0.834: completeness=75.4%, purity=93.2%
+
+Saved scored data: /Users/devanshisingh/Downloads/research/NEO_probability/neomod/s3m_digest2_comparison.parquet
