@@ -1,1 +1,34 @@
+# Paper directory (Overleaf-linked)
 paper/
+
+# Large data outputs
+*.npz
+*.parquet
+
+# Figure outputs
+*.png
+*.pdf
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter / matplotlib cache
+.ipynb_checkpoints/
+.matplotlib-cache/
+
+# Logs and lock files
+*.log
+*.lock
+
+# S3M data files (large raw input)
+S3Mdata/
+
+# Misc generated files
+*.html
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
