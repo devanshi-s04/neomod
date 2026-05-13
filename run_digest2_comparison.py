@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Digest2 vs VDP ROC curve comparison.
 
-Propagates S3M objects to 2025-03-21, filters to the same circular
+Propagates S3M objects to the configured observation time, filters to the same circular
 ecliptic sky patch used by the VDP probability maps, then scores each
 object with both the VDP maps and the digest2 classifier. Saves a
 side-by-side ROC comparison figure.
@@ -14,6 +14,7 @@ import os
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +26,8 @@ import velocity_density_pipeline as vdp
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-OBSTIME_STR   = "2025-03-21T00:00:00"
+OBSTIME_STR   = "2026-05-09T22:00:00"
+RUN_LABEL     = "2026-05-09T22_neocp"
 DT_DAYS       = 30.0 / 1440.0          # 30-min tracklet baseline
 OBSCODE       = "X05"                   # Vera C. Rubin Observatory
 DIGEST2_CHUNK_TRACKLETS = 5_000
@@ -35,10 +37,10 @@ D2_DIR  = "/Users/devanshisingh/Downloads/research/SolSys/digest3/mpcdev-digest2
 D2_EXEC = os.path.join(D2_DIR, "digest2")
 
 _SELF = os.path.dirname(os.path.abspath(__file__))
-PROB_MAPS_PATH = os.path.join(_SELF, "prob_maps_2025-03-21.npz")
-OUT_FIG        = os.path.join(_SELF, "roc_comparison_vdp_digest2.png")
-OUT_PARQUET    = os.path.join(_SELF, "s3m_digest2_comparison.parquet")
-OUT_VDP_INPUT  = os.path.join(_SELF, "s3m_digest2_comparison_vdp_input.parquet")
+PROB_MAPS_PATH = os.path.join(_SELF, f"prob_maps_{RUN_LABEL}.npz")
+OUT_FIG        = os.path.join(_SELF, f"roc_comparison_vdp_digest2_{RUN_LABEL}.png")
+OUT_PARQUET    = os.path.join(_SELF, f"s3m_digest2_comparison_{RUN_LABEL}.parquet")
+OUT_VDP_INPUT  = os.path.join(_SELF, f"s3m_digest2_comparison_vdp_input_{RUN_LABEL}.parquet")
 
 # Populations: label -> (s3m_pop_name, max_objects)
 POP_SETTINGS = {
@@ -48,9 +50,15 @@ POP_SETTINGS = {
     "Trojans": ("trojan", 100_000),     # subsample to avoid slow chunks
 }
 
-YEAR0, MONTH0 = 2025, 3
-DAY0 = 21.00000
-DAY1 = DAY0 + DT_DAYS                  # 21.02083…
+_OBS_DT = datetime.fromisoformat(OBSTIME_STR)
+YEAR0, MONTH0 = _OBS_DT.year, _OBS_DT.month
+DAY0 = (
+    _OBS_DT.day
+    + _OBS_DT.hour / 24.0
+    + _OBS_DT.minute / 1440.0
+    + (_OBS_DT.second + _OBS_DT.microsecond / 1e6) / 86400.0
+)
+DAY1 = DAY0 + DT_DAYS
 
 def format_mpc80(desig12, year, month, day_frac, ra_deg, dec_deg, mag):
     """Return exactly 80-character MPC 80-column observation line."""
@@ -142,6 +150,13 @@ def run_digest2_chunk(obs_lines, cfg_text, chunk_tracklets):
 print("Loading VDP probability maps …")
 prob_map_set = vdp.ProbMapSet.from_npz(PROB_MAPS_PATH)
 print(f"  populations: {prob_map_set.population_names}")
+print(f"  map obstime: {prob_map_set.obstime_str}")
+print(f"  map center:  ({prob_map_set.center_lon_deg:.1f}, {prob_map_set.center_lat_deg:.1f})")
+if prob_map_set.obstime_str != OBSTIME_STR:
+    raise ValueError(
+        f"Configured OBSTIME_STR={OBSTIME_STR!r} does not match "
+        f"map obstime {prob_map_set.obstime_str!r} from {PROB_MAPS_PATH}."
+    )
 
 rng = np.random.default_rng(42)
 all_frames = []
@@ -313,7 +328,7 @@ ax.set_title(
     f"ROC Comparison: VDP vs digest2\n"
     f"(S3M, ecliptic center=({prob_map_set.center_lon_deg:.0f}°, "
     f"{prob_map_set.center_lat_deg:.0f}°), radius={prob_map_set.max_sep_deg:.0f}°, "
-    f"mag 14–26, 2025-03-21)\n"
+    f"mag {mag_min:.0f}–{mag_max:.0f}, {OBSTIME_STR})\n"
     f"N_NEO={N_neo:,}, N_non={N_non:,}",
     fontsize=10,
 )
@@ -340,7 +355,7 @@ print(f"\nSaved ROC comparison: {OUT_FIG}")
 # Summary
 print("\n=== Summary ===")
 print(f"  Dataset: {len(data):,} objects  "
-      f"(map sky patch radius={prob_map_set.max_sep_deg:.1f}°, 2025-03-21)")
+      f"(map sky patch radius={prob_map_set.max_sep_deg:.1f}°, {OBSTIME_STR})")
 print(f"  True NEO:     {N_neo:,} ({100*N_neo/len(data):.1f}%)")
 print(f"  True non-NEO: {N_non:,} ({100*N_non/len(data):.1f}%)")
 print()

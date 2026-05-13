@@ -41,7 +41,8 @@ NOTES ON RECENT REFACTORING:
   cloning path for all four populations.
 - A uniform mean-anomaly fallback path is preserved but expects
   `nsc.clone_population_uniform_mean_anomaly` to exist; it is dead code
-  in the default configuration, since I never used it for the final maps.
+  in the default configuration, since I never used it for the final maps. 
+  (it would be a pain to remove the code from the notebook)
 - `build_visible_subset_dataframe` performs the equatorial->ecliptic
   rotation manually (the astropy GeocentricTrueEcliptic differential
   bug fix carried over from the notebook).
@@ -92,8 +93,9 @@ DEFAULT_GRID_LIM = (-0.8, 0.8)
 DEFAULT_GRID_STEP = 0.01
 
 # default density-estimator tuning
-DEFAULT_K_MAP = 5
+DEFAULT_K_MAP = 10
 DEFAULT_N_D0_GRID_MAP = 400
+DEFAULT_MIN_CONDITIONAL_CLONER_INPUT = 4
 
 # default sky-cut geometry
 DEFAULT_MAX_SEP_DEG = 30.0
@@ -109,7 +111,7 @@ DEFAULT_MAG_BINS = [
     {"label": "mag21", "mag_min": 21.0, "mag_max": 22.0},
     {"label": "mag22", "mag_min": 22.0, "mag_max": 23.0},
     {"label": "mag23", "mag_min": 23.0, "mag_max": 24.0},
-    {"label": "mag24+", "mag_min": 24.0, "mag_max": 26.0},
+    {"label": "mag24+", "mag_min": 24.0, "mag_max": 25.0},
 ]
 
 # default per-population settings (clone_factor and overlay style)
@@ -123,11 +125,16 @@ DEFAULT_POPULATION_SETTINGS = {
 # default mask radius for probability map plotting (deg/day)
 DEFAULT_MASK_RADIUS_DEG_PER_DAY = 0.2
 
-# default density-map smoothing controls. Smoothing is applied to the
+# default density-map smoothing controls. Smoothing is applied to selected
 # downweighted density maps before probability maps are derived.
 DEFAULT_SMOOTH_DENSITY_MAPS = True
-DEFAULT_SMOOTH_SUPPORT_THRESHOLD = 3.0
-DEFAULT_SMOOTH_SIGMA_PIXELS = 1.5
+DEFAULT_SMOOTH_POPULATION_NAMES = ("NEO",)
+DEFAULT_SMOOTH_PRESMOOTHING_PASSES = (
+    {"support_threshold": 3.0, "sigma_pixels": 1.5, "truncate_sigma": 5.0},
+)
+DEFAULT_SMOOTH_SUPPORT_SCALE_BY_CLONE_FACTOR = True
+DEFAULT_SMOOTH_SUPPORT_THRESHOLD = 10.0
+DEFAULT_SMOOTH_SIGMA_PIXELS = 4.0
 DEFAULT_SMOOTH_TRUNCATE_SIGMA = 5.0
 
 
@@ -233,6 +240,48 @@ def smooth_density_map_by_support(
     good = eligible & (denominator > 0)
     smoothed[good] = numerator[good] / denominator[good]
     return smoothed
+
+
+def _normalize_smoothing_passes(
+    presmoothing_passes,
+    final_support_threshold,
+    final_sigma_pixels,
+    final_truncate_sigma,
+):
+    """Build the ordered support-masked smoothing pass list.
+
+    The default production NEO smoothing intentionally mirrors the preview
+    workflow: a light legacy-style prepass followed by the sigma=4 pass.
+    """
+    out = []
+    for cfg in presmoothing_passes or ():
+        if isinstance(cfg, dict):
+            support_threshold = cfg["support_threshold"]
+            sigma_pixels = cfg["sigma_pixels"]
+            truncate_sigma = cfg.get("truncate_sigma", final_truncate_sigma)
+        else:
+            if len(cfg) == 2:
+                support_threshold, sigma_pixels = cfg
+                truncate_sigma = final_truncate_sigma
+            elif len(cfg) == 3:
+                support_threshold, sigma_pixels, truncate_sigma = cfg
+            else:
+                raise ValueError(
+                    "Each smoothing prepass must be a dict or a "
+                    "(support_threshold, sigma_pixels[, truncate_sigma]) tuple."
+                )
+        out.append({
+            "support_threshold": float(support_threshold),
+            "sigma_pixels": float(sigma_pixels),
+            "truncate_sigma": float(truncate_sigma),
+        })
+
+    out.append({
+        "support_threshold": float(final_support_threshold),
+        "sigma_pixels": float(final_sigma_pixels),
+        "truncate_sigma": float(final_truncate_sigma),
+    })
+    return out
 
 
 # =============================================================================
@@ -1006,6 +1055,9 @@ def build_cloned_maps_for_center_magbin(
     mag_min=None,
     mag_max=None,
     smooth_density_maps=DEFAULT_SMOOTH_DENSITY_MAPS,
+    smooth_population_names=DEFAULT_SMOOTH_POPULATION_NAMES,
+    smooth_presmoothing_passes=DEFAULT_SMOOTH_PRESMOOTHING_PASSES,
+    smooth_support_scale_by_clone_factor=DEFAULT_SMOOTH_SUPPORT_SCALE_BY_CLONE_FACTOR,
     smooth_support_threshold=DEFAULT_SMOOTH_SUPPORT_THRESHOLD,
     smooth_sigma_pixels=DEFAULT_SMOOTH_SIGMA_PIXELS,
     smooth_truncate_sigma=DEFAULT_SMOOTH_TRUNCATE_SIGMA,
@@ -1023,6 +1075,16 @@ def build_cloned_maps_for_center_magbin(
     support_count_maps = {}
     nearest_dist_maps = {}
     magcut_counts = {}
+    if isinstance(smooth_population_names, str):
+        smooth_population_names = {smooth_population_names}
+    else:
+        smooth_population_names = set(smooth_population_names or [])
+    smooth_passes = _normalize_smoothing_passes(
+        smooth_presmoothing_passes,
+        final_support_threshold=smooth_support_threshold,
+        final_sigma_pixels=smooth_sigma_pixels,
+        final_truncate_sigma=smooth_truncate_sigma,
+    )
 
     for pop_name, info in clone_sources.items():
         f = info["clone_factor"]
@@ -1067,7 +1129,12 @@ def build_cloned_maps_for_center_magbin(
             )
             print("  visible for conditional cloner:", len(df_cloner_input))
 
-            if len(df_cloner_input) == 0:
+            if len(df_cloner_input) < DEFAULT_MIN_CONDITIONAL_CLONER_INPUT:
+                print(
+                    "  too few visible source objects for conditional cloner "
+                    f"({len(df_cloner_input)} < {DEFAULT_MIN_CONDITIONAL_CLONER_INPUT}); "
+                    "returning zeros."
+                )
                 empty_map = np.zeros_like(X0, dtype=float)
                 inf_map = np.full_like(X0, np.inf, dtype=float)
                 clone_overlay[pop_name] = {
@@ -1167,14 +1234,19 @@ def build_cloned_maps_for_center_magbin(
                     vlam_clone, vbeta_clone, x_grid, y_grid, clone_factor=f,
                 )
 
-                if smooth_density_maps:
-                    density_downweighted_map = smooth_density_map_by_support(
-                        density_downweighted_map,
-                        support_count_map,
-                        support_threshold=smooth_support_threshold,
-                        sigma_pixels=smooth_sigma_pixels,
-                        truncate_sigma=smooth_truncate_sigma,
-                    )
+                if smooth_density_maps and pop_name in smooth_population_names:
+                    if smooth_support_scale_by_clone_factor:
+                        support_for_smoothing = support_count_map * f
+                    else:
+                        support_for_smoothing = support_count_map
+                    for pass_cfg in smooth_passes:
+                        density_downweighted_map = smooth_density_map_by_support(
+                            density_downweighted_map,
+                            support_for_smoothing,
+                            support_threshold=pass_cfg["support_threshold"],
+                            sigma_pixels=pass_cfg["sigma_pixels"],
+                            truncate_sigma=pass_cfg["truncate_sigma"],
+                        )
 
                 nearest_dist_flat, _ = tree_clone.query(grid_points, k=1)
                 nearest_dist = nearest_dist_flat.reshape(X0.shape)
@@ -1215,6 +1287,9 @@ def build_cloned_maps_for_center_magbin(
         "density_all_downweighted": density_all_clone_downweighted,
         "smoothing": {
             "enabled": bool(smooth_density_maps),
+            "population_names": tuple(sorted(smooth_population_names)),
+            "passes": tuple(smooth_passes),
+            "support_scale_by_clone_factor": bool(smooth_support_scale_by_clone_factor),
             "support_threshold": float(smooth_support_threshold),
             "sigma_pixels": float(smooth_sigma_pixels),
             "truncate_sigma": float(smooth_truncate_sigma),
@@ -1243,6 +1318,9 @@ def generate_probability_maps(
     seed=42,
     save_overlays=False,
     smooth_density_maps=DEFAULT_SMOOTH_DENSITY_MAPS,
+    smooth_population_names=DEFAULT_SMOOTH_POPULATION_NAMES,
+    smooth_presmoothing_passes=DEFAULT_SMOOTH_PRESMOOTHING_PASSES,
+    smooth_support_scale_by_clone_factor=DEFAULT_SMOOTH_SUPPORT_SCALE_BY_CLONE_FACTOR,
     smooth_support_threshold=DEFAULT_SMOOTH_SUPPORT_THRESHOLD,
     smooth_sigma_pixels=DEFAULT_SMOOTH_SIGMA_PIXELS,
     smooth_truncate_sigma=DEFAULT_SMOOTH_TRUNCATE_SIGMA,
@@ -1285,6 +1363,17 @@ def generate_probability_maps(
     smooth_density_maps : bool
         If True, Gaussian-smooth downweighted density pixels whose
         raw cloned-point support count is at least smooth_support_threshold.
+    smooth_population_names : sequence of str
+        Populations to smooth. Defaults to ("NEO",); other populations keep
+        their unsmoothed downweighted density maps.
+    smooth_presmoothing_passes : sequence
+        Extra support-masked smoothing passes applied before the final
+        smooth_support_threshold/smooth_sigma_pixels pass. The default light
+        prepass plus final sigma=4 pass reproduces the smoothing-preview look.
+    smooth_support_scale_by_clone_factor : bool
+        If True, multiply the support map by each population's clone_factor
+        before applying support thresholds. Defaults to True to match
+        smoothing_preview.ipynb's support rescaling behavior.
     smooth_support_threshold : float
         Minimum cloned points per velocity-grid pixel before
         replacing that density value with the Gaussian-smoothed value.
@@ -1313,6 +1402,16 @@ def generate_probability_maps(
         )
 
     population_names = list(clone_sources.keys())
+    if isinstance(smooth_population_names, str):
+        smooth_population_names = (smooth_population_names,)
+    else:
+        smooth_population_names = tuple(smooth_population_names or ())
+    smooth_passes = _normalize_smoothing_passes(
+        smooth_presmoothing_passes,
+        final_support_threshold=smooth_support_threshold,
+        final_sigma_pixels=smooth_sigma_pixels,
+        final_truncate_sigma=smooth_truncate_sigma,
+    )
 
     # grid
     x_grid, y_grid, X0, Y0, grid_points = make_default_grid(
@@ -1346,6 +1445,9 @@ def generate_probability_maps(
             mag_min=mbin["mag_min"],
             mag_max=mbin["mag_max"],
             smooth_density_maps=smooth_density_maps,
+            smooth_population_names=smooth_population_names,
+            smooth_presmoothing_passes=smooth_presmoothing_passes,
+            smooth_support_scale_by_clone_factor=smooth_support_scale_by_clone_factor,
             smooth_support_threshold=smooth_support_threshold,
             smooth_sigma_pixels=smooth_sigma_pixels,
             smooth_truncate_sigma=smooth_truncate_sigma,
@@ -1366,6 +1468,9 @@ def generate_probability_maps(
         save_overlays=save_overlays,
         smoothing={
             "enabled": bool(smooth_density_maps),
+            "population_names": tuple(smooth_population_names or []),
+            "passes": tuple(smooth_passes),
+            "support_scale_by_clone_factor": bool(smooth_support_scale_by_clone_factor),
             "support_threshold": float(smooth_support_threshold),
             "sigma_pixels": float(smooth_sigma_pixels),
             "truncate_sigma": float(smooth_truncate_sigma),
@@ -1431,8 +1536,24 @@ def save_maps_to_npz(
         "mag_bin_maxs": np.asarray([mb["mag_max"] for mb in mag_bins], dtype=np.float64),
     }
     if smoothing is not None:
+        smoothing_passes = list(smoothing.get("passes", ()))
         out.update({
             "smooth_density_maps": np.asarray(bool(smoothing["enabled"])),
+            "smooth_population_names": np.asarray(
+                smoothing.get("population_names", ()), dtype=str,
+            ),
+            "smooth_support_scale_by_clone_factor": np.asarray(
+                bool(smoothing.get("support_scale_by_clone_factor", False)),
+            ),
+            "smooth_pass_support_thresholds": np.asarray(
+                [p["support_threshold"] for p in smoothing_passes], dtype=np.float64,
+            ),
+            "smooth_pass_sigma_pixels": np.asarray(
+                [p["sigma_pixels"] for p in smoothing_passes], dtype=np.float64,
+            ),
+            "smooth_pass_truncate_sigmas": np.asarray(
+                [p["truncate_sigma"] for p in smoothing_passes], dtype=np.float64,
+            ),
             "smooth_support_threshold": np.asarray(
                 smoothing["support_threshold"], dtype=np.float64,
             ),
@@ -1490,6 +1611,34 @@ def load_maps_from_npz(path):
         mag_bin_maxs = z["mag_bin_maxs"]
         smoothing = {
             "enabled": bool(z["smooth_density_maps"]) if "smooth_density_maps" in z else False,
+            "population_names": (
+                [str(s) for s in z["smooth_population_names"]]
+                if "smooth_population_names" in z else []
+            ),
+            "support_scale_by_clone_factor": (
+                bool(z["smooth_support_scale_by_clone_factor"])
+                if "smooth_support_scale_by_clone_factor" in z else False
+            ),
+            "passes": (
+                [
+                    {
+                        "support_threshold": float(threshold),
+                        "sigma_pixels": float(sigma),
+                        "truncate_sigma": float(truncate),
+                    }
+                    for threshold, sigma, truncate in zip(
+                        z["smooth_pass_support_thresholds"],
+                        z["smooth_pass_sigma_pixels"],
+                        z["smooth_pass_truncate_sigmas"],
+                    )
+                ]
+                if (
+                    "smooth_pass_support_thresholds" in z
+                    and "smooth_pass_sigma_pixels" in z
+                    and "smooth_pass_truncate_sigmas" in z
+                )
+                else []
+            ),
             "support_threshold": (
                 float(z["smooth_support_threshold"])
                 if "smooth_support_threshold" in z else None
@@ -2072,11 +2221,15 @@ __all__ = [
     "AU_KM", "MU_SUN", "ECLIPTIC_OBLIQUITY_DEG",
     "DEFAULT_GRID_LIM", "DEFAULT_GRID_STEP",
     "DEFAULT_K_MAP", "DEFAULT_N_D0_GRID_MAP",
+    "DEFAULT_MIN_CONDITIONAL_CLONER_INPUT",
     "DEFAULT_MAX_SEP_DEG",
     "DEFAULT_CENTER_LON_DEG", "DEFAULT_CENTER_LAT_DEG",
     "DEFAULT_MAG_BINS", "DEFAULT_POPULATION_SETTINGS",
     "DEFAULT_MASK_RADIUS_DEG_PER_DAY",
-    "DEFAULT_SMOOTH_DENSITY_MAPS", "DEFAULT_SMOOTH_SUPPORT_THRESHOLD",
+    "DEFAULT_SMOOTH_DENSITY_MAPS", "DEFAULT_SMOOTH_POPULATION_NAMES",
+    "DEFAULT_SMOOTH_PRESMOOTHING_PASSES",
+    "DEFAULT_SMOOTH_SUPPORT_SCALE_BY_CLONE_FACTOR",
+    "DEFAULT_SMOOTH_SUPPORT_THRESHOLD",
     "DEFAULT_SMOOTH_SIGMA_PIXELS", "DEFAULT_SMOOTH_TRUNCATE_SIGMA",
     # grid
     "make_default_grid", "make_support_count_map",
