@@ -405,14 +405,26 @@ Kernel for notebooks on Hyak: `/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bi
 - **Time span ≤90 minutes** between any pair in the tracklet
 - **Arc length ≥1 arcsec** (~5 Rubin pixels)
 
-Our existing S3M comparison used 2 detections × 30 min separation. **Zeljko's decision (2026-05-27): use 2 detections throughout** — that is what the real Rubin pipeline does. Do NOT adopt Wagg's ≥3 cut.
+Our existing S3M comparison used 2 detections × 30 min separation. **Zeljko's decision (2026-05-27):** Do NOT adopt Wagg's ≥3 cut. The correct approach depends on data source:
 
-For Sorcha detections, apply quality cuts on the pair instead:
-- Time separation **3 min ≤ Δt ≤ 90 min** (removes pairs too close for good velocity estimate, and pairs too far apart)
-- Optionally: velocity errors based on astrometric errors and temporal baseline
-- Per object per night: pick the best valid pair (widest baseline within the window)
+**For Sorcha simulations:**
+`score_observation` takes already-computed velocity components (`dra_deg_day`, `ddec_deg_day`). Sorcha outputs instantaneous rates directly (`RARateCosDec_deg_day`, `DecRate_deg_day`) — so VDP can score individual detections without pairing at all. "For sims it's easy as there is no noise — you just need to compute the angular velocity components."
 
-This keeps S3M and Sorcha comparisons consistent — no rerun of S3M needed.
+- **VDP side**: use instantaneous rates from Sorcha output per detection (or per-night mean). No pairing needed.
+- **digest2 side**: still needs 2 sky positions in MPC 80-col format → pick one pair per object per night with time separation **3 min ≤ Δt ≤ 90 min**
+
+**For real Rubin data (future work):**
+Instantaneous rates are unavailable — must compute from 2 detections, which introduces astrometric noise. Quality cuts matter:
+- Time separation 3–90 min as proxy for velocity quality
+- Or explicit velocity errors from astrometric errors + temporal baseline
+
+This is "what the pipeline does" in real-world use — VDP and digest2 both score the same 2-detection tracklet.
+
+**Bottom line for wagg_postprocess.py:**
+- Group detections by (ObjID, night)
+- VDP: score using mean/first-detection rates from Sorcha output directly
+- digest2: pick best pair per night (3–90 min separation), build MPC 80-col from those 2 positions
+- No S3M rerun needed — S3M comparison already used rates computed from synthetic propagation
 
 ### digest2 Threshold
 Wagg uses **score ≥65 on 0–100 scale** for NEOCP submission. Our comparison uses 0–1 scale (threshold ~0.97) — equivalent, just need consistent scaling.
