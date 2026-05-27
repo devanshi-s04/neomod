@@ -405,7 +405,14 @@ Kernel for notebooks on Hyak: `/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bi
 - **Time span ≤90 minutes** between any pair in the tracklet
 - **Arc length ≥1 arcsec** (~5 Rubin pixels)
 
-Our existing S3M comparison used 2 detections × 30 min separation. Whether to unify tracklet definition across S3M and Sorcha comparisons is an open advisor question.
+Our existing S3M comparison used 2 detections × 30 min separation. **Zeljko's decision (2026-05-27): use 2 detections throughout** — that is what the real Rubin pipeline does. Do NOT adopt Wagg's ≥3 cut.
+
+For Sorcha detections, apply quality cuts on the pair instead:
+- Time separation **3 min ≤ Δt ≤ 90 min** (removes pairs too close for good velocity estimate, and pairs too far apart)
+- Optionally: velocity errors based on astrometric errors and temporal baseline
+- Per object per night: pick the best valid pair (widest baseline within the window)
+
+This keeps S3M and Sorcha comparisons consistent — no rerun of S3M needed.
 
 ### digest2 Threshold
 Wagg uses **score ≥65 on 0–100 scale** for NEOCP submission. Our comparison uses 0–1 scale (threshold ~0.97) — equivalent, just need consistent scaling.
@@ -464,7 +471,7 @@ PY
 
 If IDs have population prefixes → use directly. If not → classify from state vectors stored in Sorcha output (q = a(1−e) < 1.3 AU → NEO, 2.0 < a < 3.3 → MBA, a > 30 → TNO, a ≈ 5.2 → Trojan).
 
-2. **Advisor decision** on whether to redo S3M comparison with 3-detection tracklets for consistency with Wagg, or keep 2-detection for S3M and 3-detection for Sorcha.
+2. ~~**Advisor decision** on tracklet definition~~ — **RESOLVED**: use 2 detections, 3–90 min separation throughout. No S3M rerun needed.
 
 ---
 
