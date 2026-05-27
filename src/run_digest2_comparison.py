@@ -11,6 +11,7 @@ Run:
 """
 
 import os
+import argparse
 import subprocess
 import sys
 import tempfile
@@ -26,8 +27,21 @@ import velocity_density_pipeline as vdp
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-OBSTIME_STR   = "2026-05-09T22:00:00"
-RUN_LABEL     = "2026-05-09T22_neocp"
+parser = argparse.ArgumentParser(description="Digest2 vs VDP ROC curve comparison.")
+parser.add_argument(
+    "--obstime-str",
+    default="2026-05-09T22:00:00",
+    help="Observation time matching the probability-map file.",
+)
+parser.add_argument(
+    "--run-label",
+    default="2026-05-09T22_neocp",
+    help="Label used in prob_maps_<label>.npz and output filenames.",
+)
+args = parser.parse_args()
+
+OBSTIME_STR   = args.obstime_str
+RUN_LABEL     = args.run_label
 DT_DAYS       = 30.0 / 1440.0          # 30-min tracklet baseline
 OBSCODE       = "X05"                   # Vera C. Rubin Observatory
 DIGEST2_CHUNK_TRACKLETS = 5_000
@@ -36,11 +50,12 @@ DIGEST2_TIMEOUT_SEC     = 1_800
 D2_DIR  = "/Users/devanshisingh/Downloads/research/SolSys/digest3/mpcdev-digest2-278a31e734e4"
 D2_EXEC = os.path.join(D2_DIR, "digest2")
 
-_SELF = os.path.dirname(os.path.abspath(__file__))
-PROB_MAPS_PATH = os.path.join(_SELF, f"prob_maps_{RUN_LABEL}.npz")
-OUT_FIG        = os.path.join(_SELF, f"roc_comparison_vdp_digest2_{RUN_LABEL}.png")
-OUT_PARQUET    = os.path.join(_SELF, f"s3m_digest2_comparison_{RUN_LABEL}.parquet")
-OUT_VDP_INPUT  = os.path.join(_SELF, f"s3m_digest2_comparison_vdp_input_{RUN_LABEL}.parquet")
+_SRC = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.dirname(_SRC)
+PROB_MAPS_PATH = os.path.join(_ROOT, f"prob_maps_{RUN_LABEL}.npz")
+OUT_FIG        = os.path.join(_ROOT, f"roc_comparison_vdp_digest2_{RUN_LABEL}.png")
+OUT_PARQUET    = os.path.join(_ROOT, f"s3m_digest2_comparison_{RUN_LABEL}.parquet")
+OUT_VDP_INPUT  = os.path.join(_ROOT, f"s3m_digest2_comparison_vdp_input_{RUN_LABEL}.parquet")
 
 # Populations: label -> (s3m_pop_name, max_objects)
 POP_SETTINGS = {
