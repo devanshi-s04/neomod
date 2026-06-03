@@ -8,7 +8,7 @@
 # Reattach: screen -r neocp
 # Stop:     screen -r neocp, then Ctrl+C
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INTERVAL_SEC=${NEOCP_INTERVAL_SEC:-14400}   # default: every 4 hours
@@ -20,7 +20,7 @@ echo "=== NEOCP loop started $(date -u '+%Y-%m-%dT%H:%M:%SZ') interval=${INTERVA
 
 while true; do
     echo "--- $(date -u '+%Y-%m-%dT%H:%M:%SZ') collecting ---" | tee -a "$LOG"
-    python3 "$SCRIPT_DIR/collect_neocp.py" 2>&1 | tee -a "$LOG"
+    python3 "$SCRIPT_DIR/collect_neocp.py" 2>&1 | tee -a "$LOG" || true
     echo "--- $(date -u '+%Y-%m-%dT%H:%M:%SZ') sleeping ${INTERVAL_SEC}s ---" | tee -a "$LOG"
     sleep "$INTERVAL_SEC"
 done
