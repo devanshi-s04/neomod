@@ -1,5 +1,5 @@
 # Paper directory (Overleaf-linked)
-paper/
+/paper/
 
 # Large data outputs
 *.npz
