@@ -90,7 +90,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--subsample-file",
         type=Path,
-        default=DEFAULT_WORK_DIR / "wagg_subsample.parquet",
+        default=DEFAULT_WORK_DIR / "sorcha_subsample.parquet",
         help="Subsample parquet written by 'sample' and read by 'run-digest2'.",
     )
     parser.add_argument(
@@ -116,7 +116,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--outfile",
         type=Path,
-        default=DEFAULT_WORK_DIR / "wagg_sorcha_comparison.parquet",
+        default=DEFAULT_WORK_DIR / "sorcha_comparison.parquet",
     )
     return parser.parse_args()
 

@@ -6,7 +6,7 @@ Filters to: tracklets observed in May 2026 AND within 30° of the May 9 antisun
 (ecliptic lon=228°, lat=0°). Joins S3M kNN scores with GMM scores so all three
 classifiers (S3M kNN, GMM, digest2) appear on the same rows.
 
-Output: outputs/phase2/wagg_sorcha_may2026_antisun_patch.parquet
+Output: outputs/phase2/sorcha_may2026_antisun_patch.parquet
 
 Why NOT 100 sq deg (5.6° radius):
   A strict 5.6° radius around the antisun yields only 83 objects (6 NEOs) from the
@@ -22,9 +22,9 @@ import pandas as pd
 from astropy.time import Time
 
 WORKDIR = "/mmfs1/gscratch/astro/ds2004/sorcha"
-S3M_PARQUET = f"{WORKDIR}/outputs/phase2/wagg_sorcha_comparison.parquet"
-GMM_PARQUET = f"{WORKDIR}/outputs/phase2_gmm/wagg_sorcha_comparison_gmm.parquet"
-OUT_PARQUET = f"{WORKDIR}/outputs/phase2/wagg_sorcha_may2026_antisun_patch.parquet"
+S3M_PARQUET = f"{WORKDIR}/outputs/phase2/sorcha_comparison.parquet"
+GMM_PARQUET = f"{WORKDIR}/outputs/phase2_gmm/sorcha_comparison_gmm.parquet"
+OUT_PARQUET = f"{WORKDIR}/outputs/phase2/sorcha_may2026_antisun_patch.parquet"
 
 ANTISUN_LON = 228.02   # May 9 2026 antisun ecliptic longitude (deg)
 ANTISUN_LAT = 0.0

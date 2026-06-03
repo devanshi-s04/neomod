@@ -8,7 +8,7 @@ Read this document top to bottom before touching any code. Then read
 
 ## 1. Current state (what we have, what we want)
 
-**Goal:** VDP F1 > digest2 F1 on the Sorcha/Wagg Rubin simulation.
+**Goal:** VDP F1 > digest2 F1 on the Sorcha Rubin simulation.
 
 | Classifier | F1 | Completeness | Contamination |
 |---|---|---|---|
@@ -333,7 +333,7 @@ from sklearn.metrics import precision_recall_curve
 
 vdp = pd.concat([pd.read_parquet(f, columns=['tracklet_id','P_NEO_vdp'])
                  for f in sorted(glob('outputs/phase2_gmm/vdp_shards/vdp_*.parquet'))])
-base = pd.read_parquet('outputs/phase2_hybrid/wagg_sorcha_comparison_hybrid.parquet',
+base = pd.read_parquet('outputs/phase2_hybrid/sorcha_comparison_hybrid.parquet',
                        columns=['tracklet_id','population','P_NEO_d2'])
 out = base.merge(vdp, on='tracklet_id', how='left')
 
@@ -390,7 +390,7 @@ To re-enable nearest_dist mask for GMM: remove `--no-nearest-dist-mask` from
 | `sorcha_phase2.py` | Shared Phase 2 pipeline | Has --no-nearest-dist-mask flag |
 | `sorcha_postprocess.sh` | Phase 1 Slurm (--overwrite) | Ready for footprint change |
 | `prob_maps_gmm/` | 24 monthly GMM maps (active) | Regen after pipeline changes |
-| `outputs/phase2_hybrid/wagg_sorcha_comparison_hybrid.parquet` | kNN baseline result | READ ONLY (used as d2 source) |
+| `outputs/phase2_hybrid/sorcha_comparison_hybrid.parquet` | kNN baseline result | READ ONLY (used as d2 source) |
 | `outputs/phase2_gmm/` | GMM scoring results | Active output directory |
 | `production_run/` | Archived production scripts | READ ONLY |
 
@@ -420,7 +420,7 @@ QOS limit on ckpt: max 2 job arrays at once. Check with `hyakalloc`.
 - `prob_maps/` — 24 S3M monthly maps
 - `prob_maps_hybrid/` — 24 hybrid kNN maps
 - `outputs/phase2/` — S3M scoring results
-- `outputs/phase2_hybrid/wagg_sorcha_comparison_hybrid.parquet` — kNN result (used as source for d2 columns in combine)
+- `outputs/phase2_hybrid/sorcha_comparison_hybrid.parquet` — kNN result (used as source for d2 columns in combine)
 
 ---
 

@@ -13,7 +13,7 @@
 #SBATCH --error=logs/%x_%A_%a.err
 
 # 598,670 rows / 5,000 per chunk = 120 chunks (array tasks 0-119)
-# Each task processes rows [TASK*5000, (TASK+1)*5000) from wagg_subsample.parquet
+# Each task processes rows [TASK*5000, (TASK+1)*5000) from sorcha_subsample.parquet
 # ~28 min per chunk; 64-way concurrency → ~30 min total wall time
 
 set -euo pipefail
