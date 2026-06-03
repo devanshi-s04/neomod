@@ -32,3 +32,9 @@ S3Mdata/
 *.fls
 *.out
 *.synctex.gz
+
+# NEOMOD3 input data (62 MB, re-downloadable from Boulder SWRI)
+NEOMOD3/
+
+# Pipeline data inputs (large, Hyak-only)
+pipeline/CDS_colors.parquet

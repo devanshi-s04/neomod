@@ -1,0 +1,51 @@
+#!/bin/bash
+#SBATCH --job-name=sorcha_post
+#SBATCH --partition=ckpt
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=8G
+#SBATCH --time=01:00:00
+#SBATCH --array=0-999%64
+#SBATCH --chdir=/mmfs1/gscratch/astro/ds2004/sorcha
+#SBATCH --export=all
+#SBATCH --output=logs/%x_%A_%a.out
+#SBATCH --error=logs/%x_%A_%a.err
+
+set -euo pipefail
+
+PY=/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python
+WORKDIR=/mmfs1/gscratch/astro/ds2004/sorcha
+
+cd "$WORKDIR"
+
+mkdir -p logs outputs/tracklets
+
+# Keep Astropy cache writes off the read-only home cache inside batch jobs.
+export XDG_CACHE_HOME=/tmp/${USER}/sorcha_postprocess_xdg_cache
+mkdir -p "$XDG_CACHE_HOME"
+
+# Keep implicit math-library threading aligned with the Slurm allocation.
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+export OPENBLAS_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+export MKL_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+export NUMEXPR_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+
+echo "job_id=${SLURM_JOB_ID}"
+echo "array_job_id=${SLURM_ARRAY_JOB_ID}"
+echo "array_task_id=${SLURM_ARRAY_TASK_ID}"
+INDEX_OFFSET=${INDEX_OFFSET:-0}
+FILE_INDEX=$((SLURM_ARRAY_TASK_ID + INDEX_OFFSET))
+echo "index_offset=${INDEX_OFFSET}"
+echo "file_index=${FILE_INDEX}"
+echo "host=$(hostname)"
+echo "start=$(date -Is)"
+
+"$PY" "$WORKDIR/neomod/pipeline/sorcha_postprocess.py" \
+  --file_index "${FILE_INDEX}" \
+  --indir outputs/production_2yr \
+  --outdir outputs/tracklets \
+  --prob_maps_dir prob_maps \
+  --overwrite
+
+echo "end=$(date -Is)"
