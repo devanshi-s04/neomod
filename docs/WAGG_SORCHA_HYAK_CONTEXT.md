@@ -4,6 +4,56 @@ Covers: full Hyak setup, Sorcha 2yr production run, neomod deployment, Wagg pape
 
 ---
 
+## Dirac Storage Migration (2026-06-03)
+
+Access to `/mmfs1/gscratch/dirac/` was granted (Unix group `dirac` confirmed via `groups`).
+Dirac has ~9.5 TB free vs ~640 GB free in astro. Migration is in progress.
+
+**Storage access vs compute access:**
+- `/mmfs1/gscratch/dirac/` storage: **YES** — `groups` shows `dirac`
+- `--account=dirac` Slurm compute: **NOT YET** — not in `hyakalloc`. PI needs to run `sacctmgr add user ds2004 account=dirac`. Continue using `--partition=ckpt` (no account needed) for now.
+
+**Already moved to dirac:**
+- `home_lib/python3.13` (pip packages, 773 MB) — at `/mmfs1/gscratch/dirac/ds2004/home_lib/`
+- Symlink: `/mmfs1/home/ds2004/.local/lib/python3.13` → `/mmfs1/gscratch/dirac/ds2004/home_lib/python3.13`
+
+**In progress — Slurm job to move sorcha (299 GB):**
+
+`astro` and `dirac` are on separate GPFS storage pools so `mv` requires a real copy.
+A Slurm job handles this safely on a compute node (no login-node time limits).
+
+Scripts at sorcha root:
+- `move_to_dirac.sh` — rsync + file-count verify + atomic symlink + delete
+- `update_paths_to_dirac.sh` — patches all hardcoded paths in pipeline scripts, commits to git
+
+```bash
+# Submit (run once, then close laptop — job runs independently)
+cd /mmfs1/gscratch/astro/ds2004/sorcha
+sbatch move_to_dirac.sh
+# Log: /mmfs1/gscratch/astro/ds2004/move_to_dirac_JOBID.out
+
+# After job completes (check log ends with "New canonical path: ...dirac...")
+bash /mmfs1/gscratch/dirac/ds2004/sorcha/update_paths_to_dirac.sh
+```
+
+**Safety design of move_to_dirac.sh:**
+1. `rsync -av` copies everything to dirac
+2. File count verified — exits without touching source if counts differ
+3. `mv sorcha sorcha.bak_before_delete` + `ln -s dirac/sorcha sorcha` — atomic swap
+4. `rm -rf sorcha.bak_before_delete` — only runs after symlink is in place
+5. At no point is data at risk — both copies exist until the final rm
+
+**After migration, new canonical paths:**
+```
+/mmfs1/gscratch/dirac/ds2004/sorcha/           ← working directory
+/mmfs1/gscratch/dirac/ds2004/sorcha/neomod/    ← git repo
+/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python
+```
+Old path `/mmfs1/gscratch/astro/ds2004/sorcha` continues to work via symlink.
+
+
+---
+
 ## Repository Reorganisation (2026-06-03)
 
 The neomod git repo was restructured and all "wagg" references removed from file names and
