@@ -1,6 +1,82 @@
 # Wagg / Sorcha / Hyak Context
-Generated: 2026-05-27, Updated: 2026-05-31 (hybrid catalog pipeline complete, grid extension attempted+reverted, current kNN baseline F1=0.780)
+Generated: 2026-05-27, Updated: 2026-06-03 (repo reorganised into neomod/, all wagg→sorcha file renames applied, F1=0.837 tied with digest2)
 Covers: full Hyak setup, Sorcha 2yr production run, neomod deployment, Wagg paper methodology, post-processing plan.
+
+---
+
+## Repository Reorganisation (2026-06-03)
+
+The neomod git repo was restructured and all "wagg" references removed from file names and
+code (except `WAGG_SORCHA_HYAK_CONTEXT.md` itself).
+
+### New neomod/ directory layout
+
+```
+neomod/
+├── src/                          ← Python library (velocity_density_pipeline*.py, loaders, etc.)
+├── pipeline/                     ← Sorcha pipeline scripts (moved from sorcha/ root)
+│   ├── sorcha_postprocess.py
+│   ├── sorcha_phase2.py
+│   ├── sorcha_gen_map*.py
+│   ├── hybrid_catalog_prep.py
+│   ├── make_may2026_antisun_patch.py
+│   ├── sanity_check_frame.py
+│   ├── config/                   ← Rubin ini config files
+│   └── slurm/                    ← All Slurm job scripts
+├── notebooks/
+│   ├── paper/                    ← 6 paper/advisor notebooks
+│   ├── dev/                      ← 40 exploration notebooks
+│   └── sorcha/                   ← sorcha_roc_comparison.ipynb
+├── docs/                         ← All context/handoff markdown files
+│   ├── WAGG_SORCHA_HYAK_CONTEXT.md  ← this file
+│   ├── HANDOFF.md
+│   ├── cloning_gmm_neo.md
+│   └── ...
+├── adam_core_stub/               ← Minimal adam_core mock (moved from sorcha/ root)
+├── old_ones/                     ← Archived old notebooks (unchanged)
+└── neocp_data/                   ← Real NEOCP scraping data (unchanged)
+```
+
+### Key path changes
+
+All Slurm scripts now call Python scripts with full path from WORKDIR:
+```bash
+"$PY" "$WORKDIR/neomod/pipeline/sorcha_gen_map_gmm.py"  # was $WORKDIR/sorcha_gen_map_gmm.py
+"$PY" "$WORKDIR/neomod/pipeline/sorcha_phase2.py"        # was bare relative call
+```
+
+`sorcha_phase2.py` ROOT navigation fixed for new location at `neomod/pipeline/`:
+```python
+_NEOMOD = Path(__file__).resolve().parent.parent   # neomod/pipeline -> neomod/
+ROOT    = _NEOMOD.parent                            # neomod/ -> sorcha/ (data root)
+NEOMOD_SRC = _NEOMOD / "src"
+ADAM_STUB  = _NEOMOD / "adam_core_stub"
+```
+
+`sorcha_gen_map*.py` adam_core_stub path: `WORKDIR/adam_core_stub` → `NEOMOD/adam_core_stub`
+
+Notebook sys.path: `"src"` → `"../../src"` (notebooks now 2 levels deep from neomod/)
+
+### Output file renames (wagg → sorcha)
+
+| Old name | New name |
+|----------|----------|
+| `wagg_sorcha_comparison.parquet` | `sorcha_comparison.parquet` |
+| `wagg_sorcha_comparison_gmm.parquet` | `sorcha_comparison_gmm.parquet` |
+| `wagg_sorcha_comparison_hybrid.parquet` | `sorcha_comparison_hybrid.parquet` |
+| `wagg_subsample.parquet` | `sorcha_subsample.parquet` |
+| `wagg_sorcha_may2026_antisun_patch.parquet` | `sorcha_may2026_antisun_patch.parquet` |
+| `d2_wagg_subsample_r*.parquet` (284 files) | `d2_sorcha_subsample_r*.parquet` |
+| `roc_comparison_wagg_sorcha*.png` | `roc_comparison_sorcha*.png` |
+
+### Git commits (2026-06-03)
+
+| Hash | Description |
+|------|-------------|
+| `6d756c8` | Reorganise repo: notebooks/, pipeline/, docs/; add GMM+hybrid pipeline files |
+| `74762db` | Remove all 'wagg' references from file names, comments, and code |
+| `8e75465` | Fix .gitignore: anchor paper/ to root so notebooks/paper/ is tracked |
+
 
 ---
 
@@ -53,6 +129,13 @@ The shell always shows `(base)` — that is NOT the working env. Ignore it.
 ├── sorcha_cache_2025-07-06/            SPICE/ephemeris cache
 ├── outputs/production_2yr/             COMPLETED 2yr run (14,445 h5 files, ~232G)
 ├── neomod/                             VDP codebase (cloned from GitHub)
+│   ├── src/                            library code
+│   ├── pipeline/                       sorcha pipeline scripts + slurm/ + config/
+│   ├── notebooks/paper/                paper figure notebooks
+│   ├── notebooks/dev/                  development notebooks
+│   ├── notebooks/sorcha/               Sorcha ROC notebook
+│   ├── docs/                           context/handoff markdown files
+│   └── adam_core_stub/                 minimal adam_core mock (moved from sorcha/ root)
 │   └── src/
 │       ├── velocity_density_pipeline.py
 │       ├── neoscore.py
@@ -68,9 +151,7 @@ The shell always shows `(base)` — that is NOT the working env. Ignore it.
 │       ├── time/__init__.py            class Timestamp: pass
 │       ├── coordinates/__init__.py     stub classes
 │       └── constants/__init__.py      KM_P_AU, S_P_DAY
-├── multi_sorcha_production.py          Resumable parallel Sorcha wrapper
-├── multi_sorcha_production.sh          Slurm script for production runs
-└── check_sorcha_outputs.py             Checker/rerun script generator
+└── production_run/                     archived original production run scripts
 ```
 
 ---
@@ -282,7 +363,7 @@ Phase 2 — IN PROGRESS (2026-05-28)
 
   Step 2 — sample: COMPLETE
     Keeps ALL 98,646 NEOs + samples 500K non-NEOs proportionally by population
-    Output: outputs/phase2/wagg_subsample.parquet (598,670 rows)
+    Output: outputs/phase2/sorcha_subsample.parquet (598,670 rows)
     Population: NEO 98,646 | MBA 452,304 | Trojan 21,707 | other 20,094 | TNO 5,919
 
   Step 3 — run-digest2: COMPLETE
@@ -298,7 +379,7 @@ Phase 2 — IN PROGRESS (2026-05-28)
     Output: 120 parquets in outputs/phase2/digest2_shards/
 
   Step 4 — combine: COMPLETE
-    Output: outputs/phase2/wagg_sorcha_comparison.parquet (598,670 rows)
+    Output: outputs/phase2/sorcha_comparison.parquet (598,670 rows)
     Final columns include: population, P_NEO_vdp, vlam, vbeta, mag_bin_label,
                            P_NEO_d2, digest2_id, and all tracklet geometry columns
 
@@ -731,7 +812,7 @@ zones that kNN zeroed, picking up a few extra MBAs. Net F1 gain is positive.
 | `sorcha_gen_maps_hybrid_slurm.sh` | Slurm script → prob_maps_hybrid/ | DONE |
 | `sorcha_phase2_vdp_hybrid.sh` | Phase 2 scoring → outputs/phase2_hybrid/ | DONE |
 | `prob_maps_hybrid/` | 24 monthly antisun maps (hybrid training) | DONE |
-| `outputs/phase2_hybrid/wagg_sorcha_comparison_hybrid.parquet` | Final comparison | DONE |
+| `outputs/phase2_hybrid/sorcha_comparison_hybrid.parquet` | Final comparison | DONE |
 
 **Bugs found and fixed during hybrid pipeline build:**
 
@@ -941,10 +1022,10 @@ contamination — VDP selects 7.5× more false MBAs at optimal threshold.
 prob_maps/                         ← S3M kNN monthly maps (24 files)
 prob_maps_gmm/                     ← GMM monthly maps (May 2026 confirmed)
 outputs/phase2/
-  wagg_sorcha_comparison.parquet            (162 MB — S3M result)
-  wagg_sorcha_comparison_gmm.parquet        (75 MB  — GMM result)
-  wagg_sorcha_comparison_hybrid.parquet     (162 MB — hybrid result)
-  wagg_sorcha_may2026_antisun_patch.parquet (1.2 MB — single-epoch patch, see below)
+  sorcha_comparison.parquet            (162 MB — S3M result)
+  sorcha_comparison_gmm.parquet        (75 MB  — GMM result)
+  sorcha_comparison_hybrid.parquet     (162 MB — hybrid result)
+  sorcha_may2026_antisun_patch.parquet (1.2 MB — single-epoch patch, see below)
 sorcha_gmm_s3m_comparison.ipynb            ← density + P(NEO) + ROC comparison (advisor)
 sorcha_gmm_s3m_singleepoch_comparison.ipynb ← same-objects single-epoch ROC (new)
 ```
@@ -1300,7 +1381,7 @@ vdp = pd.concat([pd.read_parquet(f, columns=['tracklet_id','P_NEO_vdp','vlam','v
 d2  = pd.concat([pd.read_parquet(f) for f in sorted(glob('outputs/phase2_hybrid/digest2_shards/d2_*.parquet'))])
 d2  = d2.drop(columns=[c for c in ['P_NEO_vdp','vlam','vbeta','mag_bin_label'] if c in d2.columns])
 out = d2.merge(vdp, on='tracklet_id', how='left')
-out.to_parquet('outputs/phase2_hybrid/wagg_sorcha_comparison_hybrid.parquet', index=False)
+out.to_parquet('outputs/phase2_hybrid/sorcha_comparison_hybrid.parquet', index=False)
 ```
 
 ### Final directory layout
@@ -1451,10 +1532,10 @@ This gives 14,873 objects (2,402 NEOs, 16.2% NEO rate) with a realistic populati
 mix (no S3M TNO bias). The "single epoch" property is preserved: all objects observed
 in May 2026 and all scored with the May 2026 antisun VDP calibration.
 
-#### New parquet: `wagg_sorcha_may2026_antisun_patch.parquet`
+#### New parquet: `sorcha_may2026_antisun_patch.parquet`
 
-**Hyak path:** `outputs/phase2/wagg_sorcha_may2026_antisun_patch.parquet` (1.2 MB)
-**Arnor path:** `outputs/phase2/wagg_sorcha_may2026_antisun_patch.parquet`
+**Hyak path:** `outputs/phase2/sorcha_may2026_antisun_patch.parquet` (1.2 MB)
+**Arnor path:** `outputs/phase2/sorcha_may2026_antisun_patch.parquet`
 **Generator:** `make_may2026_antisun_patch.py` (Hyak working dir)
 
 **Filter criteria:**
@@ -1487,6 +1568,6 @@ ecl_lon, ecl_lat, mjd0_utc, P_NEO_gmm`
 
 **SCP from Hyak (run in sorcha working dir):**
 ```bash
-scp outputs/phase2/wagg_sorcha_may2026_antisun_patch.parquet \
+scp outputs/phase2/sorcha_may2026_antisun_patch.parquet \
     ds2004@arnor.astro.washington.edu:/astro/users/ds2004/vdp/outputs/phase2/
 ```
