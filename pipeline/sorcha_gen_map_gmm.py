@@ -12,7 +12,7 @@ import argparse
 import os
 import sys
 
-WORKDIR = "/mmfs1/gscratch/astro/ds2004/sorcha"
+WORKDIR = "/mmfs1/gscratch/dirac/ds2004/sorcha"
 NEOMOD  = os.path.join(WORKDIR, "neomod")
 
 sys.path.insert(0, os.path.join(NEOMOD, "adam_core_stub"))

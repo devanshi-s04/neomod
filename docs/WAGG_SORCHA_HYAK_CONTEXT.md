@@ -28,9 +28,9 @@ Scripts at sorcha root:
 
 ```bash
 # Submit (run once, then close laptop — job runs independently)
-cd /mmfs1/gscratch/astro/ds2004/sorcha
+cd /mmfs1/gscratch/dirac/ds2004/sorcha
 sbatch move_to_dirac.sh
-# Log: /mmfs1/gscratch/astro/ds2004/move_to_dirac_JOBID.out
+# Log: /mmfs1/gscratch/dirac/ds2004/move_to_dirac_JOBID.out
 
 # After job completes (check log ends with "New canonical path: ...dirac...")
 bash /mmfs1/gscratch/dirac/ds2004/sorcha/update_paths_to_dirac.sh
@@ -49,7 +49,7 @@ bash /mmfs1/gscratch/dirac/ds2004/sorcha/update_paths_to_dirac.sh
 /mmfs1/gscratch/dirac/ds2004/sorcha/neomod/    ← git repo
 /mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python
 ```
-Old path `/mmfs1/gscratch/astro/ds2004/sorcha` continues to work via symlink.
+Old path `/mmfs1/gscratch/dirac/ds2004/sorcha` continues to work via symlink.
 
 
 ---
@@ -148,7 +148,7 @@ ssh ds2004@klone.hyak.uw.edu
 Working directory:
 
 ```text
-/mmfs1/gscratch/astro/ds2004/sorcha
+/mmfs1/gscratch/dirac/ds2004/sorcha
 ```
 
 Slurm partition: `ckpt` (checkpoint). No explicit `--account` line needed; defaults to `astro`.
@@ -156,9 +156,9 @@ Slurm partition: `ckpt` (checkpoint). No explicit `--account` line needed; defau
 Always use the conda env Python directly — never bare `python` or `pip`:
 
 ```bash
-/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python
-/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/pip
-/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/sorcha-run
+/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python
+/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/pip
+/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/sorcha-run
 ```
 
 The shell always shows `(base)` — that is NOT the working env. Ignore it.
@@ -168,7 +168,7 @@ The shell always shows `(base)` — that is NOT the working env. Ignore it.
 ## Key Files on Hyak
 
 ```text
-/mmfs1/gscratch/astro/ds2004/sorcha/
+/mmfs1/gscratch/dirac/ds2004/sorcha/
 ├── baseline_v3.3_10yrs.db              Rubin 10yr cadence (799M)
 ├── Rubin_full_footprint_wagg_detections.ini  Wagg-style Sorcha config
 ├── hybrid.h5                           Wagg hybrid S3M+MPCORB catalog (14.4M objects)
@@ -313,13 +313,13 @@ Cloned from GitHub (public repo) via HTTPS:
 
 ```bash
 git clone https://github.com/devanshi-s04/neomod.git
-# lives at /mmfs1/gscratch/astro/ds2004/sorcha/neomod/
+# lives at /mmfs1/gscratch/dirac/ds2004/sorcha/neomod/
 ```
 
 To update after pushing from Mac:
 
 ```bash
-cd /mmfs1/gscratch/astro/ds2004/sorcha/neomod && git pull origin main
+cd /mmfs1/gscratch/dirac/ds2004/sorcha/neomod && git pull origin main
 ```
 
 ### VDP Import
@@ -330,8 +330,8 @@ Working import snippet (use in all Hyak scripts):
 
 ```python
 import sys
-sys.path.insert(0, "/mmfs1/gscratch/astro/ds2004/sorcha/adam_core_stub")
-sys.path.insert(0, "/mmfs1/gscratch/astro/ds2004/sorcha/neomod/src")
+sys.path.insert(0, "/mmfs1/gscratch/dirac/ds2004/sorcha/adam_core_stub")
+sys.path.insert(0, "/mmfs1/gscratch/dirac/ds2004/sorcha/neomod/src")
 import velocity_density_pipeline as vdp
 ```
 
@@ -360,7 +360,7 @@ Each map covers a ~30° sky radius. Objects outside all map footprints get P_NEO
 Load example:
 
 ```python
-pms = vdp.ProbMapSet.from_npz("/mmfs1/gscratch/astro/ds2004/sorcha/prob_maps/prob_maps_2025-03-21.npz")
+pms = vdp.ProbMapSet.from_npz("/mmfs1/gscratch/dirac/ds2004/sorcha/prob_maps/prob_maps_2025-03-21.npz")
 ```
 
 ---
@@ -434,7 +434,7 @@ Phase 2 — IN PROGRESS (2026-05-28)
                            P_NEO_d2, digest2_id, and all tracklet geometry columns
 
 Phase 3 — ROC analysis (on Hyak, sorcha_roc_comparison.ipynb)
-  Notebook: /mmfs1/gscratch/astro/ds2004/sorcha/sorcha_roc_comparison.ipynb
+  Notebook: /mmfs1/gscratch/dirac/ds2004/sorcha/sorcha_roc_comparison.ipynb
   Kernel: sorcha (conda_prep) — registered via: conda_prep/bin/pip install ipykernel &&
           conda_prep/bin/python -m ipykernel install --user --name sorcha
   See Results section below.
@@ -522,7 +522,7 @@ MU_SUN_AU3_DAY2 = 0.01720209895**2
 
 ### Phase 1 Script: sorcha_postprocess.py
 
-**Location:** `/mmfs1/gscratch/astro/ds2004/sorcha/sorcha_postprocess.py`
+**Location:** `/mmfs1/gscratch/dirac/ds2004/sorcha/sorcha_postprocess.py`
 **Slurm wrapper:** `sorcha_postprocess.sh` (1 CPU, 8G, 1h per task)
 
 Key design:
@@ -577,7 +577,7 @@ Production used `--cpus-per-task=16 --mem=128G --array=0-903%8`.
 ## Checker / Recovery Pattern
 
 ```bash
-/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python check_sorcha_outputs.py \
+/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python check_sorcha_outputs.py \
   --outdir outputs/production_2yr \
   --total_objects 14444912 \
   --chunksize 16000 \
@@ -622,11 +622,11 @@ Host hyak
 ```
 
 Connect: `Cmd+Shift+P` → Remote-SSH: Connect to Host → hyak → password + Duo.
-Open folder: `Cmd+Shift+P` → Open Folder → `/mmfs1/gscratch/astro/ds2004/sorcha`
+Open folder: `Cmd+Shift+P` → Open Folder → `/mmfs1/gscratch/dirac/ds2004/sorcha`
 
 Important: VSCode opens a new window for the remote. Local window stays open separately. Extensions (Claude Code) are local only — use the remote terminal for Hyak commands and paste output back to local Claude session.
 
-Kernel for notebooks on Hyak: `/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python`
+Kernel for notebooks on Hyak: `/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python`
 
 ---
 

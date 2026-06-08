@@ -7,15 +7,15 @@
 #SBATCH --mem=32G
 #SBATCH --time=04:00:00
 #SBATCH --array=0-112%32
-#SBATCH --chdir=/mmfs1/gscratch/astro/ds2004/sorcha
+#SBATCH --chdir=/mmfs1/gscratch/dirac/ds2004/sorcha
 #SBATCH --export=all
 #SBATCH --output=logs/%x_%A_%a.out
 #SBATCH --error=logs/%x_%A_%a.err
 
 set -euo pipefail
 
-PY=/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python
-WORKDIR=/mmfs1/gscratch/astro/ds2004/sorcha
+PY=/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python
+WORKDIR=/mmfs1/gscratch/dirac/ds2004/sorcha
 
 cd "$WORKDIR"
 mkdir -p logs outputs/phase2

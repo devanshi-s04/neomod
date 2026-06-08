@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from astropy.time import Time
 
-WORKDIR = "/mmfs1/gscratch/astro/ds2004/sorcha"
+WORKDIR = "/mmfs1/gscratch/dirac/ds2004/sorcha"
 S3M_PARQUET = f"{WORKDIR}/outputs/phase2/sorcha_comparison.parquet"
 GMM_PARQUET = f"{WORKDIR}/outputs/phase2_gmm/sorcha_comparison_gmm.parquet"
 OUT_PARQUET = f"{WORKDIR}/outputs/phase2/sorcha_may2026_antisun_patch.parquet"
