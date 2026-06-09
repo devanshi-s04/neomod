@@ -38,3 +38,4 @@ NEOMOD3/
 
 # Pipeline data inputs (large, Hyak-only)
 pipeline/CDS_colors.parquet
+neocp_data/
