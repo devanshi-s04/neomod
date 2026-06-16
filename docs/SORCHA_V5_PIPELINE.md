@@ -175,28 +175,73 @@ One parquet per input HDF5. Concatenated across all 14,445 files in Phase 2.
 
 ---
 
-## Step 3 — Build ~500-Map Antisun-Relative Sky Grid
-
-*Not yet done. Required before Phase 2 scoring.*
+## Step 3 — Antisun-Relative Sky Grid (667 maps) — AS BUILT (2026-06-16)
 
 ### Motivation
-The current 24 monthly maps all sit at ecliptic lat=0, covering only the antisun direction over one year. A full sky grid in antisun-relative (Δlon, lat) coordinates allows any LSST tracklet — regardless of sky position — to be scored using the nearest map. The grid is time-independent and reusable every year as the Sun moves.
+The previous 24 monthly maps all sit at ecliptic lat=0, covering only the antisun
+direction along the ecliptic. A full sky grid in **antisun-relative (Δlon, lat)
+coordinates** lets any LSST tracklet — regardless of sky position — be scored with
+the nearest map. The grid is time-independent: NEO/MBA velocity structure is set by
+geometry relative to the Sun, so a map built at offset (Δlon, lat) from the antisun
+is reusable at any epoch as the Sun moves.
 
-### Grid specification
+### Grid specification (as built)
 - **Coordinate system:** (Δlon from current antisun, ecliptic lat) — antisun-relative ecliptic
-- **Longitude:** 10° steps, −180° to +180° = 36 grid points; minus ~8 within 40° sun exclusion zone = ~28 usable
-- **Latitude:** ~16 values (e.g., 0, ±2, ±5, ±10, ±20, ±30, ±45, ±60°), finer near ecliptic
-- **Sun exclusion:** no map centers within 40° of the Sun ecliptic longitude
-- **Estimated total maps:** ~450–550
+- **Longitude:** 10° steps; centers kept where |Δlon| ≤ 140° (i.e. ≥ 40° from the Sun,
+  which sits at |Δlon| = 180°) → **29 usable longitudes** (Δlon = −140°…+140°)
+- **Latitude (non-uniform, fine near the ecliptic):** symmetric expansion of
+  `0, 1, 2, 3, 4, 5, 8, 12, 18, 25, 35, 50` → **23 values**
+  (0, ±1, ±2, ±3, ±4, ±5, ±8, ±12, ±18, ±25, ±35, ±50°). 1° steps at the ecliptic
+  where most NEOs/MBAs lie, coarsening to 10–15° steps at high latitude.
+- **Sun exclusion:** 40° (no centers within 40° of the Sun ecliptic longitude)
+- **Total maps:** **29 × 23 = 667**
+- **Reference epoch:** 2026-01-01T00:00:00 (only fixes where patches land on the real
+  sky for this generation; velocity statistics are epoch-independent in the antisun frame)
+- **MBA clone_factor = 5** (matches the config behind the documented F1≈0.837 result;
+  applied via `--mba-clone-factor 5`, the script default, NOT by editing the global
+  `DEFAULT_POPULATION_SETTINGS`). NEO=80, TNO=10, Trojans=5 are the code defaults.
+- **Velocity grid:** (−2.0, +2.0) deg/day, step 0.01 (401×401), per `velocity_density_pipeline_gmm.py`
+- **Training sky cut:** max_sep_deg = 30° per map center
 
-### Script (to be built)
-`neomod/pipeline/sorcha_gen_maps_grid.py` — configurable `--lon-step`, `--lat-points`, `--sun-exclusion`  
-Each map generated same way as existing monthly maps but at specified (Δlon, lat) offset from antisun.
+### Script
+`neomod/pipeline/sorcha_gen_maps_grid.py` — single configurable generator:
+`--lon-step`, `--lat-base`/`--lat-points`, `--sun-exclusion`, `--ref-obstime`,
+`--mba-clone-factor` (default 5), `--task-id N` (generate the Nth grid map for a
+Slurm array), `--list-only`/`--map-grid-file` (write the grid manifest), `--n-jobs`,
+`--save-overlays`. Same GMM map-generation path as `sorcha_gen_map_gmm.py`, but at the
+specified (Δlon, lat) offset from the antisun; afterwards each `.npz` is augmented with
+exact `delta_lon_from_antisun_deg` and `grid_lat_deg` keys for assignment.
 
-### Required sanity plots per batch
+**Slurm:** `neomod/pipeline/slurm/sorcha_gen_maps_grid_slurm.sh` —
+`--cpus-per-task=16 --mem=32G --time=06:00:00 --array=0-666%48`, calls the script with
+`--task-id $SLURM_ARRAY_TASK_ID`. No `--overwrite` → skip-existing, so resubmitting
+after preemption/maintenance only fills unfinished maps.
+**Test script:** `sorcha_gen_maps_grid_test.sh` (indices 333 = antisun, 652 = lat 50;
+`--save-overlays`).
+**Manifest:** `neomod/pipeline/slurm/grid_map_manifest.csv` (667 rows: index, Δlon, lat, filename).
+
+### Measured performance
+- Per-map runtime: ~3.6 min (sparse high-lat) to ~10 min (dense antisun).
+- Full grid at %48 concurrency: ~2–3 h wall (667 tasks, under the 2000 QOS cap and ~377 group ckpt limit).
+
+### Validation (test maps, 2026-06-16)
+- Map 333 (antisun) P(NEO) is physically correct: peak ≈0.93 at vlam≈−0.54 (fast
+  retrograde NEO locus); MBA stationary (0,0) and retrograde (−0.18,0) score ≈0.
+- With MBA cf=5, map 333 reproduces the old `prob_maps_gmm/2026-01-01_antisun.npz`
+  (MBA support ratio 5.0→1.0; mean P(NEO) agrees per mag bin). Confirms the grid
+  pipeline matches the F1≈0.837 configuration. Residual per-cell scatter is the known
+  joblib parallel non-determinism (~0.02 F1 between regenerations).
+
+### Map-to-tracklet assignment (in `sorcha_postprocess.py`)
+Grid maps are auto-detected by the `delta_lon_from_antisun_deg` key. For each tracklet:
+compute the antisun ecliptic longitude at observation time, take Δlon = ecl_lon −
+antisun_lon (wrapped to ±180°) and ecliptic lat, then assign to the **nearest grid
+center** in 2-D (Δlon, lat) space. Tracklets within 40° of the Sun are left unassigned.
+
+### Required sanity plots per batch (advisor)
 - Heliocentric distance histogram (AU, split by population: NEO/MBA/TNO/Trojan)
 - Heliocentric x-y scatter (1–5 AU range, showing inner belt structure)
-- Velocity (vlam, vbeta) coverage plot
+- Velocity (vlam, vbeta) coverage plot — derivable from `--save-overlays` outputs
 
 Output directory: `prob_maps_grid/`
 
