@@ -1571,12 +1571,13 @@ Good luck! — Arnor Claude, 2026-06-08 (corrected and updated)
 - Compare VDP vs digest2 F1 on new cadence
 - Fill in Section 4.8 of `neomod/paper/NEOrocks.tex`
 
-### Optional Small Wins (do NOT apply without explicit instruction)
-| Task | File | Expected F1 gain |
-|------|------|-----------------|
-| MBA clone_factor 1→5 | `neomod/src/velocity_density_pipeline_gmm.py` line ~150 | +0.020 |
-| Widen antisun footprint 30°→45° | `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run | +0.010–0.015 |
-| GMM components 80→200 | `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 | +0.003–0.008 |
+### Small Wins (deferred during the v5.0 redo — not forbidden)
+These were deprioritised in favour of the v5.0 grid redo, NOT ruled out. Adopt as decided.
+| Task | File | Expected F1 gain | Status |
+|------|------|-----------------|--------|
+| MBA clone_factor 1→5 | `neomod/src/velocity_density_pipeline_gmm.py` line ~150 | +0.020 | **ADOPTED 2026-06-16** for the v5.0 grid (matches the F1=0.837 config). Applied via `--mba-clone-factor 5` in `sorcha_gen_maps_grid.py` (default), not by editing the global default. |
+| Widen antisun footprint 30°→45° | `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run | +0.010–0.015 | not yet applied |
+| GMM components 80→200 | `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 | +0.003–0.008 | not yet applied |
 
 ---
 

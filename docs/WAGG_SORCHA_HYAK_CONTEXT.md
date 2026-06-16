@@ -1827,7 +1827,8 @@ See Task 2 in `SORCHA_HYAK_ARNOR_CONTEXT.md` for full step list.
 - `neomod/paper/NEOrocks.tex` — Section 4 "Rubin-Cadence Evaluation with Sorcha" drafted (Sections 4.1–4.8; 4.8 Results is a placeholder pending Phase 2)
 - `neomod/paper/` directory created, NEOrocks.tex SCPed from Mac
 
-### Immediate Hyak priorities (small wins — do NOT apply without explicit instruction)
-- [ ] MBA clone_factor 1→5 in `neomod/src/velocity_density_pipeline_gmm.py` line ~150 → expected +0.020 F1
-- [ ] Widen antisun footprint 30°→45° in `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run → expected +0.010–0.015
-- [ ] More GMM components 80→200 in `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 → expected +0.003–0.008
+### Hyak small wins (deferred during the v5.0 redo — not forbidden)
+These were deprioritised in favour of the v5.0 grid redo, NOT ruled out. Adopt as decided.
+- [x] MBA clone_factor 1→5 in `neomod/src/velocity_density_pipeline_gmm.py` line ~150 → +0.020 F1. **ADOPTED 2026-06-16** for the v5.0 antisun-relative grid (matches the F1=0.837 config). Applied via `--mba-clone-factor 5` (default) in `sorcha_gen_maps_grid.py`, not by editing the global default.
+- [ ] Widen antisun footprint 30°→45° in `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run → expected +0.010–0.015 (not yet applied)
+- [ ] More GMM components 80→200 in `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 → expected +0.003–0.008 (not yet applied)

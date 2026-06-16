@@ -21,6 +21,11 @@
 #                GMM/K|M fallback does not crash where few objects are visible.
 # --save-overlays so the diagnostic plots (heliocentric x-y, velocity coverage)
 # can be made from these test maps.
+#
+# Uses MBA clone_factor=5 (the grid script default) to match the config behind
+# the documented F1=0.837 result. After regenerating, map 333 should match the
+# old prob_maps_gmm/prob_maps_2026-01-01_antisun.npz (confirms cf=5 + fix).
+# --overwrite is set, so it replaces the earlier cf=1 test maps in place.
 
 set -euo pipefail
 

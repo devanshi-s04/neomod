@@ -21,6 +21,7 @@
 #               0, +/-1, +/-2, +/-3, +/-4, +/-5, +/-8, +/-12, +/-18, +/-25, +/-35, +/-50
 #               (23 values)  ->  29 x 23 = 667 maps
 #   ref epoch : 2026-01-01T00:00:00 (maps are antisun-relative / time-independent)
+#   MBA clone_factor : 5 (grid script default; matches the F1=0.837 config)
 #
 # Each task generates ONE map by its grid index (--task-id $SLURM_ARRAY_TASK_ID).
 # The grid is rebuilt deterministically inside the script, so no manifest file is

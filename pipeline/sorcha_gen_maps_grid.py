@@ -42,6 +42,7 @@ Generate a single explicit map (manual test):
         --output prob_maps_grid/prob_maps_grid_dlon+000_lat+00.npz
 """
 import argparse
+import copy
 import csv
 import os
 import sys
@@ -158,6 +159,10 @@ def main():
                    help="Print the grid summary, write manifest if requested, exit.")
     p.add_argument("--n-jobs",        type=int, default=1,
                    help="Parallel workers for the VDP density estimator.")
+    p.add_argument("--mba-clone-factor", type=int, default=5,
+                   help="MBA clone_factor. Default 5 matches the config behind the "
+                        "documented F1=0.837 result (the code default is 1). Only MBA "
+                        "differs between cf=1 and the old maps; NEO/TNO/Trojan match.")
     p.add_argument("--save-overlays", action="store_true",
                    help="Persist cloned-object overlays (vlam/vbeta/heliocentric) "
                         "for diagnostic plots. Inflates the .npz — use for test "
@@ -236,9 +241,21 @@ def main():
     os.chdir(NEOMOD)
     import velocity_density_pipeline_gmm as vdp  # noqa: E402
 
+    # Override MBA clone_factor (default 5) without mutating the global default,
+    # so monthly/hybrid pipelines that import DEFAULT_POPULATION_SETTINGS are
+    # unaffected. Confirmed empirically: only MBA differs between cf=1 (code
+    # default) and the old maps behind F1=0.837 (cf=5).
+    pop_settings = copy.deepcopy(vdp.DEFAULT_POPULATION_SETTINGS)
+    pop_settings["MBA"]["clone_factor"] = args.mba_clone_factor
+    print(f"MBA clone_factor = {args.mba_clone_factor} "
+          f"(NEO={pop_settings['NEO']['clone_factor']}, "
+          f"TNO={pop_settings['TNO']['clone_factor']}, "
+          f"Trojans={pop_settings['Trojans']['clone_factor']})", flush=True)
+
     vdp.generate_probability_maps(
         obstime_str=args.ref_obstime,
         output_path=out,
+        population_settings=pop_settings,
         center_lon_deg=center_lon,
         center_lat_deg=center_lat,
         center_label=label,
