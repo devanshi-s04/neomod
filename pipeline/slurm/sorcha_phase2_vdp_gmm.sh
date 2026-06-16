@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=sorcha_vdp_gmm
 #SBATCH --partition=ckpt
+#SBATCH --account=astro
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2

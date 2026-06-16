@@ -106,6 +106,7 @@ OUTPUT_COLUMNS = [
     "a_au",
     "e",
     "q_au",
+    "n_det_per_night",
 ]
 
 
@@ -118,6 +119,11 @@ class ProbMapMeta:
     center_lon_deg: float
     center_lat_deg: float
     max_sep_deg: float
+    # Present only for antisun-relative grid maps (sorcha_gen_maps_grid.py).
+    # When set, the map is assigned by nearest (delta_lon, lat) offset rather
+    # than by epoch proximity to the current antisun.
+    delta_lon_from_antisun_deg: float | None = None
+    grid_lat_deg: float | None = None
 
 
 def parse_args() -> argparse.Namespace:
@@ -372,6 +378,7 @@ def build_tracklets(
             "ObjID": obj_ids,
             "night": nights.astype(int),
             "n_det": n_v.values,
+            "n_det_per_night": n_v.values,
             "night_span_min": dt_v.values,
             "dt_min": dt_v.values,
             "mean_ra": mean_ra,
@@ -423,6 +430,14 @@ def load_prob_map_metadata(prob_maps_dir: Path) -> list[ProbMapMeta]:
                     center_lon_deg=float(z["center_lon_deg"]),
                     center_lat_deg=float(z["center_lat_deg"]),
                     max_sep_deg=float(z["max_sep_deg"]),
+                    delta_lon_from_antisun_deg=(
+                        float(z["delta_lon_from_antisun_deg"])
+                        if "delta_lon_from_antisun_deg" in z.files else None
+                    ),
+                    grid_lat_deg=(
+                        float(z["grid_lat_deg"])
+                        if "grid_lat_deg" in z.files else None
+                    ),
                 )
             )
 
@@ -461,6 +476,20 @@ def _ecl_lon_from_radec(ra_deg: np.ndarray, dec_deg: np.ndarray) -> np.ndarray:
     return np.rad2deg(np.arctan2(y_ecl, x)) % 360.0
 
 
+def _ecl_lat_from_radec(ra_deg: np.ndarray, dec_deg: np.ndarray) -> np.ndarray:
+    """Convert equatorial (RA, Dec) to geocentric ecliptic latitude (deg).
+
+    Uses a fixed obliquity — sufficient for grid-cell proximity in latitude.
+    """
+    ra  = np.deg2rad(ra_deg)
+    dec = np.deg2rad(dec_deg)
+    c, s = np.cos(_ECLIPTIC_OBL_RAD), np.sin(_ECLIPTIC_OBL_RAD)
+    y     = np.cos(dec) * np.sin(ra)
+    z     = np.sin(dec)
+    z_ecl = -s * y + c * z
+    return np.rad2deg(np.arcsin(np.clip(z_ecl, -1.0, 1.0)))
+
+
 def _angular_sep_ecl_lon(lon_a: np.ndarray, lon_b: np.ndarray) -> np.ndarray:
     """Great-circle-approximate angular separation between two ecliptic longitudes
     at lat ≈ 0 (deg). Fast scalar-or-array operation."""
@@ -482,6 +511,12 @@ def assign_probability_maps(tracklets: pd.DataFrame, metas: list[ProbMapMeta]) -
 
     Among maps whose footprint contains a tracklet we pick the one whose epoch
     is closest to the tracklet's observation time.
+
+    Grid mode (antisun-relative sky grid, sorcha_gen_maps_grid.py): if the maps
+    carry ``delta_lon_from_antisun_deg`` metadata, each tracklet is placed in the
+    antisun-relative frame (Δlon = ecl_lon − antisun_lon at observation time,
+    plus ecliptic lat) and assigned to the nearest grid center in that 2-D space.
+    Tracklets within ``SUN_EXCL_DEG`` of the Sun are left unassigned.
     """
     if len(tracklets) == 0:
         tracklets["ecl_lon"] = pd.Series(dtype=float)
@@ -498,26 +533,45 @@ def assign_probability_maps(tracklets: pd.DataFrame, metas: list[ProbMapMeta]) -
 
     # Precompute per-tracklet quantities used in footprint checks
     ecl_lon_obs    = _ecl_lon_from_radec(ra, dec)           # ecliptic lon at obs time
+    ecl_lat_obs    = _ecl_lat_from_radec(ra, dec)           # ecliptic lat at obs time
     antisun_lon    = _antisun_ecl_lon(mjd_obs)               # current antisun lon
 
-    # (N, M) arrays of footprint membership and |epoch diff| in days
+    is_grid = any(m.delta_lon_from_antisun_deg is not None for m in metas)
+
+    # (N, M) footprint membership, plus a per-(tracklet,map) "score" we minimise
+    # to choose the assigned map:
+    #   grid maps          -> 2-D (Δlon, lat) distance to the grid center
+    #   antisun monthly    -> |epoch − obs_time| (days)
     in_footprint = np.zeros((N, M), dtype=bool)
-    epoch_diff   = np.full((N, M), np.inf, dtype=float)
+    score        = np.full((N, M), np.inf, dtype=float)
 
-    for j, meta in enumerate(metas):
-        epoch_diff[:, j] = np.abs(mjd_obs - meta.obstime_mjd)
-        # All VDP maps are calibrated for the antisun geometry, so the footprint
-        # criterion for every map is: is the tracklet within max_sep of the
-        # CURRENT antisun at observation time?  This prevents off-axis tracklets
-        # (those far from the current antisun) from being scored with a map whose
-        # velocity calibration assumes near-opposition geometry.
-        dist = _angular_sep_ecl_lon(ecl_lon_obs, antisun_lon)
-        in_footprint[:, j] = dist <= meta.max_sep_deg
+    if is_grid:
+        SUN_EXCL_DEG = 40.0
+        # antisun-relative longitude offset of each tracklet, wrapped to [-180,180]
+        delta_lon_obs = ((ecl_lon_obs - antisun_lon) + 180.0) % 360.0 - 180.0
+        in_sun_zone   = np.abs(delta_lon_obs) > (180.0 - SUN_EXCL_DEG)
+        for j, meta in enumerate(metas):
+            d_lon = np.abs(
+                ((delta_lon_obs - meta.delta_lon_from_antisun_deg) + 180.0) % 360.0 - 180.0
+            )
+            d_lat = np.abs(ecl_lat_obs - meta.grid_lat_deg)
+            score[:, j] = np.hypot(d_lon, d_lat)
+        # every non-sun-zone tracklet is assigned to its nearest grid center
+        in_footprint[~in_sun_zone, :] = True
+    else:
+        for j, meta in enumerate(metas):
+            score[:, j] = np.abs(mjd_obs - meta.obstime_mjd)
+            # All antisun maps are calibrated for the antisun geometry, so the
+            # footprint criterion for every map is: is the tracklet within
+            # max_sep of the CURRENT antisun at observation time?  This prevents
+            # off-axis tracklets from being scored with a near-opposition map.
+            dist = _angular_sep_ecl_lon(ecl_lon_obs, antisun_lon)
+            in_footprint[:, j] = dist <= meta.max_sep_deg
 
-    # Among in-footprint maps, pick the one with smallest |epoch - obs_time|.
-    epoch_diff_masked = np.where(in_footprint, epoch_diff, np.inf)
-    best_j = np.argmin(epoch_diff_masked, axis=1)                 # (N,)
-    any_in_footprint = in_footprint.any(axis=1)                   # (N,)
+    # Among in-footprint maps, pick the one with the smallest score.
+    score_masked = np.where(in_footprint, score, np.inf)
+    best_j = np.argmin(score_masked, axis=1)                     # (N,)
+    any_in_footprint = in_footprint.any(axis=1)                  # (N,)
 
     # Build per-map attribute arrays for fast indexing
     labels      = np.array([m.label          for m in metas], dtype=object)
@@ -531,12 +585,19 @@ def assign_probability_maps(tracklets: pd.DataFrame, metas: list[ProbMapMeta]) -
     best_obstime    = np.where(any_in_footprint, obstimes[best_j],    None)
     best_center_lon = np.where(any_in_footprint, center_lons[best_j], np.nan)
     best_center_lat = np.where(any_in_footprint, center_lats[best_j], np.nan)
-    # For antisun maps store distance from current antisun; for others use map-center dist
-    best_dist = np.where(
-        any_in_footprint,
-        _angular_sep_ecl_lon(ecl_lon_obs, antisun_lon),   # approx dist from antisun
-        np.nan,
-    )
+    # Distance-to-assigned-center diagnostic:
+    #   grid maps -> the 2-D (Δlon, lat) distance to the chosen grid center
+    #   antisun   -> approximate distance from the current antisun
+    if is_grid:
+        best_dist = np.where(
+            any_in_footprint, score_masked[np.arange(N), best_j], np.nan,
+        )
+    else:
+        best_dist = np.where(
+            any_in_footprint,
+            _angular_sep_ecl_lon(ecl_lon_obs, antisun_lon),   # approx dist from antisun
+            np.nan,
+        )
 
     # Ecliptic lon already computed above from obs-time ra/dec (ecl_lon_obs).
     # For ecl_lat use the first map's frame (small error, diagnostic only).

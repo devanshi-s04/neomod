@@ -1370,6 +1370,8 @@ def build_cloned_maps_for_center_magbin(
                 center_lon_deg=center_lon_deg, center_lat_deg=center_lat_deg,
             )
             print("  visible source objects:", len(df_cloner_input))
+            n_source = len(df_cloner_input)
+            n_visible_clones_gmm = None  # set below if GMM path succeeds
 
             if len(df_cloner_input) < DEFAULT_MIN_CONDITIONAL_CLONER_INPUT:
                 print(
@@ -1418,6 +1420,7 @@ def build_cloned_maps_for_center_magbin(
                     print("  GMM visible clones:", len(clone_visible_df))
                     if len(clone_visible_df) >= 2:
                         gmm_success = True
+                        n_visible_clones_gmm = len(clone_visible_df)
                 except Exception as exc:
                     print(f"  GMM failed ({exc}); falling back to K|M")
 
@@ -1514,14 +1517,23 @@ def build_cloned_maps_for_center_magbin(
                     n_jobs=n_jobs,
                 )
                 density_clone_map = density_clone_flat.reshape(X0.shape)
-                density_downweighted_map = density_clone_map / f
+                # GMM NEO: divide by actual visible-clone ratio (not intended f),
+                # because GMM samples from full orbit space then sky-cuts, so only
+                # acceptance_fraction of f*N_vis clones survive. Dividing by f
+                # underestimates NEO density by ~3× (diagnosed 2026-06-07).
+                if (pop_name == "NEO" and gmm_success
+                        and n_visible_clones_gmm is not None and n_source > 0):
+                    effective_factor = n_visible_clones_gmm / n_source
+                else:
+                    effective_factor = f
+                density_downweighted_map = density_clone_map / effective_factor
                 support_count_map = make_support_count_map(
-                    vlam_clone, vbeta_clone, x_grid, y_grid, clone_factor=f,
+                    vlam_clone, vbeta_clone, x_grid, y_grid, clone_factor=effective_factor,
                 )
 
                 if smooth_density_maps and pop_name in smooth_population_names:
                     if smooth_support_scale_by_clone_factor:
-                        support_for_smoothing = support_count_map * f
+                        support_for_smoothing = support_count_map * effective_factor
                     else:
                         support_for_smoothing = support_count_map
                     for pass_cfg in smooth_passes:

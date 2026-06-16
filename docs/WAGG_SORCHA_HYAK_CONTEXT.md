@@ -1,55 +1,34 @@
 # Wagg / Sorcha / Hyak Context
-Generated: 2026-05-27, Updated: 2026-06-03 (repo reorganised into neomod/, all wagg→sorcha file renames applied, F1=0.837 tied with digest2)
+Generated: 2026-05-27, Updated: 2026-06-08 (GMM bug fixed + regenerated; digest2 NEOCP validation; May 2026 patch regenerated)
 Covers: full Hyak setup, Sorcha 2yr production run, neomod deployment, Wagg paper methodology, post-processing plan.
 
 ---
 
-## Dirac Storage Migration (2026-06-03)
+## Dirac Storage Migration (complete 2026-06-07)
 
 Access to `/mmfs1/gscratch/dirac/` was granted (Unix group `dirac` confirmed via `groups`).
-Dirac has ~9.5 TB free vs ~640 GB free in astro. Migration is in progress.
+Dirac has ~9.5 TB free vs ~640 GB free in astro. **Migration complete.**
 
 **Storage access vs compute access:**
 - `/mmfs1/gscratch/dirac/` storage: **YES** — `groups` shows `dirac`
 - `--account=dirac` Slurm compute: **NOT YET** — not in `hyakalloc`. PI needs to run `sacctmgr add user ds2004 account=dirac`. Continue using `--partition=ckpt` (no account needed) for now.
 
-**Already moved to dirac:**
-- `home_lib/python3.13` (pip packages, 773 MB) — at `/mmfs1/gscratch/dirac/ds2004/home_lib/`
-- Symlink: `/mmfs1/home/ds2004/.local/lib/python3.13` → `/mmfs1/gscratch/dirac/ds2004/home_lib/python3.13`
-
-**In progress — Slurm job to move sorcha (299 GB):**
-
-`astro` and `dirac` are on separate GPFS storage pools so `mv` requires a real copy.
-A Slurm job handles this safely on a compute node (no login-node time limits).
-
-Scripts at sorcha root:
-- `move_to_dirac.sh` — rsync + file-count verify + atomic symlink + delete
-- `update_paths_to_dirac.sh` — patches all hardcoded paths in pipeline scripts, commits to git
-
-```bash
-# Submit (run once, then close laptop — job runs independently)
-cd /mmfs1/gscratch/dirac/ds2004/sorcha
-sbatch move_to_dirac.sh
-# Log: /mmfs1/gscratch/dirac/ds2004/move_to_dirac_JOBID.out
-
-# After job completes (check log ends with "New canonical path: ...dirac...")
-bash /mmfs1/gscratch/dirac/ds2004/sorcha/update_paths_to_dirac.sh
+**Current canonical paths:**
 ```
-
-**Safety design of move_to_dirac.sh:**
-1. `rsync -av` copies everything to dirac
-2. File count verified — exits without touching source if counts differ
-3. `mv sorcha sorcha.bak_before_delete` + `ln -s dirac/sorcha sorcha` — atomic swap
-4. `rm -rf sorcha.bak_before_delete` — only runs after symlink is in place
-5. At no point is data at risk — both copies exist until the final rm
-
-**After migration, new canonical paths:**
-```
-/mmfs1/gscratch/dirac/ds2004/sorcha/           ← working directory
-/mmfs1/gscratch/dirac/ds2004/sorcha/neomod/    ← git repo
+/mmfs1/gscratch/dirac/ds2004/sorcha/                    ← working directory
+/mmfs1/gscratch/dirac/ds2004/sorcha/neomod/             ← git repo
 /mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python
+/mmfs1/gscratch/dirac/ds2004/home_lib/python3.13        ← pip packages (773 MB)
 ```
-Old path `/mmfs1/gscratch/dirac/ds2004/sorcha` continues to work via symlink.
+Old path `/mmfs1/gscratch/astro/ds2004/sorcha` is a symlink → dirac and still resolves correctly.
+Symlink: `/mmfs1/home/ds2004/.local/lib/python3.13` → `/mmfs1/gscratch/dirac/ds2004/home_lib/python3.13`
+
+**What was done:**
+- 299 GB rsync'd from astro to dirac via Slurm job (jobs 35872135, 35882655 on ckpt)
+- Orphaned rsync temp file (`.orbits_009.csv.atrFDk`) manually removed before final count verify
+- Atomic swap: `sorcha/` renamed to `sorcha.bak_before_delete`, symlink created, backup deleted
+- 17 files patched (`astro/ds2004` → `dirac/ds2004`): all pipeline .py scripts, all slurm .sh scripts, WAGG_SORCHA_HYAK_CONTEXT.md — committed as `1862bd1`
+- `astro` and `dirac` are on **separate GPFS storage pools** — `mv` requires a real copy (not instant rename)
 
 
 ---
@@ -1621,3 +1600,167 @@ ecl_lon, ecl_lat, mjd0_utc, P_NEO_gmm`
 scp outputs/phase2/sorcha_may2026_antisun_patch.parquet \
     ds2004@arnor.astro.washington.edu:/astro/users/ds2004/vdp/outputs/phase2/
 ```
+
+---
+
+## GMM Normalisation Bug — FIXED AND FULLY REGENERATED (2026-06-07/08)
+
+### What the bug was
+
+Advisor identified: GMM P(NEO) was much weaker than S3M kNN, especially at vlam ≈ −0.5.
+Diagnostic from Arnor notebook (mag22, vbeta=0):
+
+| vlam  | P(NEO) S3M | P(NEO) GMM (buggy) | ratio |
+|-------|-----------|-----------|-------|
+| -0.50 | 0.9543    | 0.4568    | 2.09× |
+| -0.30 | 0.6793    | 0.0902    | 7.53× |
+|  0.00 | 0.0448    | 0.0005    | 95.9× |
+
+Grid integral ratios (GMM/S3M): MBA=0.995, **NEO=0.322**, TNO=0.674, Trojans=4.532
+
+**Root cause:** `velocity_density_pipeline_gmm.py` line (previously ~1517):
+```python
+density_downweighted_map = density_clone_map / f   # BUG for GMM path
+```
+K|M cloner starts from N_vis visible objects and produces ≈f×N_vis visible clones (sky-cut
+preserving) — dividing by f is correct there. GMM cloner samples f×N_vis clones from the
+full NEO orbit distribution then re-applies the sky cut; only acceptance_fraction ≈ 0.32
+survive. Dividing by f instead of n_visible_clones/n_source underscales NEO density by
+1/0.322 ≈ 3.1×.
+
+### The fix (applied 2026-06-07)
+
+```python
+# inside build_cloned_maps_for_center_magbin, NEO GMM branch:
+n_source = len(df_cloner_input)               # visible source NEOs in sky patch
+n_visible_clones_gmm = len(clone_visible_df)  # GMM clones surviving sky cut
+
+# at the downweighting step:
+if pop_name == "NEO" and gmm_success and n_source > 0:
+    effective_factor = n_visible_clones_gmm / n_source
+else:
+    effective_factor = f
+density_downweighted_map = density_clone_map / effective_factor
+# same effective_factor passed to make_support_count_map and support_for_smoothing
+```
+
+### Full pipeline re-run (2026-06-07/08) — COMPLETE
+
+All steps re-run after fix:
+
+| Step | Slurm job | Status | Output |
+|------|-----------|--------|--------|
+| Regenerate 24 GMM maps | array (sorcha_gen_maps_gmm_slurm.sh) | Done | `prob_maps_gmm/*.npz` |
+| Phase 2 GMM scoring (113 shards) | array (sorcha_phase2_vdp_gmm.sh) | Done | `outputs/phase2_gmm/vdp_shards/` |
+| Combine 40M rows | 128GB job (combine_gmm.sh) | Done | `outputs/phase2_gmm/sorcha_comparison_gmm.parquet` |
+| Build 611K comparison parquet | 128GB job (build_gmm_comparison.sh) | Done | `outputs/phase2/sorcha_comparison_gmm.parquet` |
+| Regenerate May 2026 patch | 128GB job 35982399 | Done 2026-06-08T14:03 | `outputs/phase2/sorcha_may2026_antisun_patch.parquet` |
+
+**May 2026 patch after fix:** P_NEO_gmm range [0.0000, 0.9812] (was suppressed to ~0.46 max).
+
+### Note on "Bug 2" (MBA tails)
+
+Arnor Claude flagged GMM MBA density being 9× higher than S3M MBA at vlam=−0.5.
+MBA uses K|M, not GMM. The discrepancy is from the sky-center offset (S3M: lon=229°,
+GMM: lon=220°) changing which MBAs are visible, not Gaussian tail leakage.
+Bug 1 (NEO underscaling) was the actionable fix.
+
+---
+
+## digest2 NEOCP Validation (2026-06-08)
+
+Advisor suggestion: validate our digest2 implementation against MPC's published
+NEOCP scores (which MPC also computes with digest2). We have real NEOCP data in
+`neomod/neocp_data/`.
+
+### Data available
+
+- `neocp_data/tables/neocp_objects_history.csv`: 60 rows, 20 unique NEOCP objects
+  (May 7 2026 snapshots), each with `score` (0–100) and `score_0_1` = MPC's digest2 score
+- `neocp_data/ephemerides/neocp_ephemerides_20260507T104242Z.csv`: 425 rows, hourly
+  ephemerides per object with `ra_deg`, `dec_deg`, `v_mag`, `motion_arcsec_per_min`, `pa_deg`
+
+### Approach
+
+For each NEOCP object with ephemerides, take two consecutive hourly positions (1-hr
+tracklet baseline), format as MPC 80-column obs, run our digest2 binary, compare our
+P_NEO_d2 to MPC's `score_0_1`.
+
+**Caveat:** MPC used the actual submitted arc (nobs=2–35, arc_days=0.01–9.96); we use
+synthetic 2-det tracklets from ephemerides. Perfect match not expected, but correlation
+validates the binary is correct.
+
+### Script
+
+`neomod/pipeline/validate_digest2_neocp.py`
+
+**Key engineering issues found and fixed:**
+1. Ephemeris dedup: two snapshot files had overlapping `(designation, ephem_time_utc)` rows
+   → dedup on that pair before picking obs pairs
+2. digest2 truncates designation to 5 chars in output → `A11BRHV` → `A11BR`, causing
+   collisions between `ZTF10Df`/`ZTF10Di` → both → `ZTF10`
+3. Fix: use synthetic 5-char unique keys `VA000`–`VA016` in MPC obs lines; map back by index
+
+### Results (17 objects, run 2026-06-08)
+
+| Metric | Value |
+|--------|-------|
+| Pearson r | 0.627 |
+| Spearman ρ | 0.586 |
+| MAE | 0.101 |
+| High-MPC (≥0.90) scored ≥0.50 | 12/13 |
+
+```
+designation  mpc_score_0_1  our_d2_score  nobs  arc_days
+    ZTF10Di           1.00          1.00     4      0.02
+    C468U01           1.00          1.00     8      0.06
+    ...
+    ZTF10Df           0.98          0.03     9      0.68  ← outlier (9 obs, 0.68d arc)
+    P22n0fj           0.97          1.00     8      0.10
+    S001563           0.68          0.71     3      0.03
+    C1EUYV5           0.65          0.39    12      9.79
+    C1EUWK5           0.37          0.23    10      9.96
+```
+
+**Conclusion:** Binary is functioning correctly. Correlation is limited by input
+differences (MPC used full arc; we used 1-hr synthetic). The ordering is preserved
+at the extremes (high-MPC → high ours; low-MPC → low ours). One outlier (ZTF10Df,
+0.68d arc) resolves at a 1-hr tracklet to a non-NEO-like velocity — understandable.
+
+Output: `outputs/validate_digest2_neocp.csv`, `outputs/validate_digest2_neocp.png`
+
+---
+
+## Current Status (2026-06-08)
+
+### Completed this session
+- GMM normalisation bug fixed and all 24 maps regenerated
+- Full Phase 2 GMM re-run (113 shards → 40M row parquet → 611K comparison parquet)
+- May 2026 antisun patch regenerated with corrected GMM scores
+- digest2 NEOCP validation script written and passing (r=0.627, 12/13 high-MPC correct)
+- VSCode lock issue: created missing `~/.claude/sessions/` directory
+
+### Files still to SCP to Arnor
+
+```bash
+# From /mmfs1/gscratch/dirac/ds2004/sorcha:
+
+# 1. Fixed GMM 611K comparison parquet
+scp outputs/phase2/sorcha_comparison_gmm.parquet \
+    ds2004@arnor.astro.washington.edu:/astro/users/ds2004/vdp/outputs/phase2/sorcha_comparison_gmm.parquet
+
+# 2. Regenerated GMM map (needed by singleepoch notebook)
+scp prob_maps_gmm/prob_maps_2026-05-01_antisun.npz \
+    ds2004@arnor.astro.washington.edu:/astro/users/ds2004/vdp/prob_maps_gmm/prob_maps_2026-05-01_antisun.npz
+
+# 3. Regenerated May 2026 patch (fixed P_NEO_gmm)
+scp outputs/phase2/sorcha_may2026_antisun_patch.parquet \
+    ds2004@arnor.astro.washington.edu:/astro/users/ds2004/vdp/outputs/phase2/sorcha_may2026_antisun_patch.parquet
+```
+
+### Expected next result on Arnor
+
+After sending the fixed GMM files and re-running `sorcha_gmm_s3m_singleepoch_comparison.ipynb`:
+- P(NEO) at vlam=−0.5 should recover from 0.46 → ~0.74 (closer to S3M's 0.95)
+- Full Sorcha 2yr F1 should rise above 0.837 (current tied best)
+- Single-epoch F1 may also improve above 0.842
