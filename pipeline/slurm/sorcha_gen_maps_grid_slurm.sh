@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=32G
 #SBATCH --time=06:00:00
-#SBATCH --array=0-666%32
+#SBATCH --array=0-666%48
 #SBATCH --chdir=/mmfs1/gscratch/dirac/ds2004/sorcha
 #SBATCH --export=all
 #SBATCH --output=logs/%x_%A_%a.out
@@ -32,7 +32,9 @@
 # array to mop up any preempted tasks.
 #
 # Output: prob_maps_grid/prob_maps_grid_dlon{+DDD}_lat{+DD}.npz
-# Expected wall time: ~13-40 min per map; ~667/32 batches -> ~7-8 h total.
+# Per-map runtime (measured): ~3.6 min (sparse high-lat) to ~10 min (dense antisun).
+# At %48 concurrency: ~2-3 h total wall (667 maps x ~6 min avg / 48 slots + overhead).
+# 667 tasks is well under the 2000 QOS cap and the ~377 group ckpt limit.
 
 set -euo pipefail
 
