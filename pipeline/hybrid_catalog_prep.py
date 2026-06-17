@@ -4,7 +4,7 @@ One-time conversion: hybrid.h5 (14.4M Cartesian state vectors)
 to hybrid_elements.parquet (Keplerian elements + population label).
 
 Run on login node. No Slurm needed.
-  /mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python hybrid_catalog_prep.py
+  /mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python hybrid_catalog_prep.py
 
 Reads block0_values in 500k-row chunks to keep peak RAM under 2 GB.
 """
@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import tables
 
-WORKDIR = "/mmfs1/gscratch/astro/ds2004/sorcha"
+WORKDIR = "/mmfs1/gscratch/dirac/ds2004/sorcha"
 INPUT   = os.path.join(WORKDIR, "hybrid.h5")
 OUTPUT  = os.path.join(WORKDIR, "hybrid_elements.parquet")
 CHUNK   = 500_000

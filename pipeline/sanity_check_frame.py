@@ -1,6 +1,6 @@
 import sys, os, numpy as np, pandas as pd
 
-WORKDIR = "/mmfs1/gscratch/astro/ds2004/sorcha"
+WORKDIR = "/mmfs1/gscratch/dirac/ds2004/sorcha"
 sys.path.insert(0, os.path.join(WORKDIR, "neomod/src"))
 os.chdir(os.path.join(WORKDIR, "neomod"))
 

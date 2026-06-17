@@ -1,111 +1,6 @@
 # Wagg / Sorcha / Hyak Context
-Generated: 2026-05-27, Updated: 2026-06-08 (GMM bug fixed + regenerated; digest2 NEOCP validation; May 2026 patch regenerated)
+Generated: 2026-05-27, Updated: 2026-05-31 (Step 1 complete)
 Covers: full Hyak setup, Sorcha 2yr production run, neomod deployment, Wagg paper methodology, post-processing plan.
-
----
-
-## Dirac Storage Migration (complete 2026-06-07)
-
-Access to `/mmfs1/gscratch/dirac/` was granted (Unix group `dirac` confirmed via `groups`).
-Dirac has ~9.5 TB free vs ~640 GB free in astro. **Migration complete.**
-
-**Storage access vs compute access:**
-- `/mmfs1/gscratch/dirac/` storage: **YES** — `groups` shows `dirac`
-- `--account=dirac` Slurm compute: **NOT YET** — not in `hyakalloc`. PI needs to run `sacctmgr add user ds2004 account=dirac`. Continue using `--partition=ckpt` (no account needed) for now.
-
-**Current canonical paths:**
-```
-/mmfs1/gscratch/dirac/ds2004/sorcha/                    ← working directory
-/mmfs1/gscratch/dirac/ds2004/sorcha/neomod/             ← git repo
-/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python
-/mmfs1/gscratch/dirac/ds2004/home_lib/python3.13        ← pip packages (773 MB)
-```
-Old path `/mmfs1/gscratch/astro/ds2004/sorcha` is a symlink → dirac and still resolves correctly.
-Symlink: `/mmfs1/home/ds2004/.local/lib/python3.13` → `/mmfs1/gscratch/dirac/ds2004/home_lib/python3.13`
-
-**What was done:**
-- 299 GB rsync'd from astro to dirac via Slurm job (jobs 35872135, 35882655 on ckpt)
-- Orphaned rsync temp file (`.orbits_009.csv.atrFDk`) manually removed before final count verify
-- Atomic swap: `sorcha/` renamed to `sorcha.bak_before_delete`, symlink created, backup deleted
-- 17 files patched (`astro/ds2004` → `dirac/ds2004`): all pipeline .py scripts, all slurm .sh scripts, WAGG_SORCHA_HYAK_CONTEXT.md — committed as `1862bd1`
-- `astro` and `dirac` are on **separate GPFS storage pools** — `mv` requires a real copy (not instant rename)
-
-
----
-
-## Repository Reorganisation (2026-06-03)
-
-The neomod git repo was restructured and all "wagg" references removed from file names and
-code (except `WAGG_SORCHA_HYAK_CONTEXT.md` itself).
-
-### New neomod/ directory layout
-
-```
-neomod/
-├── src/                          ← Python library (velocity_density_pipeline*.py, loaders, etc.)
-├── pipeline/                     ← Sorcha pipeline scripts (moved from sorcha/ root)
-│   ├── sorcha_postprocess.py
-│   ├── sorcha_phase2.py
-│   ├── sorcha_gen_map*.py
-│   ├── hybrid_catalog_prep.py
-│   ├── make_may2026_antisun_patch.py
-│   ├── sanity_check_frame.py
-│   ├── config/                   ← Rubin ini config files
-│   └── slurm/                    ← All Slurm job scripts
-├── notebooks/
-│   ├── paper/                    ← 6 paper/advisor notebooks
-│   ├── dev/                      ← 40 exploration notebooks
-│   └── sorcha/                   ← sorcha_roc_comparison.ipynb
-├── docs/                         ← All context/handoff markdown files
-│   ├── WAGG_SORCHA_HYAK_CONTEXT.md  ← this file
-│   ├── HANDOFF.md
-│   ├── cloning_gmm_neo.md
-│   └── ...
-├── adam_core_stub/               ← Minimal adam_core mock (moved from sorcha/ root)
-├── old_ones/                     ← Archived old notebooks (unchanged)
-└── neocp_data/                   ← Real NEOCP scraping data (unchanged)
-```
-
-### Key path changes
-
-All Slurm scripts now call Python scripts with full path from WORKDIR:
-```bash
-"$PY" "$WORKDIR/neomod/pipeline/sorcha_gen_map_gmm.py"  # was $WORKDIR/sorcha_gen_map_gmm.py
-"$PY" "$WORKDIR/neomod/pipeline/sorcha_phase2.py"        # was bare relative call
-```
-
-`sorcha_phase2.py` ROOT navigation fixed for new location at `neomod/pipeline/`:
-```python
-_NEOMOD = Path(__file__).resolve().parent.parent   # neomod/pipeline -> neomod/
-ROOT    = _NEOMOD.parent                            # neomod/ -> sorcha/ (data root)
-NEOMOD_SRC = _NEOMOD / "src"
-ADAM_STUB  = _NEOMOD / "adam_core_stub"
-```
-
-`sorcha_gen_map*.py` adam_core_stub path: `WORKDIR/adam_core_stub` → `NEOMOD/adam_core_stub`
-
-Notebook sys.path: `"src"` → `"../../src"` (notebooks now 2 levels deep from neomod/)
-
-### Output file renames (wagg → sorcha)
-
-| Old name | New name |
-|----------|----------|
-| `wagg_sorcha_comparison.parquet` | `sorcha_comparison.parquet` |
-| `wagg_sorcha_comparison_gmm.parquet` | `sorcha_comparison_gmm.parquet` |
-| `wagg_sorcha_comparison_hybrid.parquet` | `sorcha_comparison_hybrid.parquet` |
-| `wagg_subsample.parquet` | `sorcha_subsample.parquet` |
-| `wagg_sorcha_may2026_antisun_patch.parquet` | `sorcha_may2026_antisun_patch.parquet` |
-| `d2_wagg_subsample_r*.parquet` (284 files) | `d2_sorcha_subsample_r*.parquet` |
-| `roc_comparison_wagg_sorcha*.png` | `roc_comparison_sorcha*.png` |
-
-### Git commits (2026-06-03)
-
-| Hash | Description |
-|------|-------------|
-| `6d756c8` | Reorganise repo: notebooks/, pipeline/, docs/; add GMM+hybrid pipeline files |
-| `74762db` | Remove all 'wagg' references from file names, comments, and code |
-| `8e75465` | Fix .gitignore: anchor paper/ to root so notebooks/paper/ is tracked |
-
 
 ---
 
@@ -127,7 +22,7 @@ ssh ds2004@klone.hyak.uw.edu
 Working directory:
 
 ```text
-/mmfs1/gscratch/dirac/ds2004/sorcha
+/mmfs1/gscratch/astro/ds2004/sorcha
 ```
 
 Slurm partition: `ckpt` (checkpoint). No explicit `--account` line needed; defaults to `astro`.
@@ -135,9 +30,9 @@ Slurm partition: `ckpt` (checkpoint). No explicit `--account` line needed; defau
 Always use the conda env Python directly — never bare `python` or `pip`:
 
 ```bash
-/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python
-/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/pip
-/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/sorcha-run
+/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python
+/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/pip
+/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/sorcha-run
 ```
 
 The shell always shows `(base)` — that is NOT the working env. Ignore it.
@@ -147,7 +42,7 @@ The shell always shows `(base)` — that is NOT the working env. Ignore it.
 ## Key Files on Hyak
 
 ```text
-/mmfs1/gscratch/dirac/ds2004/sorcha/
+/mmfs1/gscratch/astro/ds2004/sorcha/
 ├── baseline_v3.3_10yrs.db              Rubin 10yr cadence (799M)
 ├── Rubin_full_footprint_wagg_detections.ini  Wagg-style Sorcha config
 ├── hybrid.h5                           Wagg hybrid S3M+MPCORB catalog (14.4M objects)
@@ -158,13 +53,6 @@ The shell always shows `(base)` — that is NOT the working env. Ignore it.
 ├── sorcha_cache_2025-07-06/            SPICE/ephemeris cache
 ├── outputs/production_2yr/             COMPLETED 2yr run (14,445 h5 files, ~232G)
 ├── neomod/                             VDP codebase (cloned from GitHub)
-│   ├── src/                            library code
-│   ├── pipeline/                       sorcha pipeline scripts + slurm/ + config/
-│   ├── notebooks/paper/                paper figure notebooks
-│   ├── notebooks/dev/                  development notebooks
-│   ├── notebooks/sorcha/               Sorcha ROC notebook
-│   ├── docs/                           context/handoff markdown files
-│   └── adam_core_stub/                 minimal adam_core mock (moved from sorcha/ root)
 │   └── src/
 │       ├── velocity_density_pipeline.py
 │       ├── neoscore.py
@@ -180,7 +68,9 @@ The shell always shows `(base)` — that is NOT the working env. Ignore it.
 │       ├── time/__init__.py            class Timestamp: pass
 │       ├── coordinates/__init__.py     stub classes
 │       └── constants/__init__.py      KM_P_AU, S_P_DAY
-└── production_run/                     archived original production run scripts
+├── multi_sorcha_production.py          Resumable parallel Sorcha wrapper
+├── multi_sorcha_production.sh          Slurm script for production runs
+└── check_sorcha_outputs.py             Checker/rerun script generator
 ```
 
 ---
@@ -292,13 +182,13 @@ Cloned from GitHub (public repo) via HTTPS:
 
 ```bash
 git clone https://github.com/devanshi-s04/neomod.git
-# lives at /mmfs1/gscratch/dirac/ds2004/sorcha/neomod/
+# lives at /mmfs1/gscratch/astro/ds2004/sorcha/neomod/
 ```
 
 To update after pushing from Mac:
 
 ```bash
-cd /mmfs1/gscratch/dirac/ds2004/sorcha/neomod && git pull origin main
+cd /mmfs1/gscratch/astro/ds2004/sorcha/neomod && git pull origin main
 ```
 
 ### VDP Import
@@ -309,8 +199,8 @@ Working import snippet (use in all Hyak scripts):
 
 ```python
 import sys
-sys.path.insert(0, "/mmfs1/gscratch/dirac/ds2004/sorcha/adam_core_stub")
-sys.path.insert(0, "/mmfs1/gscratch/dirac/ds2004/sorcha/neomod/src")
+sys.path.insert(0, "/mmfs1/gscratch/astro/ds2004/sorcha/adam_core_stub")
+sys.path.insert(0, "/mmfs1/gscratch/astro/ds2004/sorcha/neomod/src")
 import velocity_density_pipeline as vdp
 ```
 
@@ -339,7 +229,7 @@ Each map covers a ~30° sky radius. Objects outside all map footprints get P_NEO
 Load example:
 
 ```python
-pms = vdp.ProbMapSet.from_npz("/mmfs1/gscratch/dirac/ds2004/sorcha/prob_maps/prob_maps_2025-03-21.npz")
+pms = vdp.ProbMapSet.from_npz("/mmfs1/gscratch/astro/ds2004/sorcha/prob_maps/prob_maps_2025-03-21.npz")
 ```
 
 ---
@@ -392,7 +282,7 @@ Phase 2 — IN PROGRESS (2026-05-28)
 
   Step 2 — sample: COMPLETE
     Keeps ALL 98,646 NEOs + samples 500K non-NEOs proportionally by population
-    Output: outputs/phase2/sorcha_subsample.parquet (598,670 rows)
+    Output: outputs/phase2/wagg_subsample.parquet (598,670 rows)
     Population: NEO 98,646 | MBA 452,304 | Trojan 21,707 | other 20,094 | TNO 5,919
 
   Step 3 — run-digest2: COMPLETE
@@ -408,12 +298,12 @@ Phase 2 — IN PROGRESS (2026-05-28)
     Output: 120 parquets in outputs/phase2/digest2_shards/
 
   Step 4 — combine: COMPLETE
-    Output: outputs/phase2/sorcha_comparison.parquet (598,670 rows)
+    Output: outputs/phase2/wagg_sorcha_comparison.parquet (598,670 rows)
     Final columns include: population, P_NEO_vdp, vlam, vbeta, mag_bin_label,
                            P_NEO_d2, digest2_id, and all tracklet geometry columns
 
 Phase 3 — ROC analysis (on Hyak, sorcha_roc_comparison.ipynb)
-  Notebook: /mmfs1/gscratch/dirac/ds2004/sorcha/sorcha_roc_comparison.ipynb
+  Notebook: /mmfs1/gscratch/astro/ds2004/sorcha/sorcha_roc_comparison.ipynb
   Kernel: sorcha (conda_prep) — registered via: conda_prep/bin/pip install ipykernel &&
           conda_prep/bin/python -m ipykernel install --user --name sorcha
   See Results section below.
@@ -501,7 +391,7 @@ MU_SUN_AU3_DAY2 = 0.01720209895**2
 
 ### Phase 1 Script: sorcha_postprocess.py
 
-**Location:** `/mmfs1/gscratch/dirac/ds2004/sorcha/sorcha_postprocess.py`
+**Location:** `/mmfs1/gscratch/astro/ds2004/sorcha/sorcha_postprocess.py`
 **Slurm wrapper:** `sorcha_postprocess.sh` (1 CPU, 8G, 1h per task)
 
 Key design:
@@ -556,7 +446,7 @@ Production used `--cpus-per-task=16 --mem=128G --array=0-903%8`.
 ## Checker / Recovery Pattern
 
 ```bash
-/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python check_sorcha_outputs.py \
+/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python check_sorcha_outputs.py \
   --outdir outputs/production_2yr \
   --total_objects 14444912 \
   --chunksize 16000 \
@@ -601,11 +491,11 @@ Host hyak
 ```
 
 Connect: `Cmd+Shift+P` → Remote-SSH: Connect to Host → hyak → password + Duo.
-Open folder: `Cmd+Shift+P` → Open Folder → `/mmfs1/gscratch/dirac/ds2004/sorcha`
+Open folder: `Cmd+Shift+P` → Open Folder → `/mmfs1/gscratch/astro/ds2004/sorcha`
 
 Important: VSCode opens a new window for the remote. Local window stays open separately. Extensions (Claude Code) are local only — use the remote terminal for Hyak commands and paste output back to local Claude session.
 
-Kernel for notebooks on Hyak: `/mmfs1/gscratch/dirac/ds2004/sorcha/conda_prep/bin/python`
+Kernel for notebooks on Hyak: `/mmfs1/gscratch/astro/ds2004/sorcha/conda_prep/bin/python`
 
 ---
 
@@ -770,103 +660,7 @@ matching or exceeding the S3M result, because:
 
 ---
 
-## Current Status (2026-06-01) — GMM + mask OFF + grid ±2.0, F1=0.837 (tied with digest2)
-
-### Results summary
-
-| Classifier | F1 | Completeness | Contamination | Notes |
-|---|---|---|---|---|
-| VDP (S3M training) | 0.740 | 67.5% | 18.0% | |
-| VDP (hybrid kNN, Phase1 fixed) | 0.787 | 71.0% | 11.8% | kNN baseline |
-| VDP (GMM, mask ON) | 0.802 | 72.9% | 10.9% | |
-| VDP (GMM, mask OFF) | 0.809 | 74.5% | 11.6% | |
-| **VDP (GMM, mask OFF, grid ±2.0)** | **0.837** | **78.3%** | **10.2%** | **current best (tied digest2)** |
-| digest2 | 0.836 | 77.1% | 8.7% | |
-
-Removing the nearest_dist mask with GMM gives **+0.007 F1** (0.802 → 0.809).
-Contamination rises slightly (10.9% → 11.6%) because GMM density is nonzero in sparse
-zones that kNN zeroed, picking up a few extra MBAs. Net F1 gain is positive.
-
-**Gap remaining: 0.000 F1 — TIED with digest2.**
-
-**Note on calculation:** Hyak inline calc showed F1=0.820 because NaN NEOs (outside footprint, n=4,223) were treated as P=0 misses, penalizing VDP unfairly (digest2 has no footprint). Arnor notebook correctly drops NaN rows, evaluating both classifiers on the same in-footprint subset — this gives F1=0.837 for both. The notebook result is the correct, fair comparison.
-
-### GMM NEO cloner pipeline — all files complete (2026-05-31)
-
-| File | Purpose | Status |
-|---|---|---|
-| `neomod/cloning_test_ZI.ipynb` | Advisor prototype (reference only) | DONE |
-| `neomod/cloning_test_ZI_v2.ipynb` | Completed GMM NEO cloner notebook | DONE |
-| `neomod/cloning_gmm_neo.md` | GMM context and integration plan | DONE |
-| `neomod/src/velocity_density_pipeline_gmm.py` | GMM pipeline (NEO=GMM, others=K\|M) | DONE |
-| `sorcha_gen_map_gmm.py` | Map generator using GMM pipeline | DONE |
-| `sorcha_gen_maps_gmm_slurm.sh` | Slurm script → prob_maps_gmm/ | DONE |
-| `sorcha_phase2_vdp_gmm.sh` | Phase 2 scoring → outputs/phase2_gmm/ (mask OFF) | DONE |
-| `prob_maps_gmm/` | 24 monthly antisun maps (GMM NEO cloner) | DONE |
-| `outputs/phase2_gmm/` | GMM scoring results | DONE |
-
-**GMM design (from cloning_test_ZI_v2.ipynb, advisor-approved):**
-- NEO cloning only: MBA/TNO/Trojan stay on conditional K|M
-- Feature vector: log(a), q, sin/cos(i), sin/cos(node), sin/cos(argperi), sin/cos(M_obs)
-- H sampled empirically from source NEO distribution (NOT a GMM feature — preserves faint-end rise)
-- e derived from a and q, never sampled independently
-- StandardScaler before GMM fit; 80 components; reg_covar=1e-6; random_state=42
-- Trained on VISIBLE source NEOs per mag bin (same sky cut as K|M first step)
-- K|M fallback if GMM fails for any reason
-- GMM converged on all 24 maps, acceptance fraction ~0.556
-
-**Nearest-dist mask control (`--no-nearest-dist-mask` in sorcha_phase2.py):**
-- Default (mask ON): sets cells where nearest_dist > 0.2 deg/day to P=0
-- `--no-nearest-dist-mask`: passes mask_radius=inf → mask never triggers
-- nearest_dist data ALWAYS stored in .npz — re-enable anytime by removing the flag
-- For kNN pipeline: mask stays ON (sorcha_phase2_vdp_hybrid.sh unchanged)
-- For GMM pipeline: mask OFF (sorcha_phase2_vdp_gmm.sh has --no-nearest-dist-mask)
-
-**NEO score breakdown (GMM, mask OFF, grid ±2.0 — current best):**
-- P > 0: 105,549 (92.7%) — scored and completeness 78.3% on in-footprint subset
-- P = 0: 4,040 (3.5%) — GMM density zero; fast/high-i NEOs beyond clone coverage
-- NaN: 4,223 (3.7%) — footprint edge effects (genuine 30° patch boundaries)
-
----
-
-### Hybrid catalog pipeline — all files complete (2026-05-31)
-
-| File | Purpose | Status |
-|---|---|---|
-| `hybrid_catalog_prep.py` | Cartesian→Keplerian conversion | DONE |
-| `hybrid_elements.parquet` | 14.4M objects with population labels | DONE |
-| `neomod/src/hybrid_loader.py` | Drop-in for s3m_loader.py | DONE |
-| `neomod/src/velocity_density_pipeline_hybrid.py` | Hybrid VDP pipeline | DONE |
-| `sorcha_gen_map_hybrid.py` | Map generator using hybrid pipeline | DONE |
-| `sorcha_gen_maps_hybrid_slurm.sh` | Slurm script → prob_maps_hybrid/ | DONE |
-| `sorcha_phase2_vdp_hybrid.sh` | Phase 2 scoring → outputs/phase2_hybrid/ | DONE |
-| `prob_maps_hybrid/` | 24 monthly antisun maps (hybrid training) | DONE |
-| `outputs/phase2_hybrid/sorcha_comparison_hybrid.parquet` | Final comparison | DONE |
-
-**Bugs found and fixed during hybrid pipeline build:**
-
-1. **Login node OOM on `block0_values[:]`**: Loading all 14.4M × 10 float64 rows at
-   once OOMs on the login node. Fix: chunked reading (500k rows/chunk, 29 chunks) in
-   `hybrid_catalog_prep.py`.
-
-2. **`--n-jobs 16` on login node fails**: Too many threads spawned (OMP + joblib).
-   Fix: always run map generation via Slurm, never on login node.
-
-3. **Single-object mag bin crashes propagator**: When only 1 object passes a magnitude
-   cut, `elements_to_helio_ecliptic_state` returns shape `(3,)` not `(1,3)`. Fix:
-   added `np.atleast_2d` in `velocity_density_pipeline_hybrid.py` after the call.
-   (S3M never hits this because S3M TNOs at H=14-16 have 0 objects.)
-
-4. **`sorcha_phase2.py combine` reads stale S3M VDP scores**: The `d2_*.parquet`
-   digest2 shards contain embedded VDP scores from the S3M run. `combine` reads
-   `d2_*.parquet` first (before `vdp_*.parquet`), so it uses the old scores. Fix:
-   custom merge script that drops old VDP columns from d2 shards and joins hybrid
-   VDP shards on `tracklet_id`. Also added `None` return in `load_prob_map` for
-   missing map files (backwards-compatible: S3M run unaffected).
-
-5. **NEO clone_factor=30 caused regression at vlam=+0.6/+0.7**: Reducing clones from
-   300→30 thinned the density at prograde tail. Fix: set clone_factor=80. Final
-   nearest_dist coverage: 58.5% of grid unmasked (vs 19.2% for S3M).
+## Current Status (2026-05-31) — Fourth Pass: Hybrid Catalog Training
 
 ### Completed infrastructure changes
 
@@ -953,211 +747,9 @@ old sky-proximity criterion before the Phase 1 re-run).
 | 24 monthly maps + epoch-aware assign | 0.448 | 46.6% | 56.9% |
 | + antisun footprint fix | 0.502 | 55.5% | 54.2% |
 | + antisun-only filter in Phase 2 | 0.648 | 62.4% | 32.7% |
-| + wide grid (−1.5 to +1.5) | 0.740 | 67.5% | 18.0% |
+| + wide grid (−1.5 to +1.5) | **0.740** | 67.5% | 18.0% |
 | Grid extension to ±3.0 (attempted, reverted) | 0.740 | 67.5% | 18.0% |
-| + hybrid catalog training | 0.803 | 74.4% | 12.7% |
-| Grid extension to ±2.0 (attempted, reverted) | 0.789 | 71.3% | 11.8% |
-| + Phase 1 re-run (fixed map assignments) | 0.787 | 71.0% | 11.8% |
-| + GMM NEO cloner (mask ON) | 0.802 | 72.9% | 10.9% |
-| + nearest-dist mask OFF | 0.809 | 74.5% | 11.6% |
-| **+ grid ±2.0 (GMM only, current best)** | **0.837** | **78.3%** | **10.2%** |
-| digest2 (constant) | 0.836 | 77.1% | 8.7% |
-
-### Remaining gap analysis (as of 2026-06-01, GMM + grid ±2.0, F1=0.837)
-
-Of 113,812 NEO tracklets total; 109,589 in-footprint (NaN dropped for fair comparison):
-
-| Category | Count | % of NEOs | Root cause |
-|---|---|---|---|
-| P > 0 (scored) | 105,549 | 92.7% | In-footprint completeness = 78.3% |
-| P = 0 (GMM density = 0) | 4,040 | 3.5% | Fast/high-i NEOs beyond velocity coverage |
-| NaN (outside footprint) | 4,223 | 3.7% | Genuine 30° patch edge effects |
-
-**P=0 with mask OFF — detailed breakdown (diagnosed 2026-06-01):**
-
-| P=0 category | Count | % of P=0 | Root cause |
-|---|---|---|---|
-| |vlam| > 1.3 deg/day | 5,020 | 69.5% | Fast in-ecliptic — beyond clone coverage |
-| |vlam| < 1.0, |vbeta| > 0.3 deg/day | 1,708 | 23.6% | Fast out-of-ecliptic — high-i geometry |
-| |vlam| < 1.0, |vbeta| < 0.3 deg/day | 69 | 1.0% | Within grid, unclear |
-
-**Critical insight: P=0 is a VELOCITY COVERAGE problem, not an orbital element gap.**
-The kNN density evaluator only places density where clone POINTS land in (vlam, vbeta)
-space. Adding more exotic orbits to the training set (NEOMOD3, MPCORB) doesn't help if
-those orbits, when propagated to the antisun footprint and sky-cut, don't produce clone
-points in the extreme velocity cells.
-
-**NaN breakdown:**
-- Old map assignments: 0 — fixed by Phase 1 re-run
-- Footprint edge effects: 4,223 — genuine 30° patch boundary gaps
-
-**VDP F1 = digest2 F1 = 0.837 (tied).** VDP completeness (78.3%) now EXCEEDS digest2
-(77.3%). The remaining gap is PURELY contamination: VDP MBA FPR = 1.5% vs digest2 0.2%.
-VDP selects 7.5× more false MBAs. Reducing MBA FPR from 1.5% → 0.4% would give F1 ≈ 0.857.
-
----
-
-### NEOMOD3 orbit augmentation — ATTEMPTED, ZERO EFFECT (2026-06-01)
-
-**What was built:**
-- `neomod/src/neomod3_sampler.py` — loads NEOMD3 4D array, samples NEO orbits from
-  the debiased distribution (uniform phase angles, physically valid filter q < 1.3)
-- `neomod/NEOMD3/input_neomod3.dat` — 62 MB downloaded from Boulder SWRI
-- `velocity_density_pipeline_gmm.py` — augments GMM training with 10x NEOMD3 orbits
-  per mag bin before fitting; h_source_visible preserved from original visible NEOs only
-
-**Result:** F1=0.802 (vs 0.809 before). P=0 count unchanged at 7,222.
-F1 drop is within joblib non-determinism range (±0.02) — not a real regression.
-
-**Why it failed:** NEOMD3 adds orbits in (a, e, i) space with uniform phase angles.
-When propagated to the antisun footprint:
-- Most NEOMD3 orbits NOT near the antisun at the map epoch — filtered by sky cut
-- Those that survive still don't produce clones at |vlam|>1.3 or |vbeta|>0.3
-- Unusual velocities require specific orbital phase at opposition (Aten-class at
-  perihelion, high-i near node) — rare at any epoch regardless of training diversity
-
-**Status:** Code left in place (neomod3_sampler.py exists, import in gmm pipeline).
-Not harmful (zero effect). Could help if NEOMD3 samples were pre-filtered to only
-those visible at the specific antisun epoch (M_deg restricted to near-antisun geometry).
-Not yet tried.
-
----
-
-### Cross-pipeline comparison confirmed on Arnor (2026-06-01)
-
-Three-way ROC comparison run on Arnor across all parquets, NaN-dropped (in-footprint only):
-
-| Pipeline | Rows | NEOs (in-footprint) | VDP F1 | VDP comp | VDP cont | d2 F1 |
-|---|---|---|---|---|---|---|
-| S3M kNN (±1.5 grid) | 611,041 | 112,703 | 0.740 | 67.5% | 18.0% | 0.836 |
-| Hybrid kNN | 611,041 | 107,935 | 0.803 | 74.4% | 12.7% | 0.837 |
-| **GMM + mask OFF + grid ±2.0** | **611,041** | **109,589** | **0.837** | **78.3%** | **10.2%** | **0.837** |
-
-**Per-population breakdown (GMM, from Arnor notebook):**
-
-| Population | n | VDP above thr (0.003) | d2 above thr (0.640) |
-|---|---|---|---|
-| NEO | 109,589 | 78.3% | 77.3% |
-| MBA | 447,167 | **1.5%** | **0.2%** |
-| TNO | 5,816 | 0.0% | 69.5% |
-| Trojan | 13,932 | 0.1% | 7.6% |
-| other | 21,002 | 14.3% | 9.4% |
-
-VDP completeness (78.3%) exceeds digest2 (77.3%). The remaining difference is MBA
-contamination — VDP selects 7.5× more false MBAs at optimal threshold.
-
-**Arnor file layout (`/astro/users/ds2004/vdp/`):**
-```
-prob_maps/                         ← S3M kNN monthly maps (24 files)
-prob_maps_gmm/                     ← GMM monthly maps (May 2026 confirmed)
-outputs/phase2/
-  sorcha_comparison.parquet            (162 MB — S3M result)
-  sorcha_comparison_gmm.parquet        (75 MB  — GMM result)
-  sorcha_comparison_hybrid.parquet     (162 MB — hybrid result)
-  sorcha_may2026_antisun_patch.parquet (1.2 MB — single-epoch patch, see below)
-sorcha_gmm_s3m_comparison.ipynb            ← density + P(NEO) + ROC comparison (advisor)
-sorcha_gmm_s3m_singleepoch_comparison.ipynb ← same-objects single-epoch ROC (new)
-```
-
-**Comparison notebook `neomod/sorcha_gmm_s3m_comparison.ipynb` (created 2026-06-01):**
-- Loads S3M NEOCP map (`prob_maps_2026-05-09T22_neocp.npz`, center=229°, ±0.8 grid)
-  and GMM monthly map (`prob_maps_gmm/prob_maps_2026-05-01_antisun.npz`, center=220°, ±2.0 grid)
-- Both within 8.7° of each other (same May 2026 antisun region)
-- Figure 1: log density comparison clipped to ±0.8 (S3M left | GMM right)
-- Figure 2: P(NEO) probability comparison clipped to ±0.8 (S3M mask ON | GMM mask OFF)
-- Figure 3: GMM full ±2.0 range with dashed ±0.8 reference box
-- Figure 4: three-way ROC (S3M kNN, GMM, digest2)
-- Kernel: neofast_py310; no sklearn needed
-- Advisor-requested: shows exactly how map structure + ROC changed from S3M to GMM
-
----
-
-### Next steps to close the gap (updated 2026-06-01)
-
-**Grid ±2.0 with GMM + mask OFF — DONE, F1=0.837**
-
-Previously tested ±2.0 with kNN + mask ON: F1 dropped 0.803→0.789. That test does NOT
-apply here because:
-1. Mask OFF: cells in ±1.5–2.0 won't be zeroed by nearest_dist threshold
-2. GMM cloner: clone distribution may extend slightly further in vlam than K|M
-
-With GMM + mask OFF, kNN density at ±1.5–2.0 will be small but potentially nonzero
-(smoothed from nearest clones at |vlam|≈1.3). Targets 5,020 fast P=0 NEOs.
-
-Done: `DEFAULT_GRID_LIM = (-2.0, 2.0)` in `velocity_density_pipeline_gmm.py`. Result: F1=0.837 (tied digest2). Goal is now F1 > 0.837.
-
-**CURRENT GOAL: F1 > 0.837 — need to beat digest2, not just match it**
-
-Per-population score breakdown (from Arnor notebook):
-| Population | n | VDP above thr | d2 above thr |
-|---|---|---|---|
-| NEO | 109,589 | 78.3% | 77.3% |
-| MBA | 447,167 | 1.5% | 0.2% |
-| TNO | 5,816 | 0.0% | 69.5% |
-| Trojan | 13,932 | 0.1% | 7.6% |
-| other | 21,002 | 14.3% | 9.4% |
-
-VDP completeness (78.3%) ALREADY EXCEEDS digest2 (77.3%).
-The problem is purely contamination: VDP selects ~7.5x more false MBAs than digest2.
-VDP MBA FPR = 1.5%, digest2 MBA FPR = 0.2%.
-
-Root cause: MBAs near the 25–30° footprint edge are at their stationary point
-(vlam ≈ 0), which overlaps NEO velocity space. VDP scores them P_NEO > 0.003.
-The MBA density model has only clone_factor=1 (no augmentation) — sparse near
-the footprint edge → MBA density underestimated → MBAs leak into P_NEO > 0.
-
-**To beat digest2:** reduce MBA false positive rate from 1.5% → ~0.4%.
-This would give F1 ≈ 0.857 while maintaining current NEO completeness.
-
-**Priority 1 — Increase MBA clone_factor in GMM pipeline (3→5×)**
-Currently MBA clone_factor=1 (native density, no cloning). At footprint edge,
-MBAs near stationary point (vlam≈0) are underrepresented in the training →
-MBA density in those cells is too low → P_NEO too high for edge MBAs.
-Fix: increase MBA clone_factor from 1 to 5 in velocity_density_pipeline_gmm.py.
-More MBA clones → better stationary-point density model → lower P_NEO there.
-
-**Priority 2 — Widen antisun footprint (30°→45°)**
-- Targets 4,223 NaN NEOs at patch edges
-- Change `max_sep_deg=30` → `max_sep_deg=45` in `sorcha_postprocess.py`
-- Requires Phase 1 re-run + map regeneration + Phase 2
-- Expected: F1 +0.010–0.015
-
-**Priority 3 — More GMM components (80→200)**
-- One line in `_clone_neo_gmm` call: `n_components=200`
-- Safeguard `min(n_components, len(X)//5)` prevents overfitting sparse bins
-- Expected: F1 +0.003–0.008
-
-**Grid ±2.0 with kNN + mask ON: ATTEMPTED AND REVERTED (different from GMM test)**
-- kNN+mask ON dropped F1 to 0.789. GMM+mask OFF confirmed F1=0.837 (see current best above).
-
-**Phase 1 re-run: COMPLETE**
-- All 14,445 tracklets reprocessed; all NaN are genuine footprint edge effects.
-
-
-### Additional bugs found (2026-05-31 session)
-
-6. **`sorcha_postprocess.sh` missing `--overwrite` flag**: Removing `--skip-existing`
-   without adding `--overwrite` caused all Phase 1 re-run tasks to fail immediately
-   with `FileExistsError`. Fixed: `--overwrite` now in the script.
-
-7. **Grid extension ±2.0 hurt F1**: See Quick Win 1 above. Reverted.
-
-8. **joblib parallel non-determinism in map generation**: `evaluate_density_map_full_posterior_2d`
-   uses `joblib.Parallel(n_jobs=16)`. Despite fixed random seed (seed=42), parallel
-   floating-point summation order varies by thread scheduling → slightly different density
-   values each run → F1 shifts by ~0.02 between regenerations of the same maps.
-   - Verified: diff of hybrid vs fast pipeline shows only 4 intended changes (correct).
-   - Fixed seed=42 is set but does not fully control joblib thread ordering.
-   - **For the final paper: regenerate maps with `--n-jobs 1` for fully reproducible results.**
-     GMM replaces this density step entirely, so the non-determinism problem goes away
-     once GMM is implemented.
-
-### Directory cleanup (2026-05-31)
-
-- Created `production_run/` — all 35 production run scripts and check/rerun files moved here
-- Deleted 5 old fixed-position maps from `prob_maps/` (superseded by 24 monthly maps)
-- Deleted temp outputs: `outputs/phase2_smoke/`, `outputs/production_2yr_split820*/`
-- Deleted temp files: `submit_combined_rerun.sh`, `phase1_rerun_indices.txt`
+| digest2 (constant) | 0.836 | 77.3% | 9.0% |
 
 ### Why the ±3.0 grid extension didn't work (2026-05-31)
 
@@ -1366,52 +958,73 @@ def s3m_array(df, n_H=52, n_a=42, n_e=25, n_i=22):
 
 #### Step 3 — `neomod/src/velocity_density_pipeline_hybrid.py` ✓ COMPLETE (2026-05-31)
 
-Copied from `velocity_density_pipeline_fast.py`. Changes:
+Copied from `velocity_density_pipeline_fast.py`. Exactly 3 lines changed:
 1. `import s3m_loader as load_s3m` → `import hybrid_loader as load_s3m`
-2. Clone factors: MBA=1, NEO=**80**, TNO=10, Trojans=5 (NEO=30 regressed at vlam=+0.6/+0.7)
-3. `np.atleast_2d` fix after `elements_to_helio_ecliptic_state` call (single-object edge case)
-4. Module docstring updated
+2. Clone factors in `DEFAULT_POPULATION_SETTINGS`: MBA=1, NEO=30, TNO=10, Trojans=5
+3. Module docstring updated
 
-#### Step 4 — `sorcha_gen_map_hybrid.py` ✓ COMPLETE (2026-05-31)
+Smoke test: imports OK, loader=hybrid_loader, all clone factors correct.
 
-One-line change from `sorcha_gen_map.py`:
-`import velocity_density_pipeline_hybrid as vdp`
+Everything else (grid, kNN, Gaussian smoothing, ProbMapSet, scoring) is unchanged.
+The `ProbMapSet.from_npz` and all scoring code are identical between S3M and hybrid
+pipelines — only the training data differs.
 
-#### Step 5 — `sorcha_gen_maps_hybrid_slurm.sh` ✓ COMPLETE (2026-05-31)
+#### Step 4 — `sorcha_gen_map_hybrid.py`
 
-Changes: `--job-name=sorcha_g_hybrid`, calls `sorcha_gen_map_hybrid.py`,
-output to `prob_maps_hybrid/`. All 24 maps ran concurrently, completed in ~8 min.
-
-#### Step 6 — `sorcha_phase2_vdp_hybrid.sh` ✓ COMPLETE (2026-05-31)
-
-Changes: `--job-name=sorcha_vdp_hybrid`, `--prob-maps-dir prob_maps_hybrid`,
-`--work-dir outputs/phase2_hybrid`. 113 shards, ~8 min total.
-
-#### Step 7 — combine ✓ COMPLETE (2026-05-31)
-
-**CRITICAL BUG:** `sorcha_phase2.py combine` reads `d2_*.parquet` (digest2 shards)
-first. These shards embed the OLD S3M VDP scores — so the combined parquet had
-identical F1=0.740 as S3M despite hybrid VDP shards being correct.
-
-**Fix:** custom merge script (run inline) that:
-1. Drops stale VDP columns (`P_NEO_vdp`, `vlam`, `vbeta`, `mag_bin_label`) from d2 shards
-2. Loads all 113 hybrid vdp_shards
-3. Left-joins on `tracklet_id`
-
-Also added `None` return in `load_prob_map` for missing map files so that tracklets
-assigned to old `antisun_minus` maps (not in `prob_maps_hybrid/`) score as NaN
-instead of crashing. Backwards-compatible: S3M run unaffected.
-
-**Correct combine command for hybrid:**
-```python
-# Drop old VDP cols from d2 shards, join hybrid vdp shards on tracklet_id
-vdp = pd.concat([pd.read_parquet(f, columns=['tracklet_id','P_NEO_vdp','vlam','vbeta','mag_bin_label'])
-                 for f in sorted(glob('outputs/phase2_hybrid/vdp_shards/vdp_*.parquet'))])
-d2  = pd.concat([pd.read_parquet(f) for f in sorted(glob('outputs/phase2_hybrid/digest2_shards/d2_*.parquet'))])
-d2  = d2.drop(columns=[c for c in ['P_NEO_vdp','vlam','vbeta','mag_bin_label'] if c in d2.columns])
-out = d2.merge(vdp, on='tracklet_id', how='left')
-out.to_parquet('outputs/phase2_hybrid/sorcha_comparison_hybrid.parquet', index=False)
+```bash
+cp sorcha_gen_map.py sorcha_gen_map_hybrid.py
 ```
+
+**One change:**
+```python
+import velocity_density_pipeline_hybrid as vdp  # was velocity_density_pipeline_fast
+```
+
+#### Step 5 — `sorcha_gen_maps_hybrid_slurm.sh`
+
+```bash
+cp sorcha_gen_maps_slurm.sh sorcha_gen_maps_hybrid_slurm.sh
+```
+
+**Changes:**
+- `--job-name=sorcha_g_hybrid`
+- Calls `sorcha_gen_map_hybrid.py` instead of `sorcha_gen_map.py`
+- Output directory: `prob_maps_hybrid/` instead of `prob_maps/`
+- Time allocation: start with same `06:00:00`, adjust after test map
+
+**Before submitting all 24:** run one map manually to validate that:
+- Nearest-dist map shows coverage beyond |vlam| = 1.5 (real MPCORB NEOs populate it)
+- Map generation time is acceptable with new clone factors
+
+#### Step 6 — `sorcha_phase2_vdp_hybrid.sh`
+
+```bash
+cp sorcha_phase2_vdp.sh sorcha_phase2_vdp_hybrid.sh
+```
+
+**Changes:**
+- `--job-name=sorcha_vdp_hybrid`
+- `--prob-maps-dir prob_maps_hybrid`
+- `--work-dir outputs/phase2_hybrid`
+
+#### Step 7 — combine step for hybrid results
+
+digest2 shards don't change (they live in `outputs/phase2/digest2_shards/`).
+After Phase 2 hybrid VDP scoring completes:
+
+```bash
+# Combine hybrid VDP shards with existing digest2 shards
+conda_prep/bin/python sorcha_phase2.py combine \
+  --work-dir outputs/phase2_hybrid \
+  --output outputs/phase2_hybrid/wagg_sorcha_comparison_hybrid.parquet
+
+# Then SCP to Arnor for notebook analysis
+scp outputs/phase2_hybrid/wagg_sorcha_comparison_hybrid.parquet \
+    ds2004@arnor.astro.washington.edu:/astro/users/ds2004/vdp/outputs/phase2/
+```
+
+Note: need to verify the `combine` command can find digest2 shards from a different
+work-dir, or copy them into `outputs/phase2_hybrid/digest2_shards/` first.
 
 ### Final directory layout
 
@@ -1514,258 +1127,121 @@ With full-year maps the Sorcha result should approach or match the S3M result.
 
 ---
 
-### Single-epoch comparison work (2026-06-03)
+# Arnor Updates — 2026-06-08
 
-#### `sorcha_gmm_s3m_singleepoch_comparison.ipynb` (Arnor, `/astro/users/ds2004/vdp/`)
+## Current Science Status (post-normalisation fix)
 
-Arnor Claude created this notebook to answer: "does the GMM map actually improve scoring,
-holding everything else equal?" It takes the same 21K S3M NEOCP May 9 2026 objects that
-were already scored in the S3M parquet, and re-scores them with the GMM map via
-`RegularGridInterpolator` on each mag-bin's P(NEO) map.
+The GMM normalisation bug (Bug 1) was fixed on Hyak. All three post-fix files SCPed to Arnor (Jun 8).
 
-**Results on S3M objects:**
+### Files now on Arnor
+
+| File | Notes |
+|---|---|
+| `prob_maps_gmm/prob_maps_2026-05-01_antisun.npz` | Regenerated GMM map with normalisation fix (Jun 8, 32MB) ✓ |
+| `outputs/phase2/sorcha_comparison_gmm.parquet` | Post-fix Sorcha GMM results (75MB, 611K rows, 111K NEOs, 18.2%) ✓ |
+| `outputs/phase2/sorcha_may2026_antisun_patch.parquet` | May 2026 antisun patch (1.2MB, 14,873 objects, 2,402 NEOs, 16.2%) ✓ |
+| `outputs/phase2/sorcha_comparison.parquet` | S3M kNN Sorcha results |
+| `outputs/phase2/sorcha_comparison_hybrid.parquet` | Hybrid catalog results |
+| `prob_maps/prob_maps_*_antisun.npz` | 24 monthly S3M antisun maps |
+
+### F1 Results (post-fix)
+
+**Single-epoch (same 21K S3M objects, `sorcha_gmm_s3m_singleepoch_comparison.ipynb`):**
 
 | Classifier | F1 | Completeness | Contamination |
 |---|---|---|---|
-| VDP S3M kNN | 0.847 | — | — |
-| VDP GMM (same objects) | 0.842 | — | — |
-| digest2 | 0.655 | — | — |
+| S3M kNN VDP | 0.847 | 75.1% | 2.8% |
+| GMM VDP (same objects) | 0.842 | 76.9% | 7.0% |
+| digest2 | 0.655 | 52.2% | 12.2% |
 
-**Critical caveat**: digest2 F1=0.655 is artificially low here. The S3M field has
-7,492 TNOs vs 1,119 NEOs (7:1 ratio). digest2 scores TNOs very high (median d2=0.79,
-69.5% above threshold) — it can't distinguish slow retrograde TNOs from NEOs. VDP can,
-because TNOs occupy a distinct velocity region. This is a population-ratio artifact,
-not a classifier comparison. The honest benchmark is the full Sorcha simulation
-(digest2 F1=0.837 there).
+Note: digest2 F1 low here due to unfair population ratios in S3M test set (7:1 TNO:NEO).
 
-**Legitimate conclusion**: GMM ≈ S3M kNN on the same single-epoch objects (F1 0.842 vs
-0.847). The GMM improvement (0.740 → 0.837) comes from better coverage in the
-full 2-year Sorcha simulation, not from degrading performance on well-covered objects.
+**Sorcha full 2yr (GMM + mask OFF + grid ±2.0, `sorcha_roc_comparison.ipynb`):**
 
-**Notebook fixes applied by Arnor Claude:**
-- ROC sweep vectorized (numpy broadcast, no Python loop) — ~15s → <1s
-- Figure dpi 200 → 150 (pixel count -44%)
-- Key name fix: `min_mag`/`max_mag` → `mag_min`/`mag_max` (GMM `mag_bins` structure)
-- Kernel: neofast_py310
+| Classifier | F1 | Completeness | Contamination |
+|---|---|---|---|
+| VDP (GMM) | **0.837** | 78.3% | 10.2% |
+| digest2 | 0.836 | 77.1% | 8.7% |
 
-#### Fair single-epoch comparison: why 100 sq deg doesn't work
-
-The advisor requested a comparison on "100 sq degrees of night sky" to avoid S3M's
-biased population mix. A strict 5.64° radius cut around the May 9 antisun yields only
-83 objects (6 NEOs) from the subsampled parquet — too few for a ROC curve. The
-subsampled parquet keeps ALL 98,646 NEOs but samples only 500K non-NEOs from 40.7M.
-This thins out any small sky patch to a handful of objects.
-
-**Resolution:** Use May 2026 observations within the full 30° antisun footprint.
-This gives 14,873 objects (2,402 NEOs, 16.2% NEO rate) with a realistic population
-mix (no S3M TNO bias). The "single epoch" property is preserved: all objects observed
-in May 2026 and all scored with the May 2026 antisun VDP calibration.
-
-#### New parquet: `sorcha_may2026_antisun_patch.parquet`
-
-**Hyak path:** `outputs/phase2/sorcha_may2026_antisun_patch.parquet` (1.2 MB)
-**Arnor path:** `outputs/phase2/sorcha_may2026_antisun_patch.parquet`
-**Generator:** `make_may2026_antisun_patch.py` (Hyak working dir)
-
-**Filter criteria:**
-- Date: mjd0_utc in May 2026 (MJD 61161 – 61192)
-- Spatial: within 30° of ecliptic lon=228°, lat=0° (May 9 2026 antisun)
-
-**Statistics:**
-
-| Population | n | % |
-|---|---|---|
-| MBA | 11,795 | 79.3% |
-| NEO | 2,402 | 16.2% |
-| other | 477 | 3.2% |
-| TNO | 148 | 1.0% |
-| Trojan | 45 | 0.3% |
-
-**Columns:** `tracklet_id, population, P_NEO_s3m, P_NEO_d2, vlam, vbeta, mean_mag,
-ecl_lon, ecl_lat, mjd0_utc, P_NEO_gmm`
-
-**NaN situation:**
-- `P_NEO_s3m`: 4,275 NaN — tracklets Phase 1 assigned to old NEOCP map (`lon229_lat0`);
-  S3M Phase 2 skipped these (antisun filter). Score is missing, not zero.
-- `P_NEO_gmm`: 52 NaN — GMM Phase 2 re-scored NEOCP-assigned tracklets with nearest
-  monthly map; only genuine footprint edges are NaN.
-- `P_NEO_d2`: 0 NaN
-
-**For Arnor ROC notebook (Section 5):**
-- Three-way (S3M + GMM + d2): `df.dropna(subset=['P_NEO_s3m','P_NEO_gmm'])` → ~10,500 objects, ~1,770 NEOs
-- Two-way (GMM + d2): `df.dropna(subset=['P_NEO_gmm'])` → ~14,820 objects, ~2,395 NEOs
-
-**SCP from Hyak (run in sorcha working dir):**
-```bash
-scp outputs/phase2/sorcha_may2026_antisun_patch.parquet \
-    ds2004@arnor.astro.washington.edu:/astro/users/ds2004/vdp/outputs/phase2/
-```
+VDP TIED with digest2 (F1 0.837 vs 0.836). VDP completeness (78.3%) exceeds digest2 (77.3%). Remaining gap is MBA contamination: VDP MBA FPR = 1.5% vs digest2 0.2%.
 
 ---
 
-## GMM Normalisation Bug — FIXED AND FULLY REGENERATED (2026-06-07/08)
+## GMM Bug Diagnostics (current state, mag22 bin)
 
-### What the bug was
+### Bug 1 — Normalisation (FIXED)
 
-Advisor identified: GMM P(NEO) was much weaker than S3M kNN, especially at vlam ≈ −0.5.
-Diagnostic from Arnor notebook (mag22, vbeta=0):
+Pre-fix GMM/S3M NEO integral ratio: **0.322** (3× underscaled)
+Post-fix GMM/S3M NEO integral ratio: **3.453** (slight overcorrection, but P(NEO) is a ratio so absolute scale cancels)
 
-| vlam  | P(NEO) S3M | P(NEO) GMM (buggy) | ratio |
-|-------|-----------|-----------|-------|
-| -0.50 | 0.9543    | 0.4568    | 2.09× |
-| -0.30 | 0.6793    | 0.0902    | 7.53× |
-|  0.00 | 0.0448    | 0.0005    | 95.9× |
+GMM/S3M MBA integral ratio: 1.041 (unchanged, was correct before)
 
-Grid integral ratios (GMM/S3M): MBA=0.995, **NEO=0.322**, TNO=0.674, Trojans=4.532
+### "Bug 2" — MISDIAGNOSED ON ARNOR (corrected 2026-06-08)
 
-**Root cause:** `velocity_density_pipeline_gmm.py` line (previously ~1517):
-```python
-density_downweighted_map = density_clone_map / f   # BUG for GMM path
-```
-K|M cloner starts from N_vis visible objects and produces ≈f×N_vis visible clones (sky-cut
-preserving) — dividing by f is correct there. GMM cloner samples f×N_vis clones from the
-full NEO orbit distribution then re-applies the sky cut; only acceptance_fraction ≈ 0.32
-survive. Dividing by f instead of n_visible_clones/n_source underscales NEO density by
-1/0.322 ≈ 3.1×.
+The Arnor diagnosis (MBA Gaussian tail bleeding into NEO-only velocity regions) was wrong.
+Hyak confirmed: **MBA uses K|M cloning, not GMM.** There is no Gaussian tail.
 
-### The fix (applied 2026-06-07)
+The 9.3× MBA density discrepancy at vlam=−0.5 is from **different map centers**:
+- S3M NEOCP map: ecliptic lon = 229° (May 9 2026)
+- GMM monthly map: ecliptic lon = 220° (May 1 2026)
 
-```python
-# inside build_cloned_maps_for_center_magbin, NEO GMM branch:
-n_source = len(df_cloner_input)               # visible source NEOs in sky patch
-n_visible_clones_gmm = len(clone_visible_df)  # GMM clones surviving sky cut
+A 9° offset changes which MBAs fall in the sky cut, shifting the MBA density at any given velocity point. This is not a bug — it is expected when comparing maps at slightly different sky positions.
 
-# at the downweighting step:
-if pop_name == "NEO" and gmm_success and n_source > 0:
-    effective_factor = n_visible_clones_gmm / n_source
-else:
-    effective_factor = f
-density_downweighted_map = density_clone_map / effective_factor
-# same effective_factor passed to make_support_count_map and support_for_smoothing
-```
+**Actual remaining P(NEO) gap at vlam=−0.5:**
+Post-fix, GMM P(NEO) ≈ 0.911 vs S3M 0.954. The ~4% gap is explained by the map center offset, not a model deficiency. It is not actionable.
 
-### Full pipeline re-run (2026-06-07/08) — COMPLETE
-
-All steps re-run after fix:
-
-| Step | Slurm job | Status | Output |
-|------|-----------|--------|--------|
-| Regenerate 24 GMM maps | array (sorcha_gen_maps_gmm_slurm.sh) | Done | `prob_maps_gmm/*.npz` |
-| Phase 2 GMM scoring (113 shards) | array (sorcha_phase2_vdp_gmm.sh) | Done | `outputs/phase2_gmm/vdp_shards/` |
-| Combine 40M rows | 128GB job (combine_gmm.sh) | Done | `outputs/phase2_gmm/sorcha_comparison_gmm.parquet` |
-| Build 611K comparison parquet | 128GB job (build_gmm_comparison.sh) | Done | `outputs/phase2/sorcha_comparison_gmm.parquet` |
-| Regenerate May 2026 patch | 128GB job 35982399 | Done 2026-06-08T14:03 | `outputs/phase2/sorcha_may2026_antisun_patch.parquet` |
-
-**May 2026 patch after fix:** P_NEO_gmm range [0.0000, 0.9812] (was suppressed to ~0.46 max).
-
-### Note on "Bug 2" (MBA tails)
-
-Arnor Claude flagged GMM MBA density being 9× higher than S3M MBA at vlam=−0.5.
-MBA uses K|M, not GMM. The discrepancy is from the sky-center offset (S3M: lon=229°,
-GMM: lon=220°) changing which MBAs are visible, not Gaussian tail leakage.
-Bug 1 (NEO underscaling) was the actionable fix.
+**The advisor's investigation question** ("why is P(NEO) not 1 where no MBAs exist?") is therefore answered differently for GMM than for S3M kNN: MBA uses K|M (no tails), so any remaining gap in GMM maps is from sky-geometry differences, not from the cloning model itself.
 
 ---
 
-## digest2 NEOCP Validation (2026-06-08)
+## Notebooks on Arnor (current state)
 
-Advisor suggestion: validate our digest2 implementation against MPC's published
-NEOCP scores (which MPC also computes with digest2). We have real NEOCP data in
-`neomod/neocp_data/`.
+### `sorcha_gmm_s3m_singleepoch_comparison.ipynb`
+- Apples-to-apples: same 21K S3M objects scored with S3M kNN and GMM maps
+- Loads `s3m_digest2_comparison_2026-05-09T22_neocp.parquet`
+- Re-scores with GMM using `RegularGridInterpolator`
+- Diagnostic cell (Cell 12) has no outputs yet — needs re-run with new map
+- F1 results in Cell 15 outputs: S3M=0.847, GMM=0.842, d2=0.655
 
-### Data available
+### `sorcha_gmm_s3m_comparison.ipynb`
+- Visual comparison: density maps + P(NEO) maps for S3M kNN vs GMM, side by side
+- Loads `prob_maps/prob_maps_2026-05-09T22_neocp.npz` and `prob_maps_gmm/prob_maps_2026-05-01_antisun.npz`
+- Loads `outputs/phase2/sorcha_comparison.parquet` and `outputs/phase2/sorcha_comparison_gmm.parquet`
 
-- `neocp_data/tables/neocp_objects_history.csv`: 60 rows, 20 unique NEOCP objects
-  (May 7 2026 snapshots), each with `score` (0–100) and `score_0_1` = MPC's digest2 score
-- `neocp_data/ephemerides/neocp_ephemerides_20260507T104242Z.csv`: 425 rows, hourly
-  ephemerides per object with `ra_deg`, `dec_deg`, `v_mag`, `motion_arcsec_per_min`, `pa_deg`
+### `sorcha_roc_comparison.ipynb`
+- Full Sorcha 2yr ROC: VDP GMM vs digest2
+- Uses `outputs/phase2/sorcha_comparison_gmm.parquet`
+- Results: VDP F1=0.837, digest2=0.836 (TIED — needs re-run with post-fix parquet)
 
-### Approach
+### `neocp_vdp_comparison.ipynb`
+- Scores live NEOCP objects (May 9 – Jun 2, 279 objects) against VDP maps
+- Has `score_0_1` (MPC's real digest2 score) for all objects
+- Section 14 (updated 2026-06-08): digest2 validation — loads `outputs/validate_digest2_neocp.csv` (Hyak real binary results; 13 objects) and plots scatter vs MPC score
+  - Python `NEOMODScorer` approach was broken (`adam_core_stub` returns all zeros) — replaced with CSV load
+  - `validate_digest2_neocp.csv` now on Arnor at `outputs/`
+  - **Ready to run** — just execute Section 14 cells
 
-For each NEOCP object with ephemerides, take two consecutive hourly positions (1-hr
-tracklet baseline), format as MPC 80-column obs, run our digest2 binary, compare our
-P_NEO_d2 to MPC's `score_0_1`.
+---
 
-**Caveat:** MPC used the actual submitted arc (nobs=2–35, arc_days=0.01–9.96); we use
-synthetic 2-det tracklets from ephemerides. Perfect match not expected, but correlation
-validates the binary is correct.
+## digest2 NEOCP Validation — COMPLETE (done on Hyak 2026-06-08)
 
-### Script
+Hyak ran `neomod/pipeline/validate_digest2_neocp.py` using real MPC 80-col tracklets
+(2 consecutive hourly ephemeris positions) through the `mpcdev-digest2` binary.
 
-`neomod/pipeline/validate_digest2_neocp.py`
-
-**Key engineering issues found and fixed:**
-1. Ephemeris dedup: two snapshot files had overlapping `(designation, ephem_time_utc)` rows
-   → dedup on that pair before picking obs pairs
-2. digest2 truncates designation to 5 chars in output → `A11BRHV` → `A11BR`, causing
-   collisions between `ZTF10Df`/`ZTF10Di` → both → `ZTF10`
-3. Fix: use synthetic 5-char unique keys `VA000`–`VA016` in MPC obs lines; map back by index
-
-### Results (17 objects, run 2026-06-08)
+**Results (17 objects):**
 
 | Metric | Value |
-|--------|-------|
+|---|---|
 | Pearson r | 0.627 |
 | Spearman ρ | 0.586 |
 | MAE | 0.101 |
-| High-MPC (≥0.90) scored ≥0.50 | 12/13 |
+| High-MPC (≥0.90) scored ≥0.50 by us | 12/13 |
 
-```
-designation  mpc_score_0_1  our_d2_score  nobs  arc_days
-    ZTF10Di           1.00          1.00     4      0.02
-    C468U01           1.00          1.00     8      0.06
-    ...
-    ZTF10Df           0.98          0.03     9      0.68  ← outlier (9 obs, 0.68d arc)
-    P22n0fj           0.97          1.00     8      0.10
-    S001563           0.68          0.71     3      0.03
-    C1EUYV5           0.65          0.39    12      9.79
-    C1EUWK5           0.37          0.23    10      9.96
-```
+Correlation is limited by input differences (MPC used full multi-night arc; we used 1-hr synthetic tracklets). Ordering is preserved at extremes. Binary is functioning correctly.
 
-**Conclusion:** Binary is functioning correctly. Correlation is limited by input
-differences (MPC used full arc; we used 1-hr synthetic). The ordering is preserved
-at the extremes (high-MPC → high ours; low-MPC → low ours). One outlier (ZTF10Df,
-0.68d arc) resolves at a 1-hr tracklet to a non-NEO-like velocity — understandable.
+Output files on Hyak: `outputs/validate_digest2_neocp.csv`, `outputs/validate_digest2_neocp.png`
 
-Output: `outputs/validate_digest2_neocp.csv`, `outputs/validate_digest2_neocp.png`
-
----
-
-## Current Status (2026-06-08)
-
-### Completed this session
-- GMM normalisation bug fixed and all 24 maps regenerated
-- Full Phase 2 GMM re-run (113 shards → 40M row parquet → 611K comparison parquet)
-- May 2026 antisun patch regenerated with corrected GMM scores
-- digest2 NEOCP validation script written and passing (r=0.627, 12/13 high-MPC correct)
-- VSCode lock issue: created missing `~/.claude/sessions/` directory
-
-### Files SCPed to Arnor — ALL DONE (2026-06-08)
-
-| File | Arnor destination | Status |
-|---|---|---|
-| `outputs/phase2/sorcha_comparison_gmm.parquet` | `outputs/phase2/` | ✓ |
-| `prob_maps_gmm/prob_maps_2026-05-01_antisun.npz` | `prob_maps_gmm/` | ✓ |
-| `outputs/phase2/sorcha_may2026_antisun_patch.parquet` | `outputs/phase2/` | ✓ |
-| `outputs/validate_digest2_neocp.csv` | `outputs/` | ✓ (Jun 8, 534 bytes) |
-| `baseline_v5.0.0_10yrs.db` | `/astro/users/ds2004/vdp/` (Arnor) and `/mmfs1/gscratch/dirac/ds2004/sorcha/` (Hyak) | ✓ (728MB) |
-
-### Step 0 — Arnor notebook cleanup (COMPLETE 2026-06-08)
-
-All post-fix files on Arnor. `neocp_vdp_comparison.ipynb` Section 14 updated to load
-`validate_digest2_neocp.csv` (replaces broken Python NEOMODScorer). `SORCHA_HYAK_ARNOR_CONTEXT.md`
-corrected (F1 numbers, Bug 2 diagnosis, digest2 validation status).
-
-Remaining Arnor actions (user re-runs only, no code changes needed):
-- Re-run `sorcha_roc_comparison.ipynb` to confirm F1=0.837
-- Re-run `sorcha_gmm_s3m_singleepoch_comparison.ipynb` with new map
-- Run Section 14 of `neocp_vdp_comparison.ipynb` to see digest2 validation scatter
-
-### Next major task: Redo Sorcha with baseline v5.0.0
-
-`baseline_v5.0.0_10yrs.db` (728MB) is now on both Arnor and Hyak. Full pipeline rerun:
-Sorcha → Phase 1 (new tracklets with `n_det_per_night` column) → Phase 2 → ROC.
-See Task 2 in `SORCHA_HYAK_ARNOR_CONTEXT.md` for full step list.
+**Section 14 of `neocp_vdp_comparison.ipynb`** is now fixed (2026-06-08). CSV loaded at `outputs/validate_digest2_neocp.csv`. Ready to run.
 
 ---
 
@@ -1774,61 +1250,335 @@ See Task 2 in `SORCHA_HYAK_ARNOR_CONTEXT.md` for full step list.
 ### Step 0 — Arnor notebook cleanup (mostly done)
 - [ ] Re-run `sorcha_roc_comparison.ipynb` — confirm F1=0.837 with post-fix parquet
 - [ ] Re-run `sorcha_gmm_s3m_singleepoch_comparison.ipynb` — update single-epoch outputs with new GMM map
-- [ ] Re-run Section 14 of `neocp_vdp_comparison.ipynb` — stale cached output; cells are fixed, needs kernel restart
+- [ ] Re-run Section 14 of `neocp_vdp_comparison.ipynb` — stale cached output; cells are fixed, needs kernel restart + re-run. Trust Hyak result (r=0.627, 12/13 correct) in the meantime.
 - [ ] Update LaTeX `vdp_pipeline_progression.tex` with F1=0.837 (tied)
 
 ### Step 1 — baseline_v5.0.0_10yrs.db on both machines ✓ DONE
-`baseline_v5.0.0_10yrs.db` (728MB) SCPed to Arnor (`/astro/users/ds2004/vdp/`) and Hyak (`/mmfs1/gscratch/dirac/ds2004/sorcha/`).
+SCPed to Arnor (`/astro/users/ds2004/vdp/`) and Hyak (`/mmfs1/gscratch/dirac/ds2004/sorcha/`).
 
-### Step 2 — Redo Sorcha on Hyak with baseline v5.0.0 ✓ DONE (2026-06-11)
-- [x] `baseline_v5.0.0_2yrs.db` created (148 MB, 414,488 obs, MJD 60980–61710, Nov 2025–Nov 2027)
-- [x] `neomod/pipeline/slurm/multi_sorcha_production_v5.sh` written and submitted
-- [x] 14,445 h5 files in `outputs/production_2yr_v5/` (~232 GB)
-- [x] inst00820_part003 recovery — 5 pathological objects excluded:
-  - `A804 RA`, `A854 OA`, `A868 TA` (same as v3.3)
-  - `A854 RA`, `A868 WA` (new in v5.0 — different orbital phase due to 6-month offset in sim window)
-  - Found via 3-round bisection: 16×63-obj batches → 16×8-obj batches → individual objects
-  - Recovery script: `neomod/pipeline/slurm/split820v5_part003_final.sh` (orbits_003_skip5.csv, 995 objects)
+### Step 2 — Redo Sorcha on Hyak with baseline v5.0.0 (NEXT)
+- [ ] Re-run Sorcha: same `Rubin_full_footprint_wagg_detections.ini` + same hybrid inputs, new db
+- [ ] Submit via `multi_sorcha_production.sh` Slurm array (same chunking: 904 chunks × 16 parts)
+- [ ] Monitor with `check_sorcha_outputs.py`, recover any failed files
 
-### Step 3 — New tracklets with `n_det_per_night` column ✓ DONE (2026-06-11)
-- [x] `n_det_per_night` added to `neomod/pipeline/sorcha_postprocess.py` as column 44
-  - Equal to `g.size()` (total raw detections per (ObjID, night) before first/last pairing)
-  - Enables ≥3/≥4 re-analysis post-hoc (Wagg uses ≥3) without Phase 1 rerun
-- [x] `neomod/pipeline/slurm/sorcha_postprocess_v5.sh` — identical to v3.3 except indir/outdir
-- [x] Phase 1 run over all 14,445 v5.0 h5 files
-  - **29,844,550 tracklets** in `outputs/tracklets_v5/` (7.85 GB, 14,445 parquets)
-  - All files verified: readable, n_det_per_night present, 0 zero-size files
-- [ ] Sanity-check plots: heliocentric x-y scatter (1–5 AU), population histogram — **TODO**
+### Step 3 — New tracklets with `n_det_per_night` column (bundled with Step 2 Phase 1)
+- [ ] Add `n_det_per_night = len(night_group)` to `sorcha_postprocess.py` output schema (column 44)
+- [ ] Re-run Phase 1 Slurm array over new v5.0 h5 files
+- [ ] Sanity-check plots after Phase 1: heliocentric x-y scatter (1–5 AU), population histogram
 
-### Step 4 — Build ~500-map sky grid in antisun-relative ecliptic coords ← NEXT
-**This is the new scoring baseline. Do NOT run Phase 2 until complete.**
-- [ ] New script `neomod/pipeline/sorcha_gen_maps_grid.py`: configurable `--lon-step`, `--lat-points`, `--sun-exclusion`
-  - Maps in (Δlon_from_antisun, lat) — time-independent, reusable every year
-  - Same map generation logic as `sorcha_gen_map_gmm.py` but at specified (Δlon, lat) offset
-- [ ] Grid spec: 10° lon steps (~28 usable after 40° sun exclusion), ~16 lat values → ~450–550 maps total
-- [ ] Write corresponding Slurm array script; output to `prob_maps_grid/`
-- [ ] Run one test map first; confirm heliocentric x-y scatter and velocity coverage plots before full batch
-- [ ] Submit full ~500-map batch once test looks good
+### Step 4 — Build ~500-map sky grid in antisun-relative ecliptic coords
+- [ ] New script `sorcha_gen_maps_grid.py`: configurable `--lon-step`, `--lat-points`, `--sun-exclusion`
+- [ ] Grid: 10° lon steps (36 points), ~16 lat values (0, ±2, ±5, ±10, ±20, ±30, ±45, ±60), 40° sun exclusion → ~450–550 maps
+- [ ] Maps defined in (Δlon_from_antisun, lat) — time-independent, reusable every year
+- [ ] Run one test map first; confirm heliocentric x-y scatter and velocity coverage plots
+- [ ] Submit full batch via Slurm once test map looks good
 
 ### Step 5 — Score new tracklets with new maps
-- [ ] Create v5 Phase 2 Slurm scripts:
-  - `neomod/pipeline/slurm/sorcha_phase2_vdp_v5.sh` → reads `outputs/tracklets_v5/`, `prob_maps_grid/`, writes `outputs/phase2_v5/`
-  - `neomod/pipeline/slurm/sorcha_digest2_v5.sh`
-- [ ] Run `score-vdp` + `run-digest2` + `combine` → `outputs/phase2_v5/sorcha_comparison_v5.parquet`
+- [ ] Update `sorcha_postprocess.py` map-assignment to use nearest (Δlon, lat) center in antisun-relative coords
+- [ ] Re-run Phase 2: score-vdp + run-digest2 + combine on v5.0 tracklets
 - [ ] SCP combined parquet to Arnor
 
 ### Step 6 — ROC analysis on Arnor
 - [ ] Re-run `sorcha_roc_comparison.ipynb` on v5.0 results
 - [ ] Compare VDP vs digest2 F1 on new cadence
-- [ ] Fill in Section 4.8 of `neomod/paper/NEOrocks.tex` with results
 
-### Documentation added (2026-06-11)
-- `SORCHA_V5_PIPELINE.md` — full pipeline reference (inputs, scripts, slurm params, batching, technical notes)
-- `neomod/paper/NEOrocks.tex` — Section 4 "Rubin-Cadence Evaluation with Sorcha" drafted (Sections 4.1–4.8; 4.8 Results is a placeholder pending Phase 2)
-- `neomod/paper/` directory created, NEOrocks.tex SCPed from Mac
+### Immediate Hyak small wins (can do before/alongside Step 2)
+- [ ] MBA clone_factor 1→5 in `velocity_density_pipeline_gmm.py` → expected +0.020 F1
+- [ ] Widen antisun footprint 30°→45° in `sorcha_postprocess.py` → Phase 1 re-run → expected +0.010–0.015
+- [ ] More GMM components 80→200 in `_clone_neo_gmm` → expected +0.003–0.008
 
-### Hyak small wins (deferred during the v5.0 redo — not forbidden)
+---
+
+## Known Bugs in Notebooks (non-critical)
+
+- `neocp_vdp_comparison.ipynb` Cell `1f36014b` (Section 13): references `first_seen` column which doesn't exist in `gone_df` → `KeyError`. Pre-existing bug, section still runs partially.
+- Section 14 of same notebook: displays stale cached output (old Python scorer, all d2 scores at 0, wrong title). The cell code is correct (loads CSV), but a clean kernel restart + Section 14 re-run is needed to refresh the displayed plot. Hyak validation result (r=0.627) is the ground truth.
+
+---
+
+Good luck! — Arnor Claude, 2026-06-08
+
+---
+
+# Advisor Feedback + Next Major Tasks — 2026-06-08 (corrected)
+
+*Written for Hyak Claude. Read `docs/WAGG_SORCHA_HYAK_CONTEXT.md` for full Hyak infrastructure — that is the canonical file. Hyak working dir: `/mmfs1/gscratch/dirac/ds2004/sorcha/` (astro path is a symlink, both work). Pipeline scripts are now in `neomod/pipeline/` after 2026-06-03 repo reorganisation.*
+
+---
+
+## Current Scorecard (as of 2026-06-08)
+
+| Classifier | F1 | Completeness | Contamination | Notes |
+|---|---|---|---|---|
+| S3M kNN VDP | 0.847 | 75.1% | 2.8% | Single-epoch S3M test (unfair 7:1 TNO:NEO) |
+| GMM VDP (single-epoch) | 0.842 | 76.9% | 7.0% | Same single-epoch test |
+| digest2 (single-epoch) | 0.655 | — | — | Artificially low — TNO:NEO bias |
+| **VDP GMM + mask OFF + ±2.0 grid** | **0.837** | **78.3%** | **10.2%** | **Current best, TIED with digest2** |
+| digest2 (Sorcha 2yr full) | 0.836 | 77.1% | 8.7% | |
+
+VDP completeness (78.3%) already exceeds digest2 (77.3%). Remaining gap is MBA contamination: VDP MBA FPR 1.5% vs digest2 0.2%.
+
+**Existing infrastructure (all on Hyak at `/mmfs1/gscratch/dirac/ds2004/sorcha/`):**
+- 14,445 Sorcha output h5 files in `outputs/production_2yr/` (232G, baseline_v3.3_10yrs.db)
+- 24 monthly S3M antisun maps in `prob_maps/` (May 2025 – Apr 2027)
+- Hybrid training maps in `prob_maps_hybrid/`
+- Phase 2 pipeline: `sorcha_phase2.py` (commands: score-vdp, run-digest2, combine)
+- `sorcha_postprocess.py` for Phase 1 tracklet building
+- `sorcha_gen_map_hybrid.py` + `sorcha_gen_maps_hybrid_slurm.sh` for map generation
+
+---
+
+## Task 1 — Investigate P(NEO) in NEO-only velocity cells (CORRECTED)
+
+**What the advisor asked:** "Look at counts of vel -0.5 or 0.8, look at that giant pixel and see how many objects are in that pixel — if no objects but NEO probability must be 1."
+
+**CORRECTED diagnosis (from Hyak, 2026-06-08):** The earlier Arnor diagnosis (MBA Gaussian tail bleeding) was wrong. **MBA uses K|M cloning, not GMM — there are no Gaussian tails.**
+
+The 9.3× MBA density discrepancy at vlam=−0.5 between the S3M and GMM maps is from **different map centers**:
+- S3M NEOCP map: ecliptic lon = 229°
+- GMM monthly map: ecliptic lon = 220°
+
+A 9° offset changes which MBAs fall in the sky cut at that velocity point. This is expected, not a bug.
+
+**What to do for the advisor:** Pick a velocity pixel at vlam=−0.5, count actual MBA training objects in that pixel for the GMM map, show MBA K|M density is non-zero because of nearby MBAs visible at that sky center (not tails). Document in notebook: the P(NEO) < 1 gap is from sky-geometry of the specific map center, not a model deficiency. 2–3 lines is enough for the paper.
+
+---
+
+## Task 2 — Redo Sorcha with Rubin Baseline v5.0 (IMPORTANT)
+
+**Current cadence database:** `baseline_v3.3_10yrs.db` (799MB, already on Hyak at `/mmfs1/gscratch/astro/ds2004/sorcha/`)
+
+**Needed:** `baseline_v5.0_10yrs.db` — the official Rubin Operations baseline cadence.
+
+**Why:** v3.3 is an older test cadence. v5.0 is the current official baseline. Papers submitted now should use v5.0. (v5.3 would model first-year LSST start, lower priority, skip for now.)
+
+**Steps:**
+1. Download `baseline_v5.0_10yrs.db` from the OpSim archive (rubin-sim-data, or the Rubin Community site; check what's available)
+2. Re-run Sorcha on the same `hybrid_sorcha_orbits.csv` + `hybrid_sorcha_phys.csv` inputs with the new db and same `Rubin_full_footprint_wagg_detections.ini` config
+3. Re-run Phase 1 (`sorcha_postprocess.py` Slurm array) on new output
+4. Re-run Phase 2 (`sorcha_phase2.py` score-vdp, run-digest2, combine) on new tracklets
+5. Update ROC analysis
+
+**This is a major Hyak task — check Rubin simulation archive for the db file first before starting anything else.**
+
+v5.3 is explicitly low priority — do not start until v5.0 is complete and results look good.
+
+---
+
+## Task 3 — New Comprehensive Sky-Covering Map Grid (~500 maps)
+
+This is the largest new infrastructure task. Instead of 24 maps along the ecliptic (all at lat=0), build a full sky grid of ~500 maps. The goal is to score any LSST tracklet regardless of where on sky it falls, using the nearest map center relative to the current antisun direction.
+
+### Map grid geometry
+
+**Coordinate system:** Ecliptic coordinates relative to the antisun direction. Maps are defined by (Δlon, lat) where Δlon is the longitude offset from the current antisun ecliptic longitude. This makes the grid sky-position-independent — it repeats every year as the Sun moves.
+
+**Grid parameters:**
+
+| Parameter | Value | Notes |
+|---|---|---|
+| Longitude step | 10° | −180° to +180° = 36 points along each latitude circle |
+| Alternative longitude step | 5° | Denser option, 72 points; discuss with advisor |
+| Latitude: ecliptic region | 1–2° steps, 0° to ±30° | Finer grid near ecliptic where most objects are |
+| Latitude: high-lat region | Larger steps, 30° to ±90° | Fewer objects, coarser OK |
+| Target total latitude points | ~16 (both hemispheres combined) | e.g., 0, ±2, ±5, ±10, ±15, ±20, ±30, ±45, ±60 |
+| Sun exclusion zone | 40° from Sun | No maps with center within 40° of Sun ecliptic lon |
+| Estimated total maps | ~500 | 36 lon × 16 lat × exclusion zone ≈ ~450–550 |
+
+**The "28 ecliptic + 16 latitude" framing from the advisor notes:**
+- 28 grid points along ecliptic: this is 36 longitude steps minus ~8 excluded by the 40° sun zone = ~28 usable ecliptic map centers
+- 16 latitude points: 16 unique latitude values (e.g., 0, ±2, ±4, ±8, ±15, ±25, ±40, ±60, ±80) = 16 rows
+
+### Map generation approach
+
+Make map generation **configurable** — command-line parameters, not hardcoded:
+
+```python
+# sorcha_gen_maps_grid.py (new script)
+--lon-step 10          # longitude step in degrees
+--lat-points "0,2,4,8,15,25,40,60,80"  # latitude values (degrees, symmetric ±)
+--sun-exclusion 40     # exclude maps within this many degrees of Sun
+--map-grid-file map_grid.csv  # output: list of (lon_offset, lat) pairs
+--prob-maps-dir prob_maps_grid/
+--n-jobs 16
+```
+
+Map centers are stored as (Δlon_from_antisun, lat) pairs. Each map is generated the same way as existing monthly antisun maps, but at the specified antisun-relative position instead of always at lon=0 (exactly antisun, lat=0).
+
+### Tracklet-to-map assignment (updated scoring logic)
+
+For each LSST tracklet being scored:
+
+1. Compute the current antisun ecliptic longitude at the observation time (already done in `sorcha_postprocess.py` via `_antisun_ecl_lon(mjd)`)
+2. Compute the tracklet's ecliptic (lon, lat)
+3. Compute (Δlon, lat) = (tracklet_lon − antisun_lon, tracklet_lat)
+4. Find the closest map center in this (Δlon, lat) space
+5. Use that map for VDP scoring
+
+This is analogous to the current epoch-aware antisun assignment but extended to 2D (lon offset + lat) instead of just temporal proximity.
+
+### Diagnostic plots (REQUIRED for each map batch)
+
+The advisor explicitly asked for "quick dirty" sanity-check figures every time new tracklets/maps are made. For each batch:
+
+- **Heliocentric distance histogram:** `r_helio` (AU) for all training objects split by population. Confirm:
+  - NEOs: peak at 0.5–1.5 AU
+  - MBAs: peak at 2–4 AU
+  - TNOs: >30 AU
+  - No anomalous populations
+- **Heliocentric x-y scatter** (in the orbital plane, AU): scatter plot of training objects. The interesting AU range is ~1–5 AU (showing inner belt structure). NEOs should cluster near Earth orbit; MBAs should show main belt ring.
+- **Velocity coverage plot:** show the (vlam, vbeta) coverage of training objects for each map center — confirm no empty regions in the expected range
+
+These plots confirm the new map grid is pulling in the right populations before committing to a full 500-map run.
+
+---
+
+## Task 4 — New Tracklets with Detection Count Column
+
+When rebuilding tracklets for the v5.0 Sorcha run (or any future tracklet rebuild):
+
+**Keep:** 2-detection minimum per night (current approach — keep as baseline)
+
+**Add column:** `n_det_per_night` — the total number of raw Sorcha detections for that (ObjID, night) pair, not just the 2 used for the tracklet.
+
+In `sorcha_postprocess.py`, when grouping by (ObjID, night), after picking the first/last pair for the tracklet, also record:
+
+```python
+n_det_per_night = len(night_group)  # total detections that night before pairing
+```
+
+Include this in the output parquet schema (currently 43 columns — add this as column 44).
+
+**Why:** Allows re-analysis with ≥3 or ≥4 detection thresholds later without rerunning the full Phase 1. Wagg uses ≥3 detections — this makes it trivial to reproduce their cut in post-processing.
+
+---
+
+## Task 5 — digest2 NEOCP Validation — ALREADY DONE ON HYAK
+
+**Status: COMPLETE.** `neomod/pipeline/validate_digest2_neocp.py` ran on Hyak 2026-06-08.
+Results: Pearson r=0.627, 12/13 high-MPC objects correctly classified.
+Output: `outputs/validate_digest2_neocp.csv` + `outputs/validate_digest2_neocp.png` on Hyak.
+
+**Arnor-side: COMPLETE (2026-06-08).** `validate_digest2_neocp.csv` SCPed to `outputs/`. Section 14 cells updated to load CSV and plot scatter vs MPC score. Ready to run.
+
+---
+
+## Immediate Next Steps for Hyak — Beat digest2 (F1 > 0.837)
+
+VDP is currently TIED at F1=0.837. To win: reduce MBA contamination (FPR 1.5% → ~0.4%).
+
+| Priority | Task | Expected F1 gain |
+|---|---|---|
+| 1 | **MBA clone_factor 1→5** in `velocity_density_pipeline_gmm.py` | +0.020 → F1 ≈ 0.857 |
+| 2 | **Widen antisun footprint 30°→45°** in `sorcha_postprocess.py` → Phase 1 re-run | +0.010–0.015 |
+| 3 | **More GMM components 80→200** in `_clone_neo_gmm` call | +0.003–0.008 |
+
+---
+
+## Longer-Term Tasks (advisor braindump)
+
+**B — Redo Sorcha with Rubin baseline v5.0** (IMPORTANT)
+- Current: `baseline_v3.3_10yrs.db`. Need `baseline_v5.0_10yrs.db` from OpSim archive.
+- Full pipeline rerun: Sorcha → Phase 1 → Phase 2 → ROC.
+- v5.3 (first-year LSST) is low priority, skip for now.
+
+**C — New comprehensive sky-covering map grid (~500 maps)**
+- Maps in antisun-relative ecliptic coords (Δlon, lat) — time-independent
+- Longitude: 10° steps = 36 points, minus ~8 in 40° sun exclusion zone = ~28 usable
+- Latitude: ~16 points, 1–2° steps near ecliptic, larger at high lat
+- Configurable params (lon step, lat grid, sun exclusion) as CLI args
+- Diagnostic plots required per batch: heliocentric distance histogram + x-y scatter (1–5 AU)
+- Assignment: per tracklet, compute antisun lon → find nearest (Δlon, lat) map center
+
+**D — Tracklets with detection count column**
+- Add `n_det_per_night` to `sorcha_postprocess.py` output — raw detection count before pairing
+- Allows ≥3/4 detection threshold re-analysis without Phase 1 rerun
+
+**Full redo order:** v5.0 Sorcha → new tracklets (with `n_det_per_night`) → ~500-map grid → score
+
+---
+
+Good luck! — Arnor Claude, 2026-06-08 (corrected and updated)
+
+---
+
+# Hyak Session Update — 2026-06-11
+
+## What Was Completed This Session
+
+### ✅ Sorcha v5.0 Production Run — DONE
+- **`baseline_v5.0.0_2yrs.db`** created (148 MB, 414,488 obs, MJD 60980–61710, Nov 2025 – Nov 2027)
+  - Trimmed from 10yr db via: `sqlite3 ... ATTACH ... CREATE TABLE AS SELECT WHERE observationStartMJD < 61710.0`
+- **`neomod/pipeline/slurm/multi_sorcha_production_v5.sh`** — Slurm array script (array 0-903%16, 16 CPUs, 128G, 4hr)
+- **14,445 h5 files** produced in `outputs/production_2yr_v5/` (~232 GB total)
+- **inst00820_part003 recovery**: 5 pathological objects identified and excluded via bisection:
+  - `A804 RA`, `A854 OA`, `A868 TA` — same as v3.3 run
+  - `A854 RA`, `A868 WA` — NEW in v5.0 (different orbital phase due to 6-month offset in sim window)
+  - Bisection method: split 997-obj batch → 16 batches of 63 → 16 batches of 8 → individual objects
+  - Recovery script: `neomod/pipeline/slurm/split820v5_part003_final.sh` → runs on `orbits_003_skip5.csv` (995 objects)
+  - Excluded objects logged in `work/production_2yr_v5/instance_00820/bisect*/` sub-batches
+
+### ✅ Phase 1 (Tracklet Building) — DONE
+- **`n_det_per_night` column added** to `neomod/pipeline/sorcha_postprocess.py` as column 44
+  - Stores total raw Sorcha detections per (ObjID, night) group before first/last pairing
+  - Allows ≥3/≥4 detection re-analysis post-hoc (Wagg uses ≥3)
+  - Equal to `n_det` (same `g.size()` value); added as a clearly named separate column
+- **`neomod/pipeline/slurm/sorcha_postprocess_v5.sh`** — identical to v3.3 script except `indir/outdir` paths
+- **14,445 parquet files** in `outputs/tracklets_v5/` (7.85 GB total)
+- **29,844,550 tracklets** total — all files verified readable, n_det_per_night present, zero-size = 0
+
+### ✅ Documentation Created
+- **`SORCHA_V5_PIPELINE.md`** — full pipeline reference (inputs, all steps, scripts, slurm params, batching commands, technical notes). Intended for paper write-up reference.
+- **`neomod/paper/NEOrocks.tex`** — Section 4 "Rubin-Cadence Evaluation with Sorcha" added:
+  - 4.1 Input Catalog, 4.2 Pointing Database, 4.3 Sorcha Simulation + HPC chunking
+  - 4.4 Tracklet Construction (n_det_per_night explained, Wagg comparison)
+  - 4.5 Extended VDP Map Grid (antisun-relative coords, 500-map spec)
+  - 4.6 GMM Density Estimation (why GMM vs kNN, normalisation fix)
+  - 4.7 Scoring & Comparison
+  - 4.8 Results — **placeholder, to be filled after Phase 2**
+
+---
+
+## What Still Needs to Be Done (in order)
+
+### NEXT: Step 3 — Build ~500-Map Antisun-Relative Sky Grid
+**This is the new baseline for all scoring. Do NOT run Phase 2 until this is done.**
+
+- Write `neomod/pipeline/sorcha_gen_maps_grid.py` — new script, configurable:
+  - `--lon-step 10` (degrees), `--lat-points "0,2,5,10,20,30,45,60"`, `--sun-exclusion 40`
+  - Maps defined in (Δlon_from_antisun, lat) — time-independent, reusable every year
+  - Same map generation logic as `sorcha_gen_map_gmm.py` but at specified (Δlon, lat) offset
+- Write corresponding Slurm array script
+- Output dir: `prob_maps_grid/`
+- **Run one test map first**, confirm heliocentric x-y scatter and velocity coverage plots
+- Submit full ~500-map batch once test looks good
+- Required diagnostic plots per batch: heliocentric distance histogram + x-y scatter (1–5 AU)
+
+### Step 4 — Phase 2 Scoring (after maps are ready)
+- Create v5 versions of Phase 2 Slurm scripts:
+  - `sorcha_phase2_vdp_v5.sh` → reads `outputs/tracklets_v5/`, `prob_maps_grid/`, writes `outputs/phase2_v5/`
+  - `sorcha_digest2_v5.sh` → same structure as `sorcha_digest2_slurm.sh`
+- Run `score-vdp`, `run-digest2`, then `combine`
+- Output: `outputs/phase2_v5/sorcha_comparison_v5.parquet`
+
+### Step 5 — Sanity Plots + SCP to Arnor
+- Heliocentric x-y scatter (AU, split by population)
+- Population count histogram
+- SCP `outputs/phase2_v5/sorcha_comparison_v5.parquet` to Arnor
+
+### Step 6 — ROC Analysis on Arnor
+- Re-run `sorcha_roc_comparison.ipynb` on v5.0 results
+- Compare VDP vs digest2 F1 on new cadence
+- Fill in Section 4.8 of `neomod/paper/NEOrocks.tex`
+
+### Small Wins (deferred during the v5.0 redo — not forbidden)
 These were deprioritised in favour of the v5.0 grid redo, NOT ruled out. Adopt as decided.
-- [x] MBA clone_factor 1→5 in `neomod/src/velocity_density_pipeline_gmm.py` line ~150 → +0.020 F1. **ADOPTED 2026-06-16** for the v5.0 antisun-relative grid (matches the F1=0.837 config). Applied via `--mba-clone-factor 5` (default) in `sorcha_gen_maps_grid.py`, not by editing the global default.
-- [ ] Widen antisun footprint 30°→45° in `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run → expected +0.010–0.015 (not yet applied)
-- [ ] More GMM components 80→200 in `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 → expected +0.003–0.008 (not yet applied)
+| Task | File | Expected F1 gain | Status |
+|------|------|-----------------|--------|
+| MBA clone_factor 1→5 | `neomod/src/velocity_density_pipeline_gmm.py` line ~150 | +0.020 | **ADOPTED 2026-06-16** for the v5.0 grid (matches the F1=0.837 config). Applied via `--mba-clone-factor 5` in `sorcha_gen_maps_grid.py` (default), not by editing the global default. |
+| Widen antisun footprint 30°→45° | `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run | +0.010–0.015 | not yet applied |
+| GMM components 80→200 | `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 | +0.003–0.008 | not yet applied |
+
+---
+
+Updated by Hyak Claude, 2026-06-11

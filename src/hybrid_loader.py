@@ -6,7 +6,7 @@
 
 import pandas as pd
 
-HYBRID_PARQUET = "/mmfs1/gscratch/astro/ds2004/sorcha/hybrid_elements.parquet"
+HYBRID_PARQUET = "/mmfs1/gscratch/dirac/ds2004/sorcha/hybrid_elements.parquet"
 
 # Maps the same pop keys s3m_loader accepts -> population column label in parquet
 POP_MAP = {
