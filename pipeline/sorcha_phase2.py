@@ -216,9 +216,11 @@ def score_vdp_frame(df: pd.DataFrame, prob_maps_dir: Path, cache: dict[str, vdp.
 
     for map_file, idx in df.groupby("prob_map_file", dropna=True).groups.items():
         # Skip the legacy fixed-position maps (off-axis or single-epoch).
-        # Only monthly antisun maps have "antisun" in the filename; those are
-        # the only maps calibrated for the antisun geometry we filter to.
-        if "antisun" not in str(map_file):
+        # Maps we score against: the monthly "antisun" maps (v3.3/GMM run) OR the
+        # antisun-relative "grid" maps (v5.0 full-sky grid). Legacy fixed-position
+        # maps (e.g. lon229 NEOCP) have neither token and are skipped.
+        mf = str(map_file)
+        if "antisun" not in mf and "grid" not in mf:
             continue
         pms = load_prob_map(prob_maps_dir, str(map_file), cache,
                             mask_radius_deg_per_day=mask_radius_deg_per_day)
