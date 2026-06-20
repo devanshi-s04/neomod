@@ -225,6 +225,7 @@ def score_vdp_frame(df: pd.DataFrame, prob_maps_dir: Path, cache: dict[str, vdp.
         pms = load_prob_map(prob_maps_dir, str(map_file), cache,
                             mask_radius_deg_per_day=mask_radius_deg_per_day)
         if pms is None:
+            cache.pop(mf, None)
             continue
         sub = df.loc[idx]
         scored = pms.score_observation(
@@ -241,6 +242,12 @@ def score_vdp_frame(df: pd.DataFrame, prob_maps_dir: Path, cache: dict[str, vdp.
         df.loc[idx, "vlam"] = scored["vlam"]
         df.loc[idx, "vbeta"] = scored["vbeta"]
         df.loc[idx, "mag_bin_label"] = scored["bin_labels"]
+        # Free the map immediately: groupby visits each prob_map_file exactly
+        # once per frame, so we never need to keep it. Critical for the 667-map
+        # grid — a shard touches hundreds of maps; caching them all OOMs (the
+        # 24-monthly-map run never hit this). Bounds RAM to ~1 map + the frame.
+        cache.pop(mf, None)
+        del pms, scored, sub
     return df
 
 
