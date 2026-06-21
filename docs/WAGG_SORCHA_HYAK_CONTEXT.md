@@ -1972,3 +1972,41 @@ so rMBA → ~0 where no real MBAs exist (→ P(NEO) → ~1 in pure-NEO cells).
 - `VDP_NEO_CLONER` env (default `gmm`; `km` forces K|M) — leave at `gmm`.
 - `sorcha_gen_maps_grid_kmtest.sh` (reuse pattern for the MBA tests).
 - Pure-NEO coverage test = the accept lens (advisor's test). Calibration ≠ coverage.
+
+## Pivot (2026-06-21, before bed) — cloner likely NOT the bug; check classification/definition mismatch
+
+Read `clone_population_conditional_K_from_M[_with_skycut]`. Key facts:
+- **The K|M cloner has NO scatter/bandwidth parameter.** a, e, i, node are EXACT copies
+  (`np.repeat`); only the orbital phase changes — mean anomaly `M` resampled from the
+  pooled empirical M distribution, K=node+argperi resampled conditionally on M. So
+  "tighten the K|M scatter" was the wrong framing.
+- User's point (correct): the K|M cloner is well-validated (Trojans, TNOs, the S3M
+  pipeline). A latent dispersion bug there is unlikely. **De-prioritise the cloner.**
+
+### Leading hypothesis now: catalog-MBA vs tracklet-MBA DEFINITION mismatch
+- Cloner clones **catalog MBAs** = `hybrid_catalog_prep`: `1.7 ≤ a < 4.1, q ≥ 1.3` (BROAD).
+- Truth tracklet label = `sorcha_postprocess.classify_population`: MBA = `2.0 < a < 3.3,
+  e < 0.3` (NARROW); everything else → **`other`**.
+- ⇒ Objects the MAP counts as MBA density, the TRUTH labels as `other`. The "pure-NEO"
+  coverage test counted only `population=='NEO'` as signal, so those high-|vβ| cells may
+  contain real **`other`** objects exactly where the map puts MBA density. If so,
+  **P(NEO) < 1 there is CORRECT** and the map/cloner are fine — the bug is in the
+  comparison labels, not the pipeline.
+
+### Morning check (read-only, parquet)
+1. Recompute the pure-NEO cells with **non-NEO = everything except NEO** (not just MBA),
+   and break down what the non-NEO objects in those cells actually are
+   (`other` / MBA / TNO / Trojan).
+   - If `other`(+MBA) fills the high-|vβ| wings → map is right, "bug" is a labelling
+     artifact (the cells are NOT pure NEO). Likely the resolution.
+   - If the cells really are ~100% NEO across ALL populations and the map still gives
+     P≈0.5 → genuine density issue; then look at the **kNN full-posterior estimator tails**
+     (`log_posterior_d0_2d`, "unnormalised", heavy-tailed over d0) — NOT the cloner.
+2. Reconcile the two MBA definitions (catalog 1.7–4.1 vs tracklet 2.0–3.3,e<0.3). Consider
+   aligning the truth classification with the catalog population definitions so map and
+   truth use the same population boundaries.
+
+### Status of toggles/maps
+- `VDP_NEO_CLONER` left at default `gmm`. K|M A/B maps in `prob_maps_grid_kmtest/` (ruled
+  out NEO cloner). Production `prob_maps_grid/` + parquet untouched. No code changes pending
+  beyond the committed `VDP_NEO_CLONER` toggle.
