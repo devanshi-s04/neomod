@@ -1800,27 +1800,28 @@ See Task 2 in `SORCHA_HYAK_ARNOR_CONTEXT.md` for full step list.
   - All files verified: readable, n_det_per_night present, 0 zero-size files
 - [ ] Sanity-check plots: heliocentric x-y scatter (1–5 AU), population histogram — **TODO**
 
-### Step 4 — Build ~500-map sky grid in antisun-relative ecliptic coords ← NEXT
-**This is the new scoring baseline. Do NOT run Phase 2 until complete.**
-- [ ] New script `neomod/pipeline/sorcha_gen_maps_grid.py`: configurable `--lon-step`, `--lat-points`, `--sun-exclusion`
-  - Maps in (Δlon_from_antisun, lat) — time-independent, reusable every year
-  - Same map generation logic as `sorcha_gen_map_gmm.py` but at specified (Δlon, lat) offset
-- [ ] Grid spec: 10° lon steps (~28 usable after 40° sun exclusion), ~16 lat values → ~450–550 maps total
-- [ ] Write corresponding Slurm array script; output to `prob_maps_grid/`
-- [ ] Run one test map first; confirm heliocentric x-y scatter and velocity coverage plots before full batch
-- [ ] Submit full ~500-map batch once test looks good
+### Step 4 — Build 667-map antisun-relative sky grid ✓ DONE (2026-06-17)
+**The new scoring baseline.**
+- [x] `neomod/pipeline/sorcha_gen_maps_grid.py` — configurable `--lon-step`, `--lat-base`/`--lat-points`, `--sun-exclusion`, `--ref-obstime`, `--mba-clone-factor`, `--task-id`, `--save-overlays`
+- [x] Grid: 10° lon (29 usable after 40° sun exclusion) × 23 non-uniform lat (0,±1,±2,±3,±4,±5,±8,±12,±18,±25,±35,±50 — fine 1° near ecliptic) = **667 maps**, ref epoch 2026-01-01, **MBA cf=5**
+- [x] Slurm `sorcha_gen_maps_grid_slurm.sh` (`--array=0-666%48`, skip-existing) → `prob_maps_grid/`; test script `_test.sh` (idx 333 antisun, 652 lat50)
+- [x] Validated: test map 333 physically correct (P(NEO) peaks ≈0.93 at vlam≈−0.54) and reproduces the old monthly antisun map at cf=5 (support 5→1). 667/667 maps verified (0 missing, 0 zero-byte). Auto-resumed through a maintenance window.
 
-### Step 5 — Score new tracklets with new maps
-- [ ] Create v5 Phase 2 Slurm scripts:
-  - `neomod/pipeline/slurm/sorcha_phase2_vdp_v5.sh` → reads `outputs/tracklets_v5/`, `prob_maps_grid/`, writes `outputs/phase2_v5/`
-  - `neomod/pipeline/slurm/sorcha_digest2_v5.sh`
-- [ ] Run `score-vdp` + `run-digest2` + `combine` → `outputs/phase2_v5/sorcha_comparison_v5.parquet`
-- [ ] SCP combined parquet to Arnor
+### Step 5 — Score tracklets with the grid ✓ DONE (2026-06-20)
+- [x] **Phase 1 re-run** (`sorcha_postprocess_v5_grid.sh`, 15 batches) → `outputs/tracklets_v5_grid/` (14,445 parquets). Grid-aware assignment → **~100% of tracklets get a map** (vs ~48% with monthly maps); **65.9M tracklets** retained.
+- [x] v5 Phase 2 Slurm scripts created: `sorcha_phase2_vdp_v5.sh`, `sorcha_digest2_v5.sh`, `sorcha_digest2_v5_retry.sh`.
+- [x] **score-vdp**: 113/113 shards, 65,857,457 scored, 0.00% NaN, NEO 207,602.
+  - Fix 1 (`7ffdd3a`): `score_vdp_frame` accepts `"grid"` map names (else all-NaN).
+  - Fix 2 (`1ac6170`): evict each map after scoring — a 128-file shard touches ~600 of 667 maps; caching all (~180 MB each) OOM-killed 105/113 on the first try. Eviction → peak RSS 0.46 GB.
+- [x] **sample**: `sorcha_subsample.parquet` = 707,670 rows (207,602 NEO + 500,068 non-NEO, seed 42).
+- [x] **digest2**: 142 tasks (5000 rows each). 40 hit `TimeoutExpired` on slow ckpt → `_retry.sh` with `--digest2-chunk-tracklets 1000` (5×1000) finished them → 142/142.
+- [x] **combine** → `outputs/phase2_v5/sorcha_comparison_v5.parquet` (707,670 rows, both `P_NEO_vdp`/`P_NEO_d2`, 0% NaN). Sanity medians: NEO 0.227/0.990, MBA 0.002/0.020, TNO 0.000/0.355 (vdp/d2).
+- [ ] SCP `sorcha_comparison_v5.parquet` to Arnor `/astro/users/ds2004/vdp/outputs/phase2/`.
 
-### Step 6 — ROC analysis on Arnor
-- [ ] Re-run `sorcha_roc_comparison.ipynb` on v5.0 results
-- [ ] Compare VDP vs digest2 F1 on new cadence
-- [ ] Fill in Section 4.8 of `neomod/paper/NEOrocks.tex` with results
+### Step 6 — ROC analysis on Arnor ← NEXT
+- [ ] Run `sorcha_roc_comparison.ipynb` on `sorcha_comparison_v5.parquet`
+- [ ] VDP vs digest2: AUC / best-F1 / completeness / contamination + per-population table (NEO = positive). Compare to prior 0.837/0.836 — v5.0 is the honest full-sky-grid number.
+- [ ] Fill in Section 4.8 of `neomod/paper/NEOrocks.tex`
 
 ### Documentation added (2026-06-11)
 - `SORCHA_V5_PIPELINE.md` — full pipeline reference (inputs, scripts, slurm params, batching, technical notes)
