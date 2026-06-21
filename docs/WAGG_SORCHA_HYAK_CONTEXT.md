@@ -1934,3 +1934,41 @@ A/B test.
 - The **pure-NEO-cell test** (cells where only NEOs can be should give P≈1) is the right
   lens for coverage defects.
 
+
+## A/B test result (2026-06-21, late) — NEO cloner RULED OUT; MBA over-dispersion is the target
+
+Ran the `VDP_NEO_CLONER=km` A/B test (`sorcha_gen_maps_grid_kmtest.sh` → maps 333/338/342
+into `prob_maps_grid_kmtest/`). Compared GMM vs K|M P(NEO) in the pure-NEO wing cells:
+
+| (vλ, vβ) | P_GMM | P_K\|M | rMBA_GMM | rMBA_K\|M |
+|---|---|---|---|---|
+| (−0.5, 0.5) | 0.26 | 0.13 | 32 | 42 |
+| (−0.4, 0.5) | 0.05 | 0.03 | 196 | 251 |
+
+cells P>0.5: GMM 47k → K|M 20k. **K|M is the same or slightly WORSE.** rNEO is similar
+in both. So the **NEO cloner (GMM vs K|M) is NOT the culprit — RULED OUT.** GMM stays.
+
+**The suppressor is the MBA density.** rMBA = 32–251 in cells that are 99–100% NEO (no
+real MBA tracklets there), and it is **identical between the two runs** because MBA cloning
+is unchanged (K|M for MBA in both). The conditional K|M cloner **over-disperses MBA into
+the high-|vβ| wings**, placing clones at velocities real MBAs never reach. The `nearest_dist`
+mask cannot help — the spurious clones are genuinely there (mask ON==OFF at those cells).
+
+### What to find out in the morning (debugging resumes here)
+Target: **why the K|M MBA velocity cloud is too fat in the wings**, and how to tighten it
+so rMBA → ~0 where no real MBAs exist (→ P(NEO) → ~1 in pure-NEO cells).
+1. **Read `clone_population_conditional_K_from_M_with_skycut`** (velocity_density_pipeline_gmm.py)
+   to find the cloning scatter / bandwidth parameter — that is the likely lever.
+2. **A/B tests (reuse `prob_maps_grid_kmtest`-style 3-map regen + the pure-NEO coverage test):**
+   - MBA cf 5→1 (`--mba-clone-factor 1`) — cheap baseline; expect only PARTIAL help
+     (cf is ~5×, the wing over-representation is ~300×).
+   - Tighten the K|M scatter/bandwidth — expected to be the real fix.
+   - With tails controlled, re-enable the per-population `nearest_dist` mask to zero any
+     residual MBA in pure-NEO cells.
+3. **Accept criteria (unchanged):** pure-NEO cells get P≈1; antisun control stays correct;
+   then full 667-map regen → Phase 2 → ROC.
+
+### Toggles / scripts in place
+- `VDP_NEO_CLONER` env (default `gmm`; `km` forces K|M) — leave at `gmm`.
+- `sorcha_gen_maps_grid_kmtest.sh` (reuse pattern for the MBA tests).
+- Pure-NEO coverage test = the accept lens (advisor's test). Calibration ≠ coverage.
