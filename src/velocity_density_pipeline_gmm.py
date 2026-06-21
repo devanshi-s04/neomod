@@ -78,6 +78,7 @@ NOTES ON RECENT REFACTORING:
 from __future__ import annotations
 
 import gc
+import os
 from math import lgamma
 from typing import Optional, Sequence
 
@@ -144,6 +145,13 @@ DEFAULT_MAG_BINS = [
     {"label": "mag23", "mag_min": 23.0, "mag_max": 24.0},
     {"label": "mag24+", "mag_min": 24.0, "mag_max": 25.0},
 ]
+
+# NEO cloner selector (A/B test). "gmm" (default) trains a Gaussian Mixture on
+# the visible source NEOs; "km" forces the conditional K|M / kNN cloner (the same
+# path used for MBA/TNO/Trojan, and the one behind the broad-coverage S3M maps).
+# Set VDP_NEO_CLONER=km to test whether K|M recovers the NEO velocity wings that
+# the GMM under-covers. Read at import time; one value per process.
+_NEO_CLONER = os.environ.get("VDP_NEO_CLONER", "gmm").strip().lower()
 
 # default per-population settings (clone_factor and overlay style)
 DEFAULT_POPULATION_SETTINGS = {
@@ -1399,6 +1407,9 @@ def build_cloned_maps_for_center_magbin(
                 n_clones_target = len(df_cloner_input) * f
                 gmm_success = False
                 try:
+                    if _NEO_CLONER != "gmm":
+                        raise RuntimeError(
+                            f"VDP_NEO_CLONER={_NEO_CLONER}: using K|M/kNN cloner for NEO")
                     gmm_clone_df, _, _, gmm_diag = _clone_neo_gmm(
                         df=df_cloner_input,
                         n_clones=n_clones_target,

@@ -1833,3 +1833,104 @@ These were deprioritised in favour of the v5.0 grid redo, NOT ruled out. Adopt a
 - [x] MBA clone_factor 1→5 in `neomod/src/velocity_density_pipeline_gmm.py` line ~150 → +0.020 F1. **ADOPTED 2026-06-16** for the v5.0 antisun-relative grid (matches the F1=0.837 config). Applied via `--mba-clone-factor 5` (default) in `sorcha_gen_maps_grid.py`, not by editing the global default.
 - [ ] Widen antisun footprint 30°→45° in `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run → expected +0.010–0.015 (not yet applied)
 - [ ] More GMM components 80→200 in `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 → expected +0.003–0.008 (not yet applied)
+
+---
+
+# VDP P(NEO) Suppression Investigation — 2026-06-21 (open: K|M vs GMM A/B test running)
+
+After the v5.0 Phase 2 + Arnor ROC, VDP came out **behind** digest2 on the full sky
+(AUC 0.880 / F1 0.808 vs digest2 0.930 / 0.836), where the prior antisun-only run had
+them tied at 0.837. Arnor's antisun-distance breakdown showed VDP winning at the antisun
+(0–20°: F1 0.878 > d2 0.848) but collapsing at 35–110° elongation. The advisor was
+"incredibly certain" this is a **GMM normalisation bug**. This section records the full
+diagnostic journey — **including the wrong guesses** — so we don't repeat them.
+
+## The chain of hypotheses (chronological, honest)
+
+1. **Smoothing erodes the NEO wings** — DISPROVEN. `smooth_density_map_by_support` only
+   modifies cells with `local_support >= threshold`; low-support wing cells are copied
+   through unchanged. Smoothing does not erode wings.
+2. **Relative NEO↔MBA normalisation (`effective_factor`) wrong** — IMPLEMENTED a fix
+   (PDF-normalise × n_source, the proper Bayesian mixture) → it was a **no-op**: the
+   stored NEO/MBA integral ratio barely moved (0.00316→0.00268). The cross-population
+   footing was already correct. **Reverted** (`git checkout`).
+3. **Single-reference-epoch grid breaks down off-antisun (epoch dependence)** — DISPROVEN.
+   Off-antisun NEO P_vdp is flat with |obs epoch − 2026-01-01| (0.10 at 0–45 days, 0.05
+   at 400–800 days); antisun NEOs stay ~0.55 at all epochs. The antisun-relative grid is
+   **epoch-stable** (design validated). Suppression is purely a function of elongation.
+4. **The maps are mis-normalised per-elongation** — DISPROVEN. dlon+000/+030/+050/+090
+   all have healthy P(NEO) regions (Pmax~0.97, ~50k cells>0.5, ~identical integrals).
+   The map peak even tracks the real NEO velocity vs elongation.
+5. **"There is no bug — it's a subsample artifact + physics"** — WRONG / incomplete (my
+   error). The reliability curve was computed on the **NEO-enriched `sample` parquet**
+   (all NEOs kept, only 0.76% of non-NEOs → NEOs ~130× overrepresented). A perfectly
+   calibrated map scoring P=0.05 shows `0.05/(0.05+0.95·0.0076)=87%` NEO in that
+   subsample — exactly the "P=0.05→86% NEO smoking gun". On the **full representative
+   set** the calibration sits ON the diagonal (0.30→37%, 0.50→75%, 0.91→98%). I concluded
+   "no bug". **That was too hasty** — calibration measures *reliability*, not *coverage*.
+
+## The advisor's point — CORRECT, and the real bug
+
+The advisor: at e.g. (vλ≈−0.5, vβ≈+0.6) **no MBA can live**, so P(NEO) must be ≈1, yet
+the GMM map is dark there. This is a **coverage/completeness** test that calibration
+cannot see (a map can be calibrated while scoring real NEOs ~0 — they just join the huge
+low-P background). Confirmed on v5.0 data:
+
+- **529 velocity cells that are 99–100% NEO (22,695 real NEOs) get mean P_vdp = 0.51, not
+  ≈1**; worse at high |vβ| (|vβ|>0.5 → 0.47). Real bug.
+
+**Mechanism (per-population density in pure-NEO cells, antisun map, mag22):**
+
+| (vλ, vβ) | rNEO | rMBA | truth | P(NEO) |
+|---|---|---|---|---|
+| (−0.5, 0.0) | 386 | 11 | NEO | 0.96 ✓ |
+| (−0.5, 0.5) | 11.7 | 32 | 99% NEO | 0.26 ✗ |
+| (−0.4, 0.5) | 9.9 | 196 | 99% NEO | 0.05 ✗ |
+
+Two compounding errors in the velocity wings:
+- **GMM NEO density UNDER-disperses** — rNEO collapses (386→10) into the wings; the real
+  NEO velocity distribution (and the old S3M-kNN maps) is broad there.
+- **K|M MBA density OVER-disperses** — rMBA stays 32–196 at velocities where **no real
+  MBA tracklets appear** (cloning scatter + cf=5 fatten the tail). 
+- Net: where the true NEO:MBA ratio is ~100:1, the map says ~1:3 — **backwards by ~300×**,
+  so P(NEO) collapses where it should be ≈1.
+- The `nearest_dist` mask does **not** fix it — the MBA clones are genuinely at those
+  velocities (mask ON vs OFF gives identical P at the pure-NEO cells).
+- Notably the advisor's own left panels show the **S3M-kNN maps got this right** (broad
+  NEO, P≈1 in the wings). So the **GMM-for-NEO step is a regression** in wing coverage.
+
+## What we are testing NOW (open)
+
+Hypothesis: the GMM NEO cloner is the regression — it produces a velocity density that is
+too tight, under-covering the wings, while the K|M/kNN cloner (used for MBA/TNO/Trojan,
+and behind the broad S3M maps) covers them. GMM stays the long-term goal; this is a clean
+A/B test.
+
+- Added env-var toggle `VDP_NEO_CLONER` in `velocity_density_pipeline_gmm.py`
+  (default `gmm`; `km` forces the existing, tested K|M fallback path for NEO). No
+  restructuring.
+- `neomod/pipeline/slurm/sorcha_gen_maps_grid_kmtest.sh` regenerates 3 maps
+  (333 antisun / 338 dlon+50 / 342 dlon+90) with `VDP_NEO_CLONER=km` →
+  `prob_maps_grid_kmtest/` (GMM production maps untouched).
+- **Decision test:** does K|M give **P≈1** in the pure-NEO wing cells (where GMM gave
+  ~0.2)? Does the antisun control stay correct? Does K|M NEO density cover the broad wings?
+  - If YES → GMM under-coverage confirmed; ship K|M for NEO, or fix GMM dispersion.
+  - If NO → the MBA over-dispersion is the bigger driver; pivot there (reduce K|M scatter
+    / reconsider MBA cf=5 / per-population support mask).
+
+## Validation infrastructure (reuse for any fix)
+
+- `sorcha_gen_maps_grid_fixtest.sh` / `_kmtest.sh` — regenerate 3 representative maps
+  into a side dir; ~10 min.
+- Pure-NEO coverage test (the advisor's test) + antisun control are the accept criteria,
+  BEFORE any full 667-map regen.
+
+## Lessons (do not repeat)
+
+- **Calibration ≠ coverage.** A diagonal reliability curve does NOT mean the map finds all
+  NEOs; it can score real NEOs ~0 (completeness loss invisible to calibration).
+- **Never measure calibration on a class-enriched subsample** — use the full representative
+  set or correct for the sampling rate.
+- The **pure-NEO-cell test** (cells where only NEOs can be should give P≈1) is the right
+  lens for coverage defects.
+
