@@ -330,40 +330,74 @@ See `docs/SORCHA_V5_PIPELINE.md` §3 for the full as-built block. Essentials:
 
 ---
 
-## 9. Step 4 — Phase 2: scoring
+## 9. Step 4 — Phase 2: scoring — AS RUN (v5.0, 2026-06-20)
 
 **Script:** `neomod/pipeline/sorcha_phase2.py` (commands: `audit`, `score-vdp`, `sample`,
-`run-digest2`, `combine`). v5.0 Slurm wrappers to be created:
-`sorcha_phase2_vdp_v5.sh`, `sorcha_digest2_v5.sh` (model on the existing
-`sorcha_phase2_vdp.sh`/`sorcha_digest2_slurm.sh`, repointed to `outputs/tracklets_v5_grid/`,
-`prob_maps_grid/`, `outputs/phase2_v5/`).
+`run-digest2`, `combine`). v5.0 Slurm wrappers:
+`sorcha_phase2_vdp_v5.sh`, `sorcha_digest2_v5.sh`, `sorcha_digest2_v5_retry.sh`.
+All point at `outputs/tracklets_v5_grid/`, `prob_maps_grid/`, `outputs/phase2_v5/`.
 
-### 9a. VDP scoring (`score-vdp`)
-Reads tracklet parquets, loads each tracklet's assigned map `.npz`, scores
-P(NEO) by **bilinear interpolation** on the (vlam, vbeta) grid for the tracklet's mag bin,
-using `mean_dra`/`mean_ddec` (rates from Sorcha, converted by `/cos(Dec)`). Run as a Slurm
-array of shards (prior run: 113 shards × 128 parquets, `--array=0-112%32`). Adds
-`P_NEO_vdp, vlam, vbeta, mag_bin_label`. Output: `outputs/phase2_*/vdp_shards/`.
-GMM run uses `--no-nearest-dist-mask`.
+### 9a. VDP scoring (`score-vdp`) — `sorcha_phase2_vdp_v5.sh`
+Reads tracklet parquets, loads each tracklet's assigned grid map `.npz`, scores P(NEO) by
+**bilinear interpolation** on the (vlam, vbeta) grid for the tracklet's mag bin, using
+`mean_dra`/`mean_ddec` (Sorcha rates, converted by `/cos(Dec)`). Slurm array: **113 shards**
+(14,445 files / batch-size 128), `--array=0-112%32`, `--no-nearest-dist-mask` (GMM). Adds
+`P_NEO_vdp, vlam, vbeta, mag_bin_label`. Output: `outputs/phase2_v5/vdp_shards/`.
+**Result:** 113/113 shards, **65,857,457 tracklets scored, 0.00% NaN**, NEO 207,602.
 
-### 9b. digest2 scoring (`run-digest2`)
-Formats each tracklet as a pair of MPC 80-column observations (`ra0/dec0/mjd0_utc` and
-`ra1/dec1/mjd1_utc`, observed positions, UTC) and runs the `mpcdev-digest2` binary.
-- **Designation bug (fixed):** must use `"     D{i:06d}"` (5 spaces + D + 6 digits). The old
-  `D{i:011d}` put D at col 1, so digest2's 5-char truncation collapsed all tracklets in a chunk
-  to one id → they merged into one object → digest2 hung. Lookup key = `D{i:06d}`.
-- Slurm: chunks of ~5,000 tracklets; slow ckpt nodes can time out → retry with
-  `--digest2-chunk-tracklets 1000`. Output: `outputs/phase2_*/digest2_shards/`.
-- **Threshold:** Wagg submits at digest2 ≥ 65 (0–100 scale) = 0.65 on our 0–1 scale.
+Two v5.0-specific code fixes in `sorcha_phase2.py` (`score_vdp_frame`) — both required for the
+grid; see commits `7ffdd3a`, `1ac6170`:
+1. **Accept grid maps.** The old filter `if "antisun" not in map_file: continue` skipped every
+   grid map (`grid_dlon…`), scoring all of them NaN. Now: keep maps whose name contains
+   `"antisun"` OR `"grid"`; legacy fixed-position maps (e.g. lon229 NEOCP) still skipped.
+2. **OOM fix — evict each map after scoring.** A file holds objects all over the sky, so one
+   128-file shard touches ~600 of the 667 grid maps. Caching every `ProbMapSet` (~180 MB each)
+   blew past 32 GB and OOM-killed 105/113 shards on the first attempt. Fix: `cache.pop(mf)` +
+   `del pms` right after each map's group (groupby visits each `prob_map_file` once per frame),
+   bounding RAM to ~1 map + the frame (validated: 16 files / 602 maps → peak RSS **0.46 GB**).
+   The 24-monthly-map run never hit this because ≤24 maps fit in cache.
 
-### 9c. combine
+### 9b. sample (`sample`)
+Keeps **all** NEOs + samples `--n-sample-nonneo` (500,000) non-NEOs, `--sample-seed 42`. Reads
+`vdp_shards/`, writes `outputs/phase2_v5/sorcha_subsample.parquet`. **Result:** 707,670 rows
+(NEO 207,602 + non-NEO 500,068; MBA 457,340, other 23,079, Trojan 13,309, TNO 6,340).
+(NB: needs `--overwrite` to replace an earlier subsample.)
+
+### 9c. digest2 scoring (`run-digest2`) — `sorcha_digest2_v5.sh` + `_retry.sh`
+Formats each subsample tracklet as a pair of MPC 80-column observations (`ra0/dec0/mjd0_utc`,
+`ra1/dec1/mjd1_utc`, observed UTC positions) → `mpcdev-digest2` binary. Slurm array over the
+subsample, 5,000 rows/task → **142 tasks** (`--array=0-141%64`). Adds `P_NEO_d2, digest2_id`.
+- **Designation bug (fixed earlier):** use `"     D{i:06d}"` (5 spaces + D + 6 digits); `D{i:011d}`
+  collapsed all tracklets in a chunk to one id (digest2 truncates to 5 chars) → hung.
+- **Timeout retry (v5.0):** 40/142 tasks hit `TimeoutExpired` (digest2 >3600 s on a 5000-tracklet
+  chunk on slow ckpt nodes). `sorcha_digest2_v5_retry.sh` re-runs the failed indices (explicit
+  `--array=3,4,5,…` list) with `--digest2-chunk-tracklets 1000` (5×1000 subprocess calls, each
+  under the timeout) and 03:00:00 wall → all 142 shards completed.
+- **Threshold:** Wagg submits at digest2 ≥ 65 (0–100) = 0.65 on our 0–1 scale.
+
+### 9d. combine (`combine`)
 ```
 conda_prep/bin/python neomod/pipeline/sorcha_phase2.py combine \
-  --work-dir outputs/phase2_v5 --output outputs/phase2_v5/sorcha_comparison_v5.parquet
+  --work-dir outputs/phase2_v5 --outfile outputs/phase2_v5/sorcha_comparison_v5.parquet
 ```
-**CRITICAL gotcha:** digest2 shards embed VDP columns from whatever run produced them. When
-combining a *new* VDP run, drop stale `P_NEO_vdp,vlam,vbeta,mag_bin_label` from the d2 shards,
-then left-join the fresh `vdp_shards` on `tracklet_id`. Final parquet → SCP to Arnor.
+**Result:** 707,670 rows, both `P_NEO_vdp` and `P_NEO_d2` present, 0.00% NaN. (The historical
+"stale VDP columns in d2 shards" gotcha did not bite here — single fresh v5.0 pipeline.) Final
+columns include the 44 tracklet columns + `P_NEO_vdp, vlam, vbeta, mag_bin_label, digest2_id,
+P_NEO_d2`. → SCP to Arnor `/astro/users/ds2004/vdp/outputs/phase2/`.
+
+**Median P(NEO) by population (sanity, v5.0):**
+| pop | VDP | digest2 |
+|---|---|---|
+| NEO | 0.227 | 0.990 |
+| MBA | 0.002 | 0.020 |
+| TNO | 0.000 | 0.355 |  ← VDP zeros slow TNOs; digest2 cannot
+| Trojan | 0.002 | 0.090 |
+| other | 0.003 | 0.120 |
+
+### Full-sky coverage win (v5.0 grid vs old monthly maps)
+Grid Phase 1 keeps ~100% of tracklets (every non-sun-zone tracklet gets a nearest map) →
+**65.9M scored** vs 29.8M in the monthly run, which dropped 52% outside the 30° antisun
+footprints. This is the main structural change from the prior (F1≈0.837) analysis.
 
 ### digest2 binary validation (2026-06-08)
 `validate_digest2_neocp.py` vs MPC published NEOCP scores (real 80-col tracklets through
@@ -454,6 +488,7 @@ neomod/
 
 ---
 
-*Compiled 2026-06-16 for paper methods writing. Keep in sync with `docs/SORCHA_V5_PIPELINE.md`
-(operational reference) and `docs/WAGG_SORCHA_HYAK_CONTEXT.md` (full history). v5.0 Phase 2
-results pending the 667-map grid run.*
+*Compiled 2026-06-16, updated 2026-06-20 for paper methods writing. Keep in sync with
+`docs/SORCHA_V5_PIPELINE.md` (operational reference) and `docs/WAGG_SORCHA_HYAK_CONTEXT.md`
+(full history). v5.0 pipeline complete through Phase 2 (`sorcha_comparison_v5.parquet`,
+707,670 rows); only the ROC analysis on Arnor (Step 6, Section 4.8) remains.*

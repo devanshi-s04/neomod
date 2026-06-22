@@ -78,6 +78,7 @@ NOTES ON RECENT REFACTORING:
 from __future__ import annotations
 
 import gc
+import os
 from math import lgamma
 from typing import Optional, Sequence
 
@@ -144,6 +145,13 @@ DEFAULT_MAG_BINS = [
     {"label": "mag23", "mag_min": 23.0, "mag_max": 24.0},
     {"label": "mag24+", "mag_min": 24.0, "mag_max": 25.0},
 ]
+
+# NEO cloner selector (A/B test). "gmm" (default) trains a Gaussian Mixture on
+# the visible source NEOs; "km" forces the conditional K|M / kNN cloner (the same
+# path used for MBA/TNO/Trojan, and the one behind the broad-coverage S3M maps).
+# Set VDP_NEO_CLONER=km to test whether K|M recovers the NEO velocity wings that
+# the GMM under-covers. Read at import time; one value per process.
+_NEO_CLONER = os.environ.get("VDP_NEO_CLONER", "gmm").strip().lower()
 
 # default per-population settings (clone_factor and overlay style)
 DEFAULT_POPULATION_SETTINGS = {
@@ -1399,6 +1407,9 @@ def build_cloned_maps_for_center_magbin(
                 n_clones_target = len(df_cloner_input) * f
                 gmm_success = False
                 try:
+                    if _NEO_CLONER != "gmm":
+                        raise RuntimeError(
+                            f"VDP_NEO_CLONER={_NEO_CLONER}: using K|M/kNN cloner for NEO")
                     gmm_clone_df, _, _, gmm_diag = _clone_neo_gmm(
                         df=df_cloner_input,
                         n_clones=n_clones_target,
@@ -2052,6 +2063,7 @@ class ProbMapSet:
         results,
         smoothing=None,
         mask_radius_deg_per_day=DEFAULT_MASK_RADIUS_DEG_PER_DAY,
+        support_mask_min=None,
     ):
         self.x_grid = np.asarray(x_grid, dtype=np.float64)
         self.y_grid = np.asarray(y_grid, dtype=np.float64)
@@ -2065,6 +2077,10 @@ class ProbMapSet:
         self.results = results
         self.smoothing = dict(smoothing or {})
         self.mask_radius_deg_per_day = float(mask_radius_deg_per_day)
+        self.support_mask_min = None if support_mask_min is None else float(support_mask_min)
+        # Populations NOT support-masked: the smoothed ones (smoothing intentionally
+        # fills low-support cells). NEO is the only smoothed population by default.
+        self._support_mask_skip = set(self.smoothing.get("population_names") or ("NEO",))
 
         # precompute per-bin probability maps {label -> {pop -> prob_map}}
         self._prob_maps = {}
@@ -2072,6 +2088,23 @@ class ProbMapSet:
             label = mb["label"]
             density = self.results[label]["density_maps_downweighted_raw"]
             nearest = self.results[label]["nearest_dist_maps"]
+            support = self.results[label].get("support_count_maps", {})
+
+            # Optional support-count mask. The kNN full-posterior estimator assigns
+            # density to velocity cells with ZERO clone support (the dense MBA core
+            # bleeds outward through its k nearest neighbours), suppressing
+            # P(NEO)=rho_NEO/Sum in pure-NEO velocity regions. Zero each non-smoothed
+            # population's density where it has < support_mask_min clones in-cell.
+            if self.support_mask_min is not None:
+                density = {p: arr.copy() for p, arr in density.items()}
+                for pop in self.population_names:
+                    if pop in self._support_mask_skip:
+                        continue
+                    sc = support.get(pop)
+                    if sc is not None:
+                        density[pop] = np.where(
+                            sc >= self.support_mask_min, density[pop], 0.0)
+
             density_total = sum(density.values())
 
             prob_for_label = {}
@@ -2093,7 +2126,8 @@ class ProbMapSet:
     # constructors
     # ------------------------------------------------------------------
     @classmethod
-    def from_npz(cls, path, mask_radius_deg_per_day=DEFAULT_MASK_RADIUS_DEG_PER_DAY):
+    def from_npz(cls, path, mask_radius_deg_per_day=DEFAULT_MASK_RADIUS_DEG_PER_DAY,
+                 support_mask_min=None):
         d = load_maps_from_npz(path)
         return cls(
             x_grid=d["x_grid"], y_grid=d["y_grid"],
@@ -2107,6 +2141,7 @@ class ProbMapSet:
             results=d["results"],
             smoothing=d.get("smoothing"),
             mask_radius_deg_per_day=mask_radius_deg_per_day,
+            support_mask_min=support_mask_min,
         )
 
     # ------------------------------------------------------------------

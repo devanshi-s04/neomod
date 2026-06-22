@@ -1800,27 +1800,28 @@ See Task 2 in `SORCHA_HYAK_ARNOR_CONTEXT.md` for full step list.
   - All files verified: readable, n_det_per_night present, 0 zero-size files
 - [ ] Sanity-check plots: heliocentric x-y scatter (1–5 AU), population histogram — **TODO**
 
-### Step 4 — Build ~500-map sky grid in antisun-relative ecliptic coords ← NEXT
-**This is the new scoring baseline. Do NOT run Phase 2 until complete.**
-- [ ] New script `neomod/pipeline/sorcha_gen_maps_grid.py`: configurable `--lon-step`, `--lat-points`, `--sun-exclusion`
-  - Maps in (Δlon_from_antisun, lat) — time-independent, reusable every year
-  - Same map generation logic as `sorcha_gen_map_gmm.py` but at specified (Δlon, lat) offset
-- [ ] Grid spec: 10° lon steps (~28 usable after 40° sun exclusion), ~16 lat values → ~450–550 maps total
-- [ ] Write corresponding Slurm array script; output to `prob_maps_grid/`
-- [ ] Run one test map first; confirm heliocentric x-y scatter and velocity coverage plots before full batch
-- [ ] Submit full ~500-map batch once test looks good
+### Step 4 — Build 667-map antisun-relative sky grid ✓ DONE (2026-06-17)
+**The new scoring baseline.**
+- [x] `neomod/pipeline/sorcha_gen_maps_grid.py` — configurable `--lon-step`, `--lat-base`/`--lat-points`, `--sun-exclusion`, `--ref-obstime`, `--mba-clone-factor`, `--task-id`, `--save-overlays`
+- [x] Grid: 10° lon (29 usable after 40° sun exclusion) × 23 non-uniform lat (0,±1,±2,±3,±4,±5,±8,±12,±18,±25,±35,±50 — fine 1° near ecliptic) = **667 maps**, ref epoch 2026-01-01, **MBA cf=5**
+- [x] Slurm `sorcha_gen_maps_grid_slurm.sh` (`--array=0-666%48`, skip-existing) → `prob_maps_grid/`; test script `_test.sh` (idx 333 antisun, 652 lat50)
+- [x] Validated: test map 333 physically correct (P(NEO) peaks ≈0.93 at vlam≈−0.54) and reproduces the old monthly antisun map at cf=5 (support 5→1). 667/667 maps verified (0 missing, 0 zero-byte). Auto-resumed through a maintenance window.
 
-### Step 5 — Score new tracklets with new maps
-- [ ] Create v5 Phase 2 Slurm scripts:
-  - `neomod/pipeline/slurm/sorcha_phase2_vdp_v5.sh` → reads `outputs/tracklets_v5/`, `prob_maps_grid/`, writes `outputs/phase2_v5/`
-  - `neomod/pipeline/slurm/sorcha_digest2_v5.sh`
-- [ ] Run `score-vdp` + `run-digest2` + `combine` → `outputs/phase2_v5/sorcha_comparison_v5.parquet`
-- [ ] SCP combined parquet to Arnor
+### Step 5 — Score tracklets with the grid ✓ DONE (2026-06-20)
+- [x] **Phase 1 re-run** (`sorcha_postprocess_v5_grid.sh`, 15 batches) → `outputs/tracklets_v5_grid/` (14,445 parquets). Grid-aware assignment → **~100% of tracklets get a map** (vs ~48% with monthly maps); **65.9M tracklets** retained.
+- [x] v5 Phase 2 Slurm scripts created: `sorcha_phase2_vdp_v5.sh`, `sorcha_digest2_v5.sh`, `sorcha_digest2_v5_retry.sh`.
+- [x] **score-vdp**: 113/113 shards, 65,857,457 scored, 0.00% NaN, NEO 207,602.
+  - Fix 1 (`7ffdd3a`): `score_vdp_frame` accepts `"grid"` map names (else all-NaN).
+  - Fix 2 (`1ac6170`): evict each map after scoring — a 128-file shard touches ~600 of 667 maps; caching all (~180 MB each) OOM-killed 105/113 on the first try. Eviction → peak RSS 0.46 GB.
+- [x] **sample**: `sorcha_subsample.parquet` = 707,670 rows (207,602 NEO + 500,068 non-NEO, seed 42).
+- [x] **digest2**: 142 tasks (5000 rows each). 40 hit `TimeoutExpired` on slow ckpt → `_retry.sh` with `--digest2-chunk-tracklets 1000` (5×1000) finished them → 142/142.
+- [x] **combine** → `outputs/phase2_v5/sorcha_comparison_v5.parquet` (707,670 rows, both `P_NEO_vdp`/`P_NEO_d2`, 0% NaN). Sanity medians: NEO 0.227/0.990, MBA 0.002/0.020, TNO 0.000/0.355 (vdp/d2).
+- [ ] SCP `sorcha_comparison_v5.parquet` to Arnor `/astro/users/ds2004/vdp/outputs/phase2/`.
 
-### Step 6 — ROC analysis on Arnor
-- [ ] Re-run `sorcha_roc_comparison.ipynb` on v5.0 results
-- [ ] Compare VDP vs digest2 F1 on new cadence
-- [ ] Fill in Section 4.8 of `neomod/paper/NEOrocks.tex` with results
+### Step 6 — ROC analysis on Arnor ← NEXT
+- [ ] Run `sorcha_roc_comparison.ipynb` on `sorcha_comparison_v5.parquet`
+- [ ] VDP vs digest2: AUC / best-F1 / completeness / contamination + per-population table (NEO = positive). Compare to prior 0.837/0.836 — v5.0 is the honest full-sky-grid number.
+- [ ] Fill in Section 4.8 of `neomod/paper/NEOrocks.tex`
 
 ### Documentation added (2026-06-11)
 - `SORCHA_V5_PIPELINE.md` — full pipeline reference (inputs, scripts, slurm params, batching, technical notes)
@@ -1832,3 +1833,366 @@ These were deprioritised in favour of the v5.0 grid redo, NOT ruled out. Adopt a
 - [x] MBA clone_factor 1→5 in `neomod/src/velocity_density_pipeline_gmm.py` line ~150 → +0.020 F1. **ADOPTED 2026-06-16** for the v5.0 antisun-relative grid (matches the F1=0.837 config). Applied via `--mba-clone-factor 5` (default) in `sorcha_gen_maps_grid.py`, not by editing the global default.
 - [ ] Widen antisun footprint 30°→45° in `neomod/pipeline/sorcha_postprocess.py` → Phase 1 re-run → expected +0.010–0.015 (not yet applied)
 - [ ] More GMM components 80→200 in `neomod/src/velocity_density_pipeline_gmm.py` line ~1406 → expected +0.003–0.008 (not yet applied)
+
+---
+
+# VDP P(NEO) Suppression Investigation — 2026-06-21 (open: K|M vs GMM A/B test running)
+
+After the v5.0 Phase 2 + Arnor ROC, VDP came out **behind** digest2 on the full sky
+(AUC 0.880 / F1 0.808 vs digest2 0.930 / 0.836), where the prior antisun-only run had
+them tied at 0.837. Arnor's antisun-distance breakdown showed VDP winning at the antisun
+(0–20°: F1 0.878 > d2 0.848) but collapsing at 35–110° elongation. The advisor was
+"incredibly certain" this is a **GMM normalisation bug**. This section records the full
+diagnostic journey — **including the wrong guesses** — so we don't repeat them.
+
+## The chain of hypotheses (chronological, honest)
+
+1. **Smoothing erodes the NEO wings** — DISPROVEN. `smooth_density_map_by_support` only
+   modifies cells with `local_support >= threshold`; low-support wing cells are copied
+   through unchanged. Smoothing does not erode wings.
+2. **Relative NEO↔MBA normalisation (`effective_factor`) wrong** — IMPLEMENTED a fix
+   (PDF-normalise × n_source, the proper Bayesian mixture) → it was a **no-op**: the
+   stored NEO/MBA integral ratio barely moved (0.00316→0.00268). The cross-population
+   footing was already correct. **Reverted** (`git checkout`).
+3. **Single-reference-epoch grid breaks down off-antisun (epoch dependence)** — DISPROVEN.
+   Off-antisun NEO P_vdp is flat with |obs epoch − 2026-01-01| (0.10 at 0–45 days, 0.05
+   at 400–800 days); antisun NEOs stay ~0.55 at all epochs. The antisun-relative grid is
+   **epoch-stable** (design validated). Suppression is purely a function of elongation.
+4. **The maps are mis-normalised per-elongation** — DISPROVEN. dlon+000/+030/+050/+090
+   all have healthy P(NEO) regions (Pmax~0.97, ~50k cells>0.5, ~identical integrals).
+   The map peak even tracks the real NEO velocity vs elongation.
+5. **"There is no bug — it's a subsample artifact + physics"** — WRONG / incomplete (my
+   error). The reliability curve was computed on the **NEO-enriched `sample` parquet**
+   (all NEOs kept, only 0.76% of non-NEOs → NEOs ~130× overrepresented). A perfectly
+   calibrated map scoring P=0.05 shows `0.05/(0.05+0.95·0.0076)=87%` NEO in that
+   subsample — exactly the "P=0.05→86% NEO smoking gun". On the **full representative
+   set** the calibration sits ON the diagonal (0.30→37%, 0.50→75%, 0.91→98%). I concluded
+   "no bug". **That was too hasty** — calibration measures *reliability*, not *coverage*.
+
+## The advisor's point — CORRECT, and the real bug
+
+The advisor: at e.g. (vλ≈−0.5, vβ≈+0.6) **no MBA can live**, so P(NEO) must be ≈1, yet
+the GMM map is dark there. This is a **coverage/completeness** test that calibration
+cannot see (a map can be calibrated while scoring real NEOs ~0 — they just join the huge
+low-P background). Confirmed on v5.0 data:
+
+- **529 velocity cells that are 99–100% NEO (22,695 real NEOs) get mean P_vdp = 0.51, not
+  ≈1**; worse at high |vβ| (|vβ|>0.5 → 0.47). Real bug.
+
+**Mechanism (per-population density in pure-NEO cells, antisun map, mag22):**
+
+| (vλ, vβ) | rNEO | rMBA | truth | P(NEO) |
+|---|---|---|---|---|
+| (−0.5, 0.0) | 386 | 11 | NEO | 0.96 ✓ |
+| (−0.5, 0.5) | 11.7 | 32 | 99% NEO | 0.26 ✗ |
+| (−0.4, 0.5) | 9.9 | 196 | 99% NEO | 0.05 ✗ |
+
+Two compounding errors in the velocity wings:
+- **GMM NEO density UNDER-disperses** — rNEO collapses (386→10) into the wings; the real
+  NEO velocity distribution (and the old S3M-kNN maps) is broad there.
+- **K|M MBA density OVER-disperses** — rMBA stays 32–196 at velocities where **no real
+  MBA tracklets appear** (cloning scatter + cf=5 fatten the tail). 
+- Net: where the true NEO:MBA ratio is ~100:1, the map says ~1:3 — **backwards by ~300×**,
+  so P(NEO) collapses where it should be ≈1.
+- The `nearest_dist` mask does **not** fix it — the MBA clones are genuinely at those
+  velocities (mask ON vs OFF gives identical P at the pure-NEO cells).
+- Notably the advisor's own left panels show the **S3M-kNN maps got this right** (broad
+  NEO, P≈1 in the wings). So the **GMM-for-NEO step is a regression** in wing coverage.
+
+## What we are testing NOW (open)
+
+Hypothesis: the GMM NEO cloner is the regression — it produces a velocity density that is
+too tight, under-covering the wings, while the K|M/kNN cloner (used for MBA/TNO/Trojan,
+and behind the broad S3M maps) covers them. GMM stays the long-term goal; this is a clean
+A/B test.
+
+- Added env-var toggle `VDP_NEO_CLONER` in `velocity_density_pipeline_gmm.py`
+  (default `gmm`; `km` forces the existing, tested K|M fallback path for NEO). No
+  restructuring.
+- `neomod/pipeline/slurm/sorcha_gen_maps_grid_kmtest.sh` regenerates 3 maps
+  (333 antisun / 338 dlon+50 / 342 dlon+90) with `VDP_NEO_CLONER=km` →
+  `prob_maps_grid_kmtest/` (GMM production maps untouched).
+- **Decision test:** does K|M give **P≈1** in the pure-NEO wing cells (where GMM gave
+  ~0.2)? Does the antisun control stay correct? Does K|M NEO density cover the broad wings?
+  - If YES → GMM under-coverage confirmed; ship K|M for NEO, or fix GMM dispersion.
+  - If NO → the MBA over-dispersion is the bigger driver; pivot there (reduce K|M scatter
+    / reconsider MBA cf=5 / per-population support mask).
+
+## Validation infrastructure (reuse for any fix)
+
+- `sorcha_gen_maps_grid_fixtest.sh` / `_kmtest.sh` — regenerate 3 representative maps
+  into a side dir; ~10 min.
+- Pure-NEO coverage test (the advisor's test) + antisun control are the accept criteria,
+  BEFORE any full 667-map regen.
+
+## Lessons (do not repeat)
+
+- **Calibration ≠ coverage.** A diagonal reliability curve does NOT mean the map finds all
+  NEOs; it can score real NEOs ~0 (completeness loss invisible to calibration).
+- **Never measure calibration on a class-enriched subsample** — use the full representative
+  set or correct for the sampling rate.
+- The **pure-NEO-cell test** (cells where only NEOs can be should give P≈1) is the right
+  lens for coverage defects.
+
+
+## A/B test result (2026-06-21, late) — NEO cloner RULED OUT; MBA over-dispersion is the target
+
+Ran the `VDP_NEO_CLONER=km` A/B test (`sorcha_gen_maps_grid_kmtest.sh` → maps 333/338/342
+into `prob_maps_grid_kmtest/`). Compared GMM vs K|M P(NEO) in the pure-NEO wing cells:
+
+| (vλ, vβ) | P_GMM | P_K\|M | rMBA_GMM | rMBA_K\|M |
+|---|---|---|---|---|
+| (−0.5, 0.5) | 0.26 | 0.13 | 32 | 42 |
+| (−0.4, 0.5) | 0.05 | 0.03 | 196 | 251 |
+
+cells P>0.5: GMM 47k → K|M 20k. **K|M is the same or slightly WORSE.** rNEO is similar
+in both. So the **NEO cloner (GMM vs K|M) is NOT the culprit — RULED OUT.** GMM stays.
+
+**The suppressor is the MBA density.** rMBA = 32–251 in cells that are 99–100% NEO (no
+real MBA tracklets there), and it is **identical between the two runs** because MBA cloning
+is unchanged (K|M for MBA in both). The conditional K|M cloner **over-disperses MBA into
+the high-|vβ| wings**, placing clones at velocities real MBAs never reach. The `nearest_dist`
+mask cannot help — the spurious clones are genuinely there (mask ON==OFF at those cells).
+
+### What to find out in the morning (debugging resumes here)
+Target: **why the K|M MBA velocity cloud is too fat in the wings**, and how to tighten it
+so rMBA → ~0 where no real MBAs exist (→ P(NEO) → ~1 in pure-NEO cells).
+1. **Read `clone_population_conditional_K_from_M_with_skycut`** (velocity_density_pipeline_gmm.py)
+   to find the cloning scatter / bandwidth parameter — that is the likely lever.
+2. **A/B tests (reuse `prob_maps_grid_kmtest`-style 3-map regen + the pure-NEO coverage test):**
+   - MBA cf 5→1 (`--mba-clone-factor 1`) — cheap baseline; expect only PARTIAL help
+     (cf is ~5×, the wing over-representation is ~300×).
+   - Tighten the K|M scatter/bandwidth — expected to be the real fix.
+   - With tails controlled, re-enable the per-population `nearest_dist` mask to zero any
+     residual MBA in pure-NEO cells.
+3. **Accept criteria (unchanged):** pure-NEO cells get P≈1; antisun control stays correct;
+   then full 667-map regen → Phase 2 → ROC.
+
+### Toggles / scripts in place
+- `VDP_NEO_CLONER` env (default `gmm`; `km` forces K|M) — leave at `gmm`.
+- `sorcha_gen_maps_grid_kmtest.sh` (reuse pattern for the MBA tests).
+- Pure-NEO coverage test = the accept lens (advisor's test). Calibration ≠ coverage.
+
+## Pivot (2026-06-21, before bed) — cloner likely NOT the bug; check classification/definition mismatch
+
+Read `clone_population_conditional_K_from_M[_with_skycut]`. Key facts:
+- **The K|M cloner has NO scatter/bandwidth parameter.** a, e, i, node are EXACT copies
+  (`np.repeat`); only the orbital phase changes — mean anomaly `M` resampled from the
+  pooled empirical M distribution, K=node+argperi resampled conditionally on M. So
+  "tighten the K|M scatter" was the wrong framing.
+- User's point (correct): the K|M cloner is well-validated (Trojans, TNOs, the S3M
+  pipeline). A latent dispersion bug there is unlikely. **De-prioritise the cloner.**
+
+### Leading hypothesis now: catalog-MBA vs tracklet-MBA DEFINITION mismatch
+- Cloner clones **catalog MBAs** = `hybrid_catalog_prep`: `1.7 ≤ a < 4.1, q ≥ 1.3` (BROAD).
+- Truth tracklet label = `sorcha_postprocess.classify_population`: MBA = `2.0 < a < 3.3,
+  e < 0.3` (NARROW); everything else → **`other`**.
+- ⇒ Objects the MAP counts as MBA density, the TRUTH labels as `other`. The "pure-NEO"
+  coverage test counted only `population=='NEO'` as signal, so those high-|vβ| cells may
+  contain real **`other`** objects exactly where the map puts MBA density. If so,
+  **P(NEO) < 1 there is CORRECT** and the map/cloner are fine — the bug is in the
+  comparison labels, not the pipeline.
+
+### Morning check (read-only, parquet)
+1. Recompute the pure-NEO cells with **non-NEO = everything except NEO** (not just MBA),
+   and break down what the non-NEO objects in those cells actually are
+   (`other` / MBA / TNO / Trojan).
+   - If `other`(+MBA) fills the high-|vβ| wings → map is right, "bug" is a labelling
+     artifact (the cells are NOT pure NEO). Likely the resolution.
+   - If the cells really are ~100% NEO across ALL populations and the map still gives
+     P≈0.5 → genuine density issue; then look at the **kNN full-posterior estimator tails**
+     (`log_posterior_d0_2d`, "unnormalised", heavy-tailed over d0) — NOT the cloner.
+2. Reconcile the two MBA definitions (catalog 1.7–4.1 vs tracklet 2.0–3.3,e<0.3). Consider
+   aligning the truth classification with the catalog population definitions so map and
+   truth use the same population boundaries.
+
+### Status of toggles/maps
+- `VDP_NEO_CLONER` left at default `gmm`. K|M A/B maps in `prob_maps_grid_kmtest/` (ruled
+  out NEO cloner). Production `prob_maps_grid/` + parquet untouched. No code changes pending
+  beyond the committed `VDP_NEO_CLONER` toggle.
+
+## Morning check result (2026-06-22) — label mismatch CONFIRMED as the main explanation
+
+Ran the requested read-only parquet check on the **full VDP shards** (`outputs/phase2_v5/vdp_shards/`,
+65,857,457 scored tracklets), not the NEO-enriched ROC subsample.
+
+Two versions were checked:
+
+1. **Map+mag-specific cells**: group by `(prob_map_file, mag_bin_label, vlam cell, vbeta cell)`.
+   - Antisun `mag22` alone has only 93 NEO tracklets and no tracklets in the cited example cells
+     (`(-0.5,0.5)`, `(-0.4,0.5)`, etc.).
+   - Across all maps/mags, with `NEO>=10` and `NEO/(NEO+MBA)>=0.99`, there are **0** high-support
+     pure-vs-MBA cells. So the earlier "529 pure cells" diagnostic was NOT map/mag-local; it was
+     a pooled-velocity diagnostic.
+
+2. **Pooled velocity cells**: group only by `(vlam cell, vbeta cell)` across all maps/mags.
+   This reproduces the apparent pure-cell effect and reveals the missing population:
+
+   | Criterion | Cells | NEO | Total | NEO/all | Breakdown |
+   |---|---:|---:|---:|---:|---|
+   | `NEO>=10`, `NEO/(NEO+MBA)>=0.99` | 892 | 15,257 | 22,635 | 67.4% | MBA=0, other=7,369, Trojan=9 |
+   | same, `|vbeta|>=0.3` | 50 | 556 | 1,034 | 53.8% | MBA=0, other=478 |
+   | `NEO>=20`, `NEO/(NEO+MBA)>=0.99` | 236 | 6,740 | 10,372 | 65.0% | MBA=0, other=3,625, Trojan=7 |
+
+Specific pooled cells:
+
+| `(vlam,vbeta)` | NEO | MBA | other | NEO/all | mean `P_NEO_vdp` |
+|---|---:|---:|---:|---:|---:|
+| `(-0.50, 0.00)` | 21 | 0 | 1 | 95.5% | 0.886 |
+| `(-0.50, 0.50)` | 4 | 0 | 0 | 100% | 0.508 |
+| `(-0.40, 0.50)` | 2 | 0 | 13 | 13.3% | 0.076 |
+| `(-0.40, 0.60)` | 2 | 0 | 3 | 40.0% | 0.229 |
+
+Conclusion:
+- The advisor's "no MBA can live there" statement is true but incomplete for the current
+  truth labels: **`other` lives there**.
+- The map is trained with broad catalog MBA-like density (`1.7<=a<4.1, q>=1.3`), while the
+  ROC truth labels use narrow MBA (`2.0<a<3.3, e<0.3`) and put the broad-edge belt population
+  into `other`.
+- Therefore the apparent "pure NEO" cells are mostly **not pure NEO across all populations**.
+  The VDP low P in many wing cells is largely correct under the map's broader non-NEO prior;
+  the mismatch is in the evaluation/diagnostic population definition, not in GMM NEO coverage
+  or a K|M cloner bug.
+
+Next action:
+1. Align the diagnostic and ROC labels with the training catalog definitions, at least for a
+   sensitivity test:
+   - NEO: `q < 1.3`
+   - MBA-like non-NEO: `1.7 <= a < 4.1 and q >= 1.3`
+   - Trojan: `4.7 < a < 5.9 and e < 0.3`
+   - TNO: `a > 30`
+2. Recompute ROC/per-population tables under both label schemes:
+   - original paper-friendly physical labels (`MBA=2.0<a<3.3,e<0.3`, `other` separate)
+   - training-aligned labels (broad MBA-like bin)
+3. Do **not** regenerate maps yet. Production maps and parquet are untouched; this is an
+   analysis/labeling issue first.
+
+## BUG FOUND (2026-06-22, evening) — kNN density estimator bleeds into zero-support cells
+
+After aligning eval labels to the map's training definitions (NEO q<1.3, MBA_like
+1.7<=a<4.1 & q>=1.3, ...), the scary "pure-NEO wing" suppression dropped from
+meanP 0.51 -> 0.68 (most of it was the broad-MBA-labeled-`other` artifact). A REAL
+residual remained: genuinely-pure-NEO cells (>90% NEO by real tracklets) get the map
+**rMBA/rNEO = 0.54 vs truth <0.11 — MBA over-weighted ~5x.**
+
+### Ruled out (with evidence)
+- **MBA cf 5->1**: made it WORSE (rMBA up, P down, cells>0.5 47k->4.9k). kNN over-weights
+  SPARSE regions, so fewer clones = worse. Reducing cf is wrong.
+- **The cloner**: MBA clone overlay velocities are UNDER-dispersed vs real tracklets
+  (|vbeta|>=0.4: clones 0.08% vs real 0.16%; vlam<=-0.4: 0.01% vs 0.04%). The clones do
+  NOT over-populate the wings. Cloner exonerated (well-tested, as expected).
+- **Trailing-loss/detection mismatch**: would cancel in the P(NEO) ratio (hits NEO and
+  MBA equally per velocity). Not the cause.
+
+### ROOT CAUSE (confirmed)
+The kNN full-posterior density estimator (`log_posterior_d0_2d`, k_map=10, UNNORMALISED)
+assigns density to velocity cells that contain **ZERO clone support**: in every pure-NEO
+wing cell, `support_count__MBA = 0` yet `density_raw__MBA = 11-196`. The k=10 neighbours
+reach back to the dense MBA core, so the **core bleeds density into the sparse NEO wings**.
+NEO has no dense core to bleed, so it stays sparse -> P(NEO)=rNEO/Sum collapses. The
+existing `nearest_dist` mask misses it (it checks the k=1 nearest clone, which is ~0.06
+away — close — while the cell itself is empty).
+
+### Fix (scoring-time, NO regen needed — support_count is stored)
+Mask each population's density where its in-cell `support_count` < threshold (zero the
+estimator bleed). Tested on the antisun map (mask non-smoothed pops by support>=1, keep
+NEO which is intentionally smoothed): pure-NEO wing cells **0.18-0.26 -> 1.000**;
+cells P>0.5 **47k -> 159k**.
+
+### CAVEAT to validate (the mask is currently too blunt)
+Where the CLONER has a coverage gap (support=0) but real objects ARE present, the mask
+wrongly zeros them. Example: (-0.4,+0.5) has 189 real MBA_like tracklets but support=0 ->
+mask forces P(NEO)=1 -> false positives. Net effect MUST be measured.
+
+### Next: validate via re-scoring (no map regen)
+1. Add an optional support-count mask in `ProbMapSet`/`score_vdp` (toggle), threshold a
+   small N. Re-score the existing `outputs/phase2_v5/` parquet WITH the mask.
+2. Full ROC: does pure-NEO coverage + F1 improve net of the false-positive risk in
+   cloner-gap cells? Compare to the unmasked 0.808.
+3. If net win but the cloner-gap false positives hurt: the deeper fix is improving MBA
+   clone COVERAGE at extreme velocities (the cloner under-disperses there) so support>0
+   where real MBAs are, then the support mask only cuts genuinely-empty cells.
+
+## Why the bug was invisible in the original S3M VDP-vs-digest2 win (2026-06-22)
+
+Q: if the kNN estimator bleeds the MBA core into NEO cells, why was VDP BETTER than
+digest2 (F1 0.856 vs 0.665) on the S3M kNN maps? No contradiction — three reasons:
+
+1. **The S3M ROC was antisun-only — VDP's single best geometry.** Scored one ~30° patch
+   at opposition, where NEO (fast retrograde, vλ≈−0.5) and MBA (slow, vλ≈−0.2) are
+   MAXIMALLY separated in velocity. The bleed needs NEO and MBA to be CLOSE in velocity
+   to bite; at the antisun the fast-NEO cells are ~0.3+ from the MBA core, so rMBA there
+   is negligible → P(NEO) high → VDP wins. The bug was present but didn't matter.
+2. **The full-sky grid is the first time VDP's weak regions were scored.** Off-antisun
+   overlap (40–110°, Arnor's band) and the high-|vβ| wings were OUTSIDE the 48% antisun
+   footprint in every prior run. The bleed was always there; those cells were just never
+   scored. Matches Arnor's breakdown: VDP wins 0–20° (S3M regime), loses 40–110° (new).
+3. **S3M maps used mask ON; the GMM/v5 pipeline turned it OFF** ("GMM density → 0 far
+   from data" is true for the NEO GMM but NOT the K|M MBA core). Disabling it removed the
+   guard that partially hid the bleed.
+
+⇒ VDP wasn't "better then, broken now" — it was only ever tested where it's strongest
+(opposition, max separation, mask on). The support-count mask does for the WHOLE sky what
+the old mask + opposition geometry did for the antisun. VDP's antisun strength is real
+(and operationally that's where NEOCP discoveries happen).
+
+## Support-mask fix VALIDATED — fixes the bug, but ~neutral on headline F1 (2026-06-22)
+
+Implemented the support-count mask as a scoring-time toggle: `ProbMapSet.from_npz(
+support_mask_min=N)` and `sorcha_phase2.py score-vdp --support-mask-min N` (zeros each
+non-smoothed population's density where in-cell support_count < N; NEO exempt as it is
+smoothed). Committed (86a18a5).
+
+Re-scored the existing 707,670-row eval subsample (same set as the 0.808 result), NO regen:
+
+| classifier            | AUC   | bestF1 | completeness | contamination |
+|-----------------------|-------|--------|--------------|---------------|
+| VDP original          | 0.880 | 0.808  | 74.1%        | 11.2%         |
+| VDP + support_mask=1  | 0.880 | 0.809  | 74.3%        | 11.1%         |
+| digest2               | 0.930 | 0.836  | 76.9%        | 8.4%          |
+
+**Conclusions:**
+- The mask DOES fix the bug: pure-NEO velocity cells go 0.18–0.26 → ~1.000; cells P>0.5
+  47k → 159k on the antisun map. The motto ("only-NEO regions get highest scores") is met,
+  and it is the scientifically correct behaviour (the advisor's concern is resolved).
+- BUT the headline F1 barely moves (0.808 → 0.809) and AUC is unchanged: the pure-NEO wing
+  cells hold FEW NEOs (~10% of NEOs reach |vβ|≥0.45, scattered), so correcting them does not
+  shift the aggregate. Contamination slightly improved (11.2→11.1%), so feared cloner-gap
+  false positives are negligible. Net: small clean positive — worth adopting as correct
+  behaviour, but it is NOT the lever that closes the digest2 gap.
+- **The VDP-vs-digest2 full-sky gap (0.808 vs 0.836) is dominated by the intermediate-
+  elongation overlap (40–110°), where NEO and MBA velocities genuinely overlap — physics,
+  not a bug.** No velocity-only classifier separates them there; digest2's orbit fit does.
+  VDP still WINS at the antisun (0–20°, F1 0.878 > 0.848), which is the operational NEOCP
+  discovery regime.
+
+### Recommendation
+- Adopt `--support-mask-min 1` for the production grid scoring (correct behaviour, slight
+  net positive, resolves the pure-NEO-cell concern). It is scoring-time; a full re-score
+  (Slurm array) reproduces it across all 113 shards — NO map regen needed.
+- For the paper: report VDP's antisun strength + the honest full-sky result, attributing
+  the off-antisun gap to elongation-dependent velocity overlap (physics). This matches the
+  S3M-win explanation above.
+
+## Shipping the support-masked result to Arnor (2026-06-22)
+
+KEY POINT: the support mask is applied at LOAD/SCORING time (`from_npz(support_mask_min=1)`)
+— it does NOT change the `.npz` maps (they store raw density + support_count). So:
+- "Correct maps" for Arnor = the EXISTING `prob_maps_grid/*.npz` (20 GB, 667 files; never
+  SCPed before — only the parquet went). NO 667-map regeneration needed.
+- For Arnor's probability PLOTS to show masked P(NEO): load with `support_mask_min=1` using
+  the updated `velocity_density_pipeline_gmm.py` (Arnor `git pull`).
+- The masked ROC dataset was built WITHOUT a full Slurm re-score: re-scored the 707k eval
+  subsample with support_mask_min=1 and merged into
+  `outputs/phase2_v5/sorcha_comparison_v5_masked.parquet` (NEO median P 0.227 -> 1.0;
+  P_NEO_vdp_unmasked kept as a column). ROC unchanged vs unmasked (0.808->0.809) — expected
+  (pure-NEO wing cells hold few NEOs).
+
+A full Slurm re-score of all 113 shards with `--support-mask-min 1` is OPTIONAL (canonical
+hygiene for phase2_v5); not needed for Arnor's plots (from maps) or ROC (from subsample).
+
+Files to Arnor (`/astro/users/ds2004/vdp/`):
+- `prob_maps_grid/*.npz` (667, 20 GB) -> `prob_maps_grid/`   [rsync; or a lat=0 subset first]
+- `outputs/phase2_v5/sorcha_comparison_v5_masked.parquet` -> `outputs/phase2/`
+- Arnor `git pull` neomod for the `support_mask_min` toggle, then load maps with
+  `ProbMapSet.from_npz(path, support_mask_min=1)` for the corrected probability plots.
