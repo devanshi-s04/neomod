@@ -2135,3 +2135,41 @@ digest2 (F1 0.856 vs 0.665) on the S3M kNN maps? No contradiction — three reas
 (opposition, max separation, mask on). The support-count mask does for the WHOLE sky what
 the old mask + opposition geometry did for the antisun. VDP's antisun strength is real
 (and operationally that's where NEOCP discoveries happen).
+
+## Support-mask fix VALIDATED — fixes the bug, but ~neutral on headline F1 (2026-06-22)
+
+Implemented the support-count mask as a scoring-time toggle: `ProbMapSet.from_npz(
+support_mask_min=N)` and `sorcha_phase2.py score-vdp --support-mask-min N` (zeros each
+non-smoothed population's density where in-cell support_count < N; NEO exempt as it is
+smoothed). Committed (86a18a5).
+
+Re-scored the existing 707,670-row eval subsample (same set as the 0.808 result), NO regen:
+
+| classifier            | AUC   | bestF1 | completeness | contamination |
+|-----------------------|-------|--------|--------------|---------------|
+| VDP original          | 0.880 | 0.808  | 74.1%        | 11.2%         |
+| VDP + support_mask=1  | 0.880 | 0.809  | 74.3%        | 11.1%         |
+| digest2               | 0.930 | 0.836  | 76.9%        | 8.4%          |
+
+**Conclusions:**
+- The mask DOES fix the bug: pure-NEO velocity cells go 0.18–0.26 → ~1.000; cells P>0.5
+  47k → 159k on the antisun map. The motto ("only-NEO regions get highest scores") is met,
+  and it is the scientifically correct behaviour (the advisor's concern is resolved).
+- BUT the headline F1 barely moves (0.808 → 0.809) and AUC is unchanged: the pure-NEO wing
+  cells hold FEW NEOs (~10% of NEOs reach |vβ|≥0.45, scattered), so correcting them does not
+  shift the aggregate. Contamination slightly improved (11.2→11.1%), so feared cloner-gap
+  false positives are negligible. Net: small clean positive — worth adopting as correct
+  behaviour, but it is NOT the lever that closes the digest2 gap.
+- **The VDP-vs-digest2 full-sky gap (0.808 vs 0.836) is dominated by the intermediate-
+  elongation overlap (40–110°), where NEO and MBA velocities genuinely overlap — physics,
+  not a bug.** No velocity-only classifier separates them there; digest2's orbit fit does.
+  VDP still WINS at the antisun (0–20°, F1 0.878 > 0.848), which is the operational NEOCP
+  discovery regime.
+
+### Recommendation
+- Adopt `--support-mask-min 1` for the production grid scoring (correct behaviour, slight
+  net positive, resolves the pure-NEO-cell concern). It is scoring-time; a full re-score
+  (Slurm array) reproduces it across all 113 shards — NO map regen needed.
+- For the paper: report VDP's antisun strength + the honest full-sky result, attributing
+  the off-antisun gap to elongation-dependent velocity overlap (physics). This matches the
+  S3M-win explanation above.
