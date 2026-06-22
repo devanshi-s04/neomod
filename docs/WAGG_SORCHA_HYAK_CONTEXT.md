@@ -2112,3 +2112,26 @@ mask forces P(NEO)=1 -> false positives. Net effect MUST be measured.
 3. If net win but the cloner-gap false positives hurt: the deeper fix is improving MBA
    clone COVERAGE at extreme velocities (the cloner under-disperses there) so support>0
    where real MBAs are, then the support mask only cuts genuinely-empty cells.
+
+## Why the bug was invisible in the original S3M VDP-vs-digest2 win (2026-06-22)
+
+Q: if the kNN estimator bleeds the MBA core into NEO cells, why was VDP BETTER than
+digest2 (F1 0.856 vs 0.665) on the S3M kNN maps? No contradiction — three reasons:
+
+1. **The S3M ROC was antisun-only — VDP's single best geometry.** Scored one ~30° patch
+   at opposition, where NEO (fast retrograde, vλ≈−0.5) and MBA (slow, vλ≈−0.2) are
+   MAXIMALLY separated in velocity. The bleed needs NEO and MBA to be CLOSE in velocity
+   to bite; at the antisun the fast-NEO cells are ~0.3+ from the MBA core, so rMBA there
+   is negligible → P(NEO) high → VDP wins. The bug was present but didn't matter.
+2. **The full-sky grid is the first time VDP's weak regions were scored.** Off-antisun
+   overlap (40–110°, Arnor's band) and the high-|vβ| wings were OUTSIDE the 48% antisun
+   footprint in every prior run. The bleed was always there; those cells were just never
+   scored. Matches Arnor's breakdown: VDP wins 0–20° (S3M regime), loses 40–110° (new).
+3. **S3M maps used mask ON; the GMM/v5 pipeline turned it OFF** ("GMM density → 0 far
+   from data" is true for the NEO GMM but NOT the K|M MBA core). Disabling it removed the
+   guard that partially hid the bleed.
+
+⇒ VDP wasn't "better then, broken now" — it was only ever tested where it's strongest
+(opposition, max separation, mask on). The support-count mask does for the WHOLE sky what
+the old mask + opposition geometry did for the antisun. VDP's antisun strength is real
+(and operationally that's where NEOCP discoveries happen).
