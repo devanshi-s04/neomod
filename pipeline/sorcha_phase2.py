@@ -88,6 +88,15 @@ def parse_args() -> argparse.Namespace:
              "Remove this flag to re-enable the mask.",
     )
     parser.add_argument(
+        "--support-mask-min",
+        type=float,
+        default=None,
+        help="If set, zero each non-smoothed population's density where its in-cell "
+             "clone support_count < this value, before computing P(NEO). Cuts the kNN "
+             "estimator's bleed of the dense MBA core into zero-support NEO-wing cells "
+             "(diagnosed 2026-06-22). Try 1.",
+    )
+    parser.add_argument(
         "--subsample-file",
         type=Path,
         default=DEFAULT_WORK_DIR / "sorcha_subsample.parquet",
@@ -194,7 +203,8 @@ def audit(args: argparse.Namespace) -> None:
 
 
 def load_prob_map(prob_maps_dir: Path, name: str, cache: dict[str, vdp.ProbMapSet],
-                  mask_radius_deg_per_day: float = vdp.DEFAULT_MASK_RADIUS_DEG_PER_DAY):
+                  mask_radius_deg_per_day: float = vdp.DEFAULT_MASK_RADIUS_DEG_PER_DAY,
+                  support_mask_min=None):
     if name not in cache:
         path = prob_maps_dir / name
         if not path.exists():
@@ -202,12 +212,14 @@ def load_prob_map(prob_maps_dir: Path, name: str, cache: dict[str, vdp.ProbMapSe
         else:
             print(f"  loading {path}", flush=True)
             cache[name] = vdp.ProbMapSet.from_npz(path,
-                mask_radius_deg_per_day=mask_radius_deg_per_day)
+                mask_radius_deg_per_day=mask_radius_deg_per_day,
+                support_mask_min=support_mask_min)
     return cache[name]
 
 
 def score_vdp_frame(df: pd.DataFrame, prob_maps_dir: Path, cache: dict[str, vdp.ProbMapSet],
-                    mask_radius_deg_per_day: float = vdp.DEFAULT_MASK_RADIUS_DEG_PER_DAY) -> pd.DataFrame:
+                    mask_radius_deg_per_day: float = vdp.DEFAULT_MASK_RADIUS_DEG_PER_DAY,
+                    support_mask_min=None) -> pd.DataFrame:
     df = df.copy()
     df["P_NEO_vdp"] = np.nan
     df["vlam"] = np.nan
@@ -223,7 +235,8 @@ def score_vdp_frame(df: pd.DataFrame, prob_maps_dir: Path, cache: dict[str, vdp.
         if "antisun" not in mf and "grid" not in mf:
             continue
         pms = load_prob_map(prob_maps_dir, str(map_file), cache,
-                            mask_radius_deg_per_day=mask_radius_deg_per_day)
+                            mask_radius_deg_per_day=mask_radius_deg_per_day,
+                            support_mask_min=support_mask_min)
         if pms is None:
             cache.pop(mf, None)
             continue
@@ -259,6 +272,10 @@ def score_vdp(args: argparse.Namespace) -> None:
     mask_radius = np.inf if getattr(args, "no_nearest_dist_mask", False) else vdp.DEFAULT_MASK_RADIUS_DEG_PER_DAY
     if mask_radius == np.inf:
         print("nearest-dist mask DISABLED (--no-nearest-dist-mask)", flush=True)
+    support_mask_min = getattr(args, "support_mask_min", None)
+    if support_mask_min is not None:
+        print(f"support-count mask ENABLED: min={support_mask_min} clones/cell "
+              f"(non-smoothed populations)", flush=True)
 
     needed = None
     shards = select_shards(list(batched(paths, args.batch_size)), args)
@@ -275,7 +292,8 @@ def score_vdp(args: argparse.Namespace) -> None:
         if missing:
             raise KeyError(f"Missing VDP columns in shard {shard_idx}: {missing}")
         df = score_vdp_frame(df, args.prob_maps_dir, cache,
-                             mask_radius_deg_per_day=mask_radius)
+                             mask_radius_deg_per_day=mask_radius,
+                             support_mask_min=support_mask_min)
         tmp = outfile.with_name(f".{outfile.name}.tmp_{os.getpid()}")
         df.to_parquet(tmp, index=False)
         tmp.replace(outfile)
