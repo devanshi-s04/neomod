@@ -2010,3 +2010,105 @@ Read `clone_population_conditional_K_from_M[_with_skycut]`. Key facts:
 - `VDP_NEO_CLONER` left at default `gmm`. K|M A/B maps in `prob_maps_grid_kmtest/` (ruled
   out NEO cloner). Production `prob_maps_grid/` + parquet untouched. No code changes pending
   beyond the committed `VDP_NEO_CLONER` toggle.
+
+## Morning check result (2026-06-22) — label mismatch CONFIRMED as the main explanation
+
+Ran the requested read-only parquet check on the **full VDP shards** (`outputs/phase2_v5/vdp_shards/`,
+65,857,457 scored tracklets), not the NEO-enriched ROC subsample.
+
+Two versions were checked:
+
+1. **Map+mag-specific cells**: group by `(prob_map_file, mag_bin_label, vlam cell, vbeta cell)`.
+   - Antisun `mag22` alone has only 93 NEO tracklets and no tracklets in the cited example cells
+     (`(-0.5,0.5)`, `(-0.4,0.5)`, etc.).
+   - Across all maps/mags, with `NEO>=10` and `NEO/(NEO+MBA)>=0.99`, there are **0** high-support
+     pure-vs-MBA cells. So the earlier "529 pure cells" diagnostic was NOT map/mag-local; it was
+     a pooled-velocity diagnostic.
+
+2. **Pooled velocity cells**: group only by `(vlam cell, vbeta cell)` across all maps/mags.
+   This reproduces the apparent pure-cell effect and reveals the missing population:
+
+   | Criterion | Cells | NEO | Total | NEO/all | Breakdown |
+   |---|---:|---:|---:|---:|---|
+   | `NEO>=10`, `NEO/(NEO+MBA)>=0.99` | 892 | 15,257 | 22,635 | 67.4% | MBA=0, other=7,369, Trojan=9 |
+   | same, `|vbeta|>=0.3` | 50 | 556 | 1,034 | 53.8% | MBA=0, other=478 |
+   | `NEO>=20`, `NEO/(NEO+MBA)>=0.99` | 236 | 6,740 | 10,372 | 65.0% | MBA=0, other=3,625, Trojan=7 |
+
+Specific pooled cells:
+
+| `(vlam,vbeta)` | NEO | MBA | other | NEO/all | mean `P_NEO_vdp` |
+|---|---:|---:|---:|---:|---:|
+| `(-0.50, 0.00)` | 21 | 0 | 1 | 95.5% | 0.886 |
+| `(-0.50, 0.50)` | 4 | 0 | 0 | 100% | 0.508 |
+| `(-0.40, 0.50)` | 2 | 0 | 13 | 13.3% | 0.076 |
+| `(-0.40, 0.60)` | 2 | 0 | 3 | 40.0% | 0.229 |
+
+Conclusion:
+- The advisor's "no MBA can live there" statement is true but incomplete for the current
+  truth labels: **`other` lives there**.
+- The map is trained with broad catalog MBA-like density (`1.7<=a<4.1, q>=1.3`), while the
+  ROC truth labels use narrow MBA (`2.0<a<3.3, e<0.3`) and put the broad-edge belt population
+  into `other`.
+- Therefore the apparent "pure NEO" cells are mostly **not pure NEO across all populations**.
+  The VDP low P in many wing cells is largely correct under the map's broader non-NEO prior;
+  the mismatch is in the evaluation/diagnostic population definition, not in GMM NEO coverage
+  or a K|M cloner bug.
+
+Next action:
+1. Align the diagnostic and ROC labels with the training catalog definitions, at least for a
+   sensitivity test:
+   - NEO: `q < 1.3`
+   - MBA-like non-NEO: `1.7 <= a < 4.1 and q >= 1.3`
+   - Trojan: `4.7 < a < 5.9 and e < 0.3`
+   - TNO: `a > 30`
+2. Recompute ROC/per-population tables under both label schemes:
+   - original paper-friendly physical labels (`MBA=2.0<a<3.3,e<0.3`, `other` separate)
+   - training-aligned labels (broad MBA-like bin)
+3. Do **not** regenerate maps yet. Production maps and parquet are untouched; this is an
+   analysis/labeling issue first.
+
+## BUG FOUND (2026-06-22, evening) — kNN density estimator bleeds into zero-support cells
+
+After aligning eval labels to the map's training definitions (NEO q<1.3, MBA_like
+1.7<=a<4.1 & q>=1.3, ...), the scary "pure-NEO wing" suppression dropped from
+meanP 0.51 -> 0.68 (most of it was the broad-MBA-labeled-`other` artifact). A REAL
+residual remained: genuinely-pure-NEO cells (>90% NEO by real tracklets) get the map
+**rMBA/rNEO = 0.54 vs truth <0.11 — MBA over-weighted ~5x.**
+
+### Ruled out (with evidence)
+- **MBA cf 5->1**: made it WORSE (rMBA up, P down, cells>0.5 47k->4.9k). kNN over-weights
+  SPARSE regions, so fewer clones = worse. Reducing cf is wrong.
+- **The cloner**: MBA clone overlay velocities are UNDER-dispersed vs real tracklets
+  (|vbeta|>=0.4: clones 0.08% vs real 0.16%; vlam<=-0.4: 0.01% vs 0.04%). The clones do
+  NOT over-populate the wings. Cloner exonerated (well-tested, as expected).
+- **Trailing-loss/detection mismatch**: would cancel in the P(NEO) ratio (hits NEO and
+  MBA equally per velocity). Not the cause.
+
+### ROOT CAUSE (confirmed)
+The kNN full-posterior density estimator (`log_posterior_d0_2d`, k_map=10, UNNORMALISED)
+assigns density to velocity cells that contain **ZERO clone support**: in every pure-NEO
+wing cell, `support_count__MBA = 0` yet `density_raw__MBA = 11-196`. The k=10 neighbours
+reach back to the dense MBA core, so the **core bleeds density into the sparse NEO wings**.
+NEO has no dense core to bleed, so it stays sparse -> P(NEO)=rNEO/Sum collapses. The
+existing `nearest_dist` mask misses it (it checks the k=1 nearest clone, which is ~0.06
+away — close — while the cell itself is empty).
+
+### Fix (scoring-time, NO regen needed — support_count is stored)
+Mask each population's density where its in-cell `support_count` < threshold (zero the
+estimator bleed). Tested on the antisun map (mask non-smoothed pops by support>=1, keep
+NEO which is intentionally smoothed): pure-NEO wing cells **0.18-0.26 -> 1.000**;
+cells P>0.5 **47k -> 159k**.
+
+### CAVEAT to validate (the mask is currently too blunt)
+Where the CLONER has a coverage gap (support=0) but real objects ARE present, the mask
+wrongly zeros them. Example: (-0.4,+0.5) has 189 real MBA_like tracklets but support=0 ->
+mask forces P(NEO)=1 -> false positives. Net effect MUST be measured.
+
+### Next: validate via re-scoring (no map regen)
+1. Add an optional support-count mask in `ProbMapSet`/`score_vdp` (toggle), threshold a
+   small N. Re-score the existing `outputs/phase2_v5/` parquet WITH the mask.
+2. Full ROC: does pure-NEO coverage + F1 improve net of the false-positive risk in
+   cloner-gap cells? Compare to the unmasked 0.808.
+3. If net win but the cloner-gap false positives hurt: the deeper fix is improving MBA
+   clone COVERAGE at extreme velocities (the cloner under-disperses there) so support>0
+   where real MBAs are, then the support mask only cuts genuinely-empty cells.
