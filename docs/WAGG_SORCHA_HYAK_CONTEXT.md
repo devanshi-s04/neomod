@@ -2173,3 +2173,26 @@ Re-scored the existing 707,670-row eval subsample (same set as the 0.808 result)
 - For the paper: report VDP's antisun strength + the honest full-sky result, attributing
   the off-antisun gap to elongation-dependent velocity overlap (physics). This matches the
   S3M-win explanation above.
+
+## Shipping the support-masked result to Arnor (2026-06-22)
+
+KEY POINT: the support mask is applied at LOAD/SCORING time (`from_npz(support_mask_min=1)`)
+— it does NOT change the `.npz` maps (they store raw density + support_count). So:
+- "Correct maps" for Arnor = the EXISTING `prob_maps_grid/*.npz` (20 GB, 667 files; never
+  SCPed before — only the parquet went). NO 667-map regeneration needed.
+- For Arnor's probability PLOTS to show masked P(NEO): load with `support_mask_min=1` using
+  the updated `velocity_density_pipeline_gmm.py` (Arnor `git pull`).
+- The masked ROC dataset was built WITHOUT a full Slurm re-score: re-scored the 707k eval
+  subsample with support_mask_min=1 and merged into
+  `outputs/phase2_v5/sorcha_comparison_v5_masked.parquet` (NEO median P 0.227 -> 1.0;
+  P_NEO_vdp_unmasked kept as a column). ROC unchanged vs unmasked (0.808->0.809) — expected
+  (pure-NEO wing cells hold few NEOs).
+
+A full Slurm re-score of all 113 shards with `--support-mask-min 1` is OPTIONAL (canonical
+hygiene for phase2_v5); not needed for Arnor's plots (from maps) or ROC (from subsample).
+
+Files to Arnor (`/astro/users/ds2004/vdp/`):
+- `prob_maps_grid/*.npz` (667, 20 GB) -> `prob_maps_grid/`   [rsync; or a lat=0 subset first]
+- `outputs/phase2_v5/sorcha_comparison_v5_masked.parquet` -> `outputs/phase2/`
+- Arnor `git pull` neomod for the `support_mask_min` toggle, then load maps with
+  `ProbMapSet.from_npz(path, support_mask_min=1)` for the corrected probability plots.
