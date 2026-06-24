@@ -1,0 +1,73 @@
+%% VDP pipeline fix progression — paste into any LaTeX document.
+%% Requires: booktabs, multirow, xcolor (or just remove \rowcolor lines)
+
+\begin{table}[ht]
+\centering
+\caption{%
+  Progression of VDP classifier performance across pipeline fixes on the
+  Sorcha/Wagg 2-year Rubin simulation ($\sim$607\,K tracklets,
+  $\sim$114\,K true NEOs).
+  digest2 is shown for reference; its score did not change across fixes.
+  All metrics computed at the best-F$_1$ threshold for each classifier.
+}
+\label{tab:vdp_progression}
+\setlength{\tabcolsep}{7pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+\textbf{Fix applied} & \textbf{Description} & \textbf{F$_1$} & \textbf{Completeness} & \textbf{Contamination} \\
+\midrule
+
+%% ── VDP rows ────────────────────────────────────────────────────────────────
+\multicolumn{2}{@{}l}{\textit{VDP (successive fixes)}} & & & \\[2pt]
+
+Pass 1
+  & 5 maps at 2 epochs; nearest-sky assignment;       & 0.342 & 47.2\% & 73.2\% \\
+  & velocity grid $[-0.8,\,0.8]$ deg/day              &       &        &        \\[2pt]
+
+Pass 1 (epoch-matched\textsuperscript{a})
+  & Same data, filtered to tracklets within           & 0.609 & 52.8\% & 27.9\% \\
+  & $\pm30$\,d of their map epoch                     &       &        &        \\[2pt]
+
+Fix 1
+  & 24 monthly antisun maps (May 2025 -- Apr 2027);   & 0.448 & 46.6\% & 56.9\% \\
+  & epoch-aware assignment; footprint bug present      &       &        &        \\[2pt]
+
+Fix 2
+  & Footprint criterion changed from map-epoch sky     & 0.502 & 55.5\% & 54.2\% \\
+  & position to current antisun at obs.\ time         &       &        &        \\[2pt]
+
+Fix 3
+  & Old 5 maps excluded from Phase\,2 scoring;        & 0.648 & 62.4\% & 32.7\% \\
+  & grid still $[-0.8,\,0.8]$ deg/day                 &       &        &        \\[2pt]
+
+\textbf{Fix 4}
+  & \textbf{Velocity grid extended to}                 & \textbf{0.740} & \textbf{67.5\%} & \textbf{18.0\%} \\
+  & $\mathbf{[-1.5,\,1.5]}$\textbf{ deg/day}          &       &        &        \\[4pt]
+
+\midrule
+
+%% ── digest2 ─────────────────────────────────────────────────────────────────
+digest2 (reference)
+  & MPC-style orbit-space classifier;                 & 0.836 & 77.3\% &  9.0\% \\
+  & unchanged throughout                              &       &        &        \\
+
+\bottomrule
+\end{tabular}
+
+\smallskip
+\begin{minipage}{\linewidth}
+\footnotesize
+\textsuperscript{a}\,Diagnostic only: not a pipeline fix, but a filtered view of
+Pass\,1 data showing VDP performance when solar-elongation geometry matched the
+map epoch.  Demonstrates that epoch mismatch, not fundamental classifier weakness,
+drove the low Pass\,1 score.\\[2pt]
+\textit{Notes.}
+F$_1 = 2\,P\,R\,(P+R)^{-1}$ where $P=$ purity $=1-$contamination and
+$R=$ completeness (recall).
+Completeness = fraction of true NEOs selected;
+contamination = fraction of selected candidates that are non-NEOs.
+All passes used the same Sorcha hybrid S3M+MPCORB simulation
+(Wagg et al.\ 2024; \textit{arXiv}:2408.12517) with identical tracklet cuts.
+\end{minipage}
+\end{table}

@@ -2218,3 +2218,71 @@ produce the masked vdp_shards. The canonical masked comparison parquet
 (`sorcha_comparison_v5_masked.parquet`) already exists (built via the subsample re-score with
 the _gmm ProbMapSet) and is correct, so Arnor's ROC is unaffected — only the full vdp_shards
 need the (now-fixed) re-run for canonical hygiene.
+
+---
+
+# Arnor paper write-up — `NEOrocks.tex` Section 4 + Results (2026-06-22/23)
+
+All edits below are on the Arnor copy `paper/NEOrocks.tex` (Overleaf-linked, **gitignored** —
+moves only by scp, NOT git pull; scp back to `neomod/paper/` on Hyak after changes). The
+analysis/figure code is reproducible in the notebooks listed at the end.
+
+## Section 4 (Sorcha) audited against the code and corrected
+- **Algorithm 1** rewritten as the "VDP main algorithm" with an explicit `Input:` (hybrid
+  S3M+MPCORB catalogue with population labels), `catalogue objects labelled p` (not "source
+  orbits"), `Form the NEO probability map: P = ρ_NEO/Σρ_p` (not the bare arrow), $(\alpha,\delta)$
+  spelled out, $\Delta\lambda_\odot$ defined inline, and the solar-exclusion corrected to
+  **$|\Delta\lambda_\odot| > 140^\circ$** (within 40° of the Sun — earlier wording said `<40°`,
+  which wrongly excluded the antisun). Bilinear interpolation **verified** in `_lookup_in_map`.
+- **§4.6 GMM** corrected: GMM is the NEO **cloner** (orbital-element feature space), NOT a
+  velocity-space density estimator replacing kNN. Normalisation paragraph rewritten to the real
+  **acceptance-fraction / effective-clone-factor** fix (was a wrong "integrates to unity over the
+  infinite plane" story). Added the NEOMOD3 training-augmentation paragraph (null effect, retained).
+- **§4.5 grid** updated to as-built: **667 maps** (29 lon × 23 lat), velocity grid **±2.0 → 401×401**.
+- **§4.1** added the hybrid-training dual-role paragraph (maps trained on the *same* hybrid
+  population they score — closes the S3M calibration gap).
+- **NEOMOD3** reconciled across §3 (benchmark note + forward ref), §4.6 (used as augmentation),
+  and Conclusions ("already incorporated") — no more "future work" framing for something used.
+
+## Framing sections caught up to Section 4
+- Abstract + intro now mention the Sorcha/Rubin-cadence evaluation (were benchmark-only).
+- **Conclusions** rewritten — previously listed Section 4's content (NEOMOD3, sky positions,
+  epochs) as "future work"; now summarise the Sorcha evaluation.
+- Wagg citations de-clustered 13→10; **fixed the intro number**: digest2 purity is **5.4% at
+  ≥65, 8.1% at ≥90** (was a self-contradictory "8.3%…8.1%"), verified vs arXiv:2408.12517.
+- digest2 *does* use S3M as its population model — confirmed from Keys et al. 2019 §3.3.1 (so the
+  comparison isolates the method, not the population assumptions).
+
+## Tables / figures added
+- **§3 dense numbers paragraph → Table 2** (`tab:roc_fiducial_metrics`), with the combined
+  "C/contam" column split into separate Completeness/Contamination columns.
+- **Clone-factor table** (`tab:clone_factors`, Appendix A): benchmark (NEO 300, MBA 10, TNO 100,
+  Trojan 100) vs Sorcha grid (80 / 5 / 10 / 5), referenced from §2.3, §4.5, §4.6, App B.
+- **Sky-coverage Mollweide figure** (§4.4, `sorcha_sky_coverage_smoothed.png`) — tracklet
+  density per sq deg, WFD/NES boundary at δ≈+5° explained in the caption. Built by
+  `make_sky_coverage_figure.py`.
+
+## §4.10 Results — FILLED with the final masked-parquet numbers
+Source: `outputs/phase2/sorcha_comparison_v5_masked.parquet`, training-aligned labels
+(NEO q<1.3; MBA-like 1.7≤a<4.1 & q≥1.3; Trojan 4.7<a<5.9 & e<0.3; TNO a>30; other=rest).
+- **`tab:sorcha_results` (full-sky):** VDP **AUC 0.880, F1 0.809, 74.3% compl, 11.0% contam**;
+  digest2 **0.930, 0.836, 76.9%, 8.4%** (707,670 tracklets; 207,670 NEOs).
+- **`tab:sorcha_elongation` (per |Δλ☉|):** 0–20° VDP **0.883** > d2 0.848; 20–40° 0.837/0.855;
+  40–70° 0.767/0.848; 70–110° 0.770/0.782; 110–141° **0.860**/0.854. (AUCs also in the table.)
+- **N≥3:** VDP F1 0.815 / AUC 0.882; digest2 0.840 / 0.932 (182,661 tracklets) — ranking unchanged.
+- **Support threshold** stated: one cloned point per cell (Appendix B).
+
+### Still TODO in the paper (left deliberately)
+- **Decisions for Devanshi/Zeljko** (NOT resolved): headline-metric weighting (near-antisun vs
+  uniform full-sky); broad-vs-narrow MBA definition in eval.
+- **Optional** before/after support-mask P(NEO) figure (code ready in the notebook).
+- **Wagg v3.3 traffic comparison** — needs numbers from the Wagg paper.
+- ROC-curve figure `fig:sorcha_roc` (data available; not yet drawn).
+
+## Notebooks created on Arnor (kernel `neofast_py310`)
+- `sorcha_v5_normalisation_test.ipynb` — the canonical v5.0 diagnostic: calibration, velocity
+  truth-vs-applied maps, ROC + per-band, **§5 direction-comparison grids** (density + NEO P(NEO)
+  across 4 antisun-relative offsets, mask ON) and the **MBA & NEO P, mask OFF vs ON** reference
+  (mag bins 21-22/22-23/24-25). Loads grid maps with `support_mask_min=1`, `mask_radius=inf`.
+- `paper_figures_sorcha.ipynb` — the sky-coverage figure.
+- `make_sky_coverage_figure.py` — standalone, parameterised for the v5 regen.
