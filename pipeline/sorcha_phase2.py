@@ -37,7 +37,12 @@ if ADAM_STUB.exists():
     sys.path.insert(0, str(ADAM_STUB))
 sys.path.insert(0, str(NEOMOD_SRC))
 
-import velocity_density_pipeline as vdp  # noqa: E402
+import velocity_density_pipeline_gmm as vdp  # noqa: E402
+# ^ Use the GMM pipeline module: it generated the v5 grid maps AND carries the
+#   support-count mask (support_mask_min). The original velocity_density_pipeline
+#   has no such param, so score-vdp --support-mask-min crashed against it. Its
+#   ProbMapSet.score_observation/from_npz are drop-in for scoring (unmasked AUC
+#   matches the original module; verified on the 707k subsample).
 
 
 OBSCODE = "X05"
