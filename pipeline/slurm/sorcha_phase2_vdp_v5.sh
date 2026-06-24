@@ -50,6 +50,12 @@ echo "start=$(date -Is)"
   --batch-size 128 \
   --shard-index "${SLURM_ARRAY_TASK_ID}" \
   --overwrite \
-  --no-nearest-dist-mask
+  --no-nearest-dist-mask \
+  --support-mask-min 1
 
 echo "end=$(date -Is)"
+
+# --support-mask-min 1 (adopted 2026-06-22): zeros non-smoothed populations' density in
+# velocity cells with no in-cell clone support, cutting the kNN estimator's bleed of the
+# dense MBA core into the sparse NEO wings (the confirmed wing-suppression bug). NEO is
+# smoothed and exempt. Makes the full vdp_shards canonical-masked.

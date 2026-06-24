@@ -2196,3 +2196,25 @@ Files to Arnor (`/astro/users/ds2004/vdp/`):
 - `outputs/phase2_v5/sorcha_comparison_v5_masked.parquet` -> `outputs/phase2/`
 - Arnor `git pull` neomod for the `support_mask_min` toggle, then load maps with
   `ProbMapSet.from_npz(path, support_mask_min=1)` for the corrected probability plots.
+
+## Masked full re-score: first attempt FAILED (import mismatch) — fixed (2026-06-22)
+
+Submitted the canonical masked full re-score (sorcha_phase2_vdp_v5.sh with
+--support-mask-min 1). **All 113 shards crashed instantly:**
+`TypeError: ProbMapSet.from_npz() got an unexpected keyword argument 'support_mask_min'`.
+Root cause: `sorcha_phase2.py` imported `velocity_density_pipeline` (the ORIGINAL module),
+but the support_mask_min toggle was added to `velocity_density_pipeline_gmm`. Two different
+ProbMapSet classes — scoring never saw the toggle. No masked shards were written; the
+vdp_shards on disk were STALE (2026-06-20 unmasked run).
+
+**Fix:** point `sorcha_phase2.py` at the GMM module — `import velocity_density_pipeline_gmm
+as vdp`. It generated the v5 maps AND has the mask; its score_observation/from_npz are a
+drop-in (return_intermediates returns probs/vlam/vbeta/bin_labels; unmasked AUC matches the
+original module — verified on the 707k subsample, and smoke-tested: from_npz(support_mask_min=1)
+gives 158,867 cells P>0.5; score_observation keys correct).
+
+**Still TODO:** re-submit `sbatch neomod/pipeline/slurm/sorcha_phase2_vdp_v5.sh` to actually
+produce the masked vdp_shards. The canonical masked comparison parquet
+(`sorcha_comparison_v5_masked.parquet`) already exists (built via the subsample re-score with
+the _gmm ProbMapSet) and is correct, so Arnor's ROC is unaffected — only the full vdp_shards
+need the (now-fixed) re-run for canonical hygiene.
