@@ -109,7 +109,14 @@ from scipy.special import gammaln as _gammaln
 from tqdm import tqdm
 
 import neoscore as nsc
-import hybrid_loader as load_s3m
+
+# VDP_LOADER=s3m  → pure .s3m files via s3m_loader (for the pure-S3M comparison run)
+# VDP_LOADER=hybrid (default) → hybrid_elements.parquet via hybrid_loader
+_VDP_LOADER = os.environ.get("VDP_LOADER", "hybrid").strip().lower()
+if _VDP_LOADER == "s3m":
+    import s3m_loader as load_s3m
+else:
+    import hybrid_loader as load_s3m
 
 
 # =============================================================================
