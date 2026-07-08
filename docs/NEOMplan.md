@@ -193,17 +193,31 @@ Operates only on existing parquet columns → Arnor.* Handoff artifact is always
 
 ### ── PHASE 1 — Hyak, START IMMEDIATELY (long pole; runs while everything else proceeds) ──
 
-**T1.1 NEOMOD3-drawn Sorcha referee run (2C-a; needs D1 confirmed). — Hyak. ~days wall (case-run-sized).**
-- The single most schedule-critical job: every Phase-4 result waits on it.
-- Steps:
-  1. Sample a full NEO population from `neomod3_sampler` (orbits + H, matched in number to the S3M
-     NEO input of the v5 run). Non-NEO input: unchanged S3M.
-  2. Run Sorcha with the identical v5 config + linking case as production.
-  3. Phase-1 tracklets → Phase-2 VDP scoring (current maps) → Phase-3 digest2.
-- **Output:** `sorcha_comparison_neomod3ref.parquet` (same schema as v5 masked parquet).
-- **Accept:** row counts within ~2× of v5 run; baseline VDP + d2 numbers on it are sane
-  (this ALSO immediately tells us how much the current S3M-trained classifiers degrade on
-  debiased-real-world-like NEOs — a paper number by itself).
+**T1.1 NEOMOD3 referee set (2C-a; needs D1 confirmed). — Hyak. FAST PATH FOUND (2026-07-08).**
+- **Option A (adopt Jake Kurlander's public Sorcha run — Kurlander et al. 2025, AJ 170:99):**
+  `https://epyc.astro.washington.edu/~jkurla/LSST_Sorcha_predictions/`. Verified from the paper +
+  pilot files (`one_day_neo.h5` inspected on Arnor):
+  - NEO input = **NEOMOD3** (orbits+H+albedo from the NEOMOD3 generator); MBA = **S3M × 0.80 Wagg
+    rescale** (matches our 2B plan!); Trojans = Vokrouhlický+2024; TNO = CFEPS-L7 9 subpops;
+    Hildas available (`hildamod/`). Population proportions = each model's absolute calibration →
+    physically fair mixing.
+  - Outputs are **all 5σ pre-linking detections** (SSP outcome as a `Linked` bool), 57 cols incl.
+    RA/Dec (noisy + true), **RA/Dec rates**, per-visit MJD/filter/mags(PSF+trailed+σ)/SNR, full
+    orbital elements + H_r per row, and **Range_LTC_km + RangeRate** (truth for validating 1A!).
+  - Layout: per-population `infiles/` + `outfiles/` (s3m/outfiles = 2778 h5; neomod/outfiles = 6
+    files + small-NEO d<10m subsample, weight 4.42). ~1.1B detections total. One night ≈ 470 NEO
+    objects (~265 tracklet-able) → need the bulk files, not the one_day pilots.
+  - Cadence caveat: **v3.4 baseline (survey start 2025-05-01), not our v5.0** — fine as a
+    self-contained referee (antisun-relative maps are epoch-free), but per-band numbers are not
+    directly comparable to our v5 run.
+  - Remaining work: bulk-copy outfiles → Hyak → our Phase-1 tracklet builder → Phase-2 VDP →
+    Phase-3 digest2 → `sorcha_comparison_neomod3ref.parquet`. **No Sorcha run needed.**
+- **Option B (fallback, only if bulk access fails):** run it ourselves as originally planned
+  (`neomod3_sampler` NEO input + S3M non-NEO, v5 config, days of wall time).
+- **Accept:** baseline VDP + d2 numbers on it are sane; this ALSO immediately measures how much the
+  current S3M-trained classifiers degrade on debiased NEOs — a paper number by itself.
+- **Leakage rule:** Jake's NEOMOD3 draw is EVAL-ONLY. Any NEOMOD3-based training/reweighting (1A,
+  2A/2B) must use our own independent draw via `neomod3_sampler`.
 
 **T1.2 Verify NEOCP cron/archive (gates D6). — Hyak. 10 min.**
 - `ls neomod/neocp_data/raw/` — count snapshots + date range. If stalled: restart cron now.
