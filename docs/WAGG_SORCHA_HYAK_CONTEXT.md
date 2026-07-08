@@ -2286,3 +2286,424 @@ Source: `outputs/phase2/sorcha_comparison_v5_masked.parquet`, training-aligned l
   (mag bins 21-22/22-23/24-25). Loads grid maps with `support_mask_min=1`, `mask_radius=inf`.
 - `paper_figures_sorcha.ipynb` — the sky-coverage figure.
 - `make_sky_coverage_figure.py` — standalone, parameterised for the v5 regen.
+
+---
+
+## Pure-S3M benchmark vs Sorcha: structural gap analysis (2026-07-06)
+
+### Setup
+- `benchmark_comparison_s3m.parquet` — 475,027 rows; S3M objects propagated to MJD 61041
+  (2026-01-01, map epoch), 30-min synthetic tracklet, no measurement noise, exact rates.
+  Populations: NEO 184,832 / MBA 141,103 / Trojans 99,995 / TNO 49,097.
+- `sorcha_comparison_s3m.parquet` — 648,908 rows; full 2-year Sorcha survey, scored against
+  the same 667-grid GMM maps.
+
+### Epoch mismatch is NOT the cause
+The 667-map grid is built in the **antisun-relative frame** (Δλ_antisun, β). At scoring time
+each tracklet's antisun position is recomputed from its observation epoch, so the maps are
+epoch-independent by design (`sorcha_gen_maps_grid.py` line 60: "velocity statistics are
+epoch-independent in the antisun frame"). Rebuilding maps at a different epoch produces
+essentially the same maps.
+
+**Single-night ROC test** (2026-07-06): three Sorcha single-night subsets extracted from
+`sorcha_comparison_s3m.parquet` (already fully scored — no SLURM jobs needed) and compared
+against benchmark ROC on Arnor:
+
+| Night | Date | Δ from benchmark | N_NEO | N_total | VDP F1 | d2 F1 |
+|-------|------|-----------------|-------|---------|--------|-------|
+| MJD 61033 | 2025-12-24 | −8d | 325 | 1,827 | 0.807 | 0.853 |
+| MJD 61046 | 2026-01-06 | +5d | 288 | 1,385 | 0.827 | 0.901 |
+| MJD 61642 | 2027-08-25 | +601d | 817 | 4,315 | 0.789 | 0.807 |
+| Benchmark | MJD 61041 | 0 | — | 475,027 | 0.787 | 0.667 |
+
+VDP is stable across all three nights (0.79–0.83 ≈ benchmark 0.787), confirming epoch
+independence. Digest2 is dramatically better on Sorcha single nights (0.81–0.90) than on
+the benchmark (0.667). **The gap is structural, not temporal.**
+
+### Remaining structural explanations
+
+**1. Tracklet rate noise (primary candidate)**
+Sorcha tracklets are formed from two real simulated LSST visits with photon noise, PSF scatter,
+etc. — rates are noisy. Benchmark rates are exact (two analytically propagated positions). Noisy
+(v_λ, v_β) → objects land in slightly wrong map positions → VDP P(NEO) is less sharp → ROC
+degrades. Digest2 uses an orbit-fitting approach that is less sensitive to per-tracklet rate noise.
+
+To test: stratify `sorcha_comparison_s3m.parquet` by `dt_min` and check if VDP AUC rises with
+longer baseline (lower noise). Data is already scored — purely an analysis-side experiment on Arnor.
+
+**2. Population composition / survey selection bias**
+The benchmark applies a magnitude filter (`mag_bin_label.notna()`) but not LSST's full detection
+model (visit footprint, S/N, chip gaps, cadence). Sorcha's detection criteria preferentially
+select objects at favourable sky positions and brightnesses — exactly where digest2's orbit-fitting
+is most informative. VDP is insensitive to this because it only uses the instantaneous rate vector.
+This explains why digest2 F1 jumps from 0.667 (benchmark, full S3M) to 0.85–0.90 (Sorcha,
+detected subset) while VDP stays flat.
+
+### Sorcha config: linking thresholds (`Rubin_full_footprint.ini`)
+```
+SSP_separation_threshold  = 0.5 arcsec   ← minimum motion between two visits to form a tracklet
+SSP_number_observations   = 2            ← detections per night required
+SSP_maximum_time          = 0.0625 days  ← max inter-visit gap (90 min)
+SSP_number_tracklets      = 3            ← tracklets needed across nights
+SSP_track_window          = 15 days      ← window for those 3 tracklets
+SSP_detection_efficiency  = 0.95
+```
+
+Minimum detectable rate: 0.5 arcsec / dt_min. At 30 min baseline → **0.0067 deg/day**.
+
+### TNO population loss analysis
+TNOs move ~0.017 deg/day (median), giving ~1.37 arcsec separation at a 30-min baseline.
+18.1% of Sorcha TNOs fall below the 0.5 arcsec linking threshold:
+
+| dt bin | N TNOs | Below 0.5" |
+|--------|--------|-----------|
+| < 20 min | 766 | **60%** |
+| 20–30 min | 255 | 15% |
+| 30–40 min | 3,655 | 11% |
+| > 40 min | 300 | ~4% |
+
+The 90% loss from benchmark TNOs (49,097) to Sorcha TNOs (4,976) is dominated by **magnitude**:
+the S3M TNO population peaks at mag 24–25, right at LSST's single-visit detection floor.
+Getting 6 detections (2/night × 3 nights) near the noise floor is the bottleneck.
+
+| Mag bin | Benchmark TNOs | Sorcha TNOs | Recovery |
+|---------|---------------|-------------|---------|
+| 14–22 | 1,647 | 1,146 | 66–87% |
+| 22–23 | 5,313 | 1,773 | 33% |
+| 23–24 | 16,394 | 1,777 | 11% |
+| 24–25 | 24,804 | 280 | **1%** |
+| 25+ | 939 | 0 | 0% |
+
+The 24–25 mag collapse: at the 5σ detection floor, each visit has ~50% detection probability.
+Getting 6/6 successes (2 per night × 3 nights) has probability ~0.5⁶ ≈ 1.6%, matching the
+observed 1% recovery rate.
+
+---
+
+## TNO contamination and its effect on digest2 (2026-07-06)
+
+### The shocking finding: digest2 improves dramatically from benchmark → Sorcha; VDP barely moves
+
+When the S3M benchmark and Sorcha results were compared side by side on the full-sky grid,
+the headline numbers were:
+
+| Dataset | VDP F1 | digest2 F1 |
+|---------|--------|-----------|
+| Benchmark | 0.787 | 0.667 |
+| Sorcha (full-sky) | 0.808–0.809 | 0.836 |
+
+VDP moves +0.01–0.04; digest2 moves +0.12–0.19. At the antisun (0–20°) on Sorcha,
+digest2 (F1=0.85) beats VDP (F1=0.81).
+
+Root cause: **the benchmark's population composition is a severe artificial stress test for
+digest2, not for VDP.** In the 0–20° antisun bin, benchmark has **38.6% TNOs**. Sorcha
+has **~0.7% TNOs** in that same bin. digest2 is highly vulnerable to this; VDP is not.
+
+### Why VDP is robust to TNOs
+
+TNOs at ~40 AU move ~0.01–0.05 deg/day — effectively near the origin in velocity space
+(vlam ≈ 0, vbeta ≈ 0). The VDP antisun map has high MBA density and high NEO density at
+distinct locations, but the centre (origin) is a well-calibrated low-P(NEO) zone (that's
+where MBAs pile up at slow retrograde drift at the antisun, and TNOs are even slower). So
+TNOs get correctly scored ~P(NEO)=0. Per the full-sky per-population table:
+
+| Population | VDP above threshold | d2 above threshold |
+|------------|--------------------|--------------------|
+| TNO        | 0.0%               | 69.5%              |
+
+VDP scores 0% of TNOs as NEOs; digest2 scores 69.5% of them as NEOs.
+
+### Why digest2 is NOT robust to TNOs
+
+Digest2 uses a short-arc orbit-fitting model: it computes the range of heliocentric distances
+compatible with two sky positions and a time baseline. TNOs at ~40 AU, observed over a
+30-minute arc, are indistinguishable from an NEO on a very elongated orbit — the angular
+motion is tiny and the orbital uncertainty is enormous. Digest2's orbit-space prior then
+assigns a large NEO probability because the arc is consistent with a high-eccentricity,
+low-perihelion trajectory. This is a fundamental limitation of two-detection classification.
+
+### Why the benchmark has 38.6% TNOs at 0–20° but Sorcha has 0.7%
+
+Three compounding effects explain the ~55× difference in TNO fraction:
+
+**1. Faint-end magnitude collapse (dominant effect)**
+S3M TNOs peak at V=24–25, right at LSST's single-visit detection floor. The benchmark
+applies a flat V<25 cut with 100% detection efficiency — all 49,097 S3M TNOs get a
+synthetic tracklet. Sorcha's realistic detection model requires 2 detections per night
+× 3 nights within 15 days, each above 5σ S/N. Near the detection floor (~50% per visit),
+the probability of getting 6/6 successes is ~0.5⁶ ≈ 1.6%. Observed: 1% recovery rate at
+V=24–25. The large TNO population that inflates the benchmark is almost entirely V>23
+objects that Sorcha simply never detects.
+
+| Mag bin | Benchmark TNOs | Sorcha TNOs | Recovery |
+|---------|---------------|-------------|---------|
+| 14–22   | 1,647         | 1,146       | 66–87%  |
+| 22–23   | 5,313         | 1,773       | 33%     |
+| 23–24   | 16,394        | 1,777       | 11%     |
+| 24–25   | 24,804        | 280         | 1%      |
+| 25+     | 939           | 0           | 0%      |
+
+**2. Tracklet motion threshold (secondary)**
+LSST's linking algorithm (`SSP_separation_threshold = 0.5 arcsec`) requires a detectable
+inter-visit motion. TNOs move ~0.017 deg/day (median ≈ 1.37 arcsec at 30 min baseline),
+which is above the threshold — but at the faint end where S/N is marginal, astrometric
+scatter can push the apparent separation below 0.5 arcsec. At dt < 20 min baselines,
+**60% of Sorcha TNOs fall below the motion threshold**. 18.1% of all Sorcha TNOs are lost
+this way. The benchmark uses a fixed 30-min synthetic baseline with exact positions —
+no motion threshold effect.
+
+**3. Survey footprint efficiency**
+The benchmark propagates every S3M object to MJD 61041 and creates a synthetic tracklet
+regardless of whether that sky position is actually observed. Sorcha's LSST cadence only
+covers ~18% of sky per night; TNOs in unobserved fields produce no tracklets at all.
+This is a uniform suppression across all populations (not TNO-specific), but combined
+with effects 1 and 2 it drives the 55× difference.
+
+**Phrasing for the paper:** "The benchmark applies a flat V<25 magnitude filter with 100%
+detection efficiency. Sorcha's realistic survey model — per-visit S/N threshold, tracklet
+motion requirement, and multi-night linking — preferentially excludes faint TNOs (V>23),
+reducing their fraction at the antisun from 38.6% to 0.7%. This population difference
+is the dominant driver of digest2's apparent improvement from benchmark to Sorcha."
+
+### TNO contamination proof: forward and inverse experiments (Section 15, `sorcha_v5_normalisation_s3m.ipynb`)
+
+To isolate the TNO effect, two controlled experiments were run in the 0–20° antisun bin:
+
+**Forward experiment (remove TNOs from benchmark):**
+Subsample benchmark TNOs down from 38.6% to 0.7% (matching Sorcha fraction).
+Result: digest2 F1 jumps from **0.706 → 0.842** (+0.136). VDP barely moves (+0.009–0.016).
+
+**Inverse experiment (inject benchmark TNOs into Sorcha):**
+Bootstrap-inject benchmark TNOs into the Sorcha 0–20° bin until the TNO fraction reaches
+38.6%. Result: digest2 F1 drops from **0.863 → 0.755** (−0.108). VDP barely moves.
+
+Summary table:
+
+| Experiment | TNO fraction | VDP F1 | d2 F1 |
+|------------|-------------|--------|-------|
+| Benchmark (original) | 38.6% | 0.870 | 0.706 |
+| Benchmark TNO-reduced | 0.7% | 0.861 | **0.842** |
+| Sorcha (original) | 0.7% | 0.863 | 0.863 |
+| Sorcha TNO-injected | 38.6% | 0.847 | **0.755** |
+
+These experiments causally prove that TNO fraction explains the benchmark–Sorcha gap for
+digest2. VDP's near-zero TNO false positive rate (0.0%) makes it immune. The result also
+shows that **VDP still wins at the antisun even after TNO removal** (0.861 vs 0.842), so
+TNOs are the dominant driver, not the sole explanation.
+
+**Bootstrap injection note:** The benchmark TNO pool (6,440 objects in 0–20°) was sampled
+with replacement to produce the ~92,808 injections needed to inflate Sorcha's 0.7% TNO
+fraction to 38.6%. Each injection copies only (P_NEO_vdp, P_NEO_d2, is_neo=False) — no
+orbital mechanics, just score distributions from real benchmark TNOs.
+
+### Per-bin contamination analysis (Section 16, `sorcha_v5_normalisation_s3m.ipynb`)
+
+The same forward/inverse experiment was extended to all five antisun-relative longitude bins
+using both TNOs and Trojans as contaminants:
+
+| Bin | Primary contaminant | Pattern |
+|-----|---------------------|---------|
+| 0–20° | TNO (38.6% in bench) | TNO-driven: d2 jumps +0.14 after removal |
+| 20–40° | TNO | Similar TNO-driven pattern |
+| 40–70° | Neither | Velocity-space overlap: d2 wins both benchmark and Sorcha; the gap is physics not contamination |
+| 70–110° | Trojans (suspected) | Trojan contamination suspected (Jupiter Trojan velocity overlaps with NEO at these elongations) |
+| 110–141° | Trojans/TNO (suspected) | Same pattern as 70–110° |
+
+The 40–70° bin is important: even after removing all TNOs and Trojans, digest2 still beats
+VDP. At this elongation, NEO and MBA apparent velocities genuinely overlap (both populations
+are moving prograde, similar v_λ), and digest2's orbit-fitting has more information than VDP's
+velocity position alone.
+
+### Implications for the paper
+
+1. VDP's benchmark advantage over digest2 (F1 0.787 vs 0.667) was **not a fluke** — it
+   reflects the fundamental TNO immunity built into the velocity-density approach. TNOs
+   cannot masquerade as NEOs in velocity space.
+
+2. Digest2's Sorcha improvement (0.667 → 0.836) is also real — it reflects a realistic
+   population mix that happens to play to digest2's strengths (no V>23 TNOs, genuine
+   detected NEOs with well-constrained orbits).
+
+3. The fair comparison for a real Rubin survey is the Sorcha result, where both classifiers
+   are evaluated on the population Rubin will actually deliver. On that comparison: digest2
+   leads full-sky (0.836 vs 0.809), but VDP leads at the antisun (0–20°, 0.878 vs 0.848),
+   which is the operationally critical NEOCP discovery regime.
+
+4. The benchmark remains useful for one thing: it demonstrates that VDP's robustness to
+   TNO contamination is a genuine advantage in worst-case conditions (shallow all-sky
+   survey, no multi-night linking, flat magnitude cut).
+
+---
+
+## S3M linking experiment (case1/2/3) + benchmark population-cap discovery (2026-07-06)
+
+### Purpose
+Isolate how much of the Sorcha-vs-benchmark TNO gap is caused specifically by the SSP
+linking filter's two configurable parameters, by re-running full Sorcha production with
+native `[LINKINGFILTER]` enabled (the original run never enabled it — see below), varying
+only `SSP_number_tracklets` and `SSP_separation_threshold`.
+
+Pipeline: 6 CASE-parametrized SLURM stage scripts in `neomod/pipeline/slurm/s3m_linking/`
+(`_case_env.sh` + `1_production.sh` … `6_combine.sh`), documented fully in
+`neomod/docs/sorcha_full_pipeline.md`. Configs: `s3m_case{1,2,3}_*.ini`.
+
+| Case | `SSP_number_tracklets` | `SSP_separation_threshold` | Isolates |
+|------|:---:|:---:|----------|
+| case1 | 1 | 0.5″ | motion threshold only, weak linking requirement |
+| case2 | 3 | 0.5″ | full LSST linking (real SSP baseline) |
+| case3 | 1 | 0.001″ | neither constraint (≈ old no-linking run) |
+
+Sped up ~2-3x vs the original run's concurrency (`ckpt-all` partition, `%450` array
+throttle on production/postprocess, `%113` on VDP, 4-worker GNU-parallel split on
+digest2 chunks) — case1 finished stage 1→6 in ~3 h wall (was 4-6 h historically for a
+single un-linked run). Known recurring issue: ~1-2 pathological S3M objects per full
+production run hang/crash Sorcha (documented precedent: `inst00820_part003`,
+`A804/A854/A868`-type objects from the v3.3/v5.0 hybrid runs). Same pattern hit case1
+(`inst00884_part003`, `inst00552_part002`) — excluded rather than chased, 2/14,381 files
+(0.014% of ~14.38M objects), consistent with precedent.
+
+### Finding 1 — `SSP_linking_on` confirmed engaged, but case1 barely changes raw TNO count
+Sorcha's own log per part (`inst*.h5`-adjacent `*-sorcha.log`) confirms:
+```
+Solar System Processing linking filter is turned ON.
+Number of rows BEFORE applying SSP linking filter: 50537
+Number of rows AFTER applying SSP linking filter: 50479
+```
+Only ~0.11% of rows dropped in this chunk. Raw TNO tracklet count barely moved:
+**case1 (tk=1, sep=0.5): 628,162** vs **original no-linking run: 628,994** (0.1% reduction).
+
+**Why:** `SSP_number_tracklets=1` means an object needs only ONE qualifying tracklet
+anywhere across the full 2-year survey. A TNO gets dozens–hundreds of revisit
+opportunities with varying geometry; the chance that *every single one* falls below the
+0.5″ threshold is tiny. So `tk=1` alone barely filters anything — the real test of the
+motion-threshold's impact requires `tk=3` (case2), where 3 tracklets must land within a
+15-day window, a much harder bar for slow movers. **Case2 is the case that matters most
+for this question; case1 mainly demonstrates that `tk=1` is a weak constraint.**
+
+### Finding 2 — the S3M source files and true population sizes
+`neomod/S3Mdata/` source files (via `s3m_loader.POP_TO_GLOB`): `neo→S0.s3m`,
+`mba→S1_*.s3m` (14 files), `tno→ST.s3m`, `trojan→St5.s3m`. True object counts (raw file
+line counts minus header/comment lines):
+
+| Pop | True catalog size | Share of total |
+|---|---:|---:|
+| NEO | 268,512 | 1.87% |
+| MBA | 13,883,375 | 96.54% |
+| TNO | 48,682 | 0.34% |
+| Trojan | 179,883 | 1.25% |
+| **Total** | **14,380,452** | |
+
+(Minor open discrepancy: benchmark's own reported "no-cap" TNO final count is 49,097,
+slightly *above* this 48,682 raw figure, which shouldn't be possible if filtering only
+removes rows. Not yet root-caused; ~1% and irrelevant to the conclusions below — noted
+here so it isn't silently forgotten.)
+
+### Finding 3 — case1's per-population tracklet/object rates (raw vdp_shards, case1)
+| Pop | raw tracklets | uniq objects | tracklets/obj | true catalog | object recovery |
+|---|---:|---:|---:|---:|---:|
+| NEO | 148,773 | 25,878 | 5.75 | 268,512 | **9.6%** |
+| MBA | 58,660,930 | 5,341,670 | 10.98 | 13,883,375 | 38.5% |
+| Trojan | 1,608,416 | 116,367 | 13.82 | 179,883 | 64.7% |
+| TNO | 628,162 | 41,392 | 15.18 | 48,682 | **85.0%** |
+
+TNO object-level recovery is actually the *highest* of all four populations (slow movers
+persist across many oppositions once found); NEO is the *lowest* (fast movers, brief
+visibility windows). TNOs are not "hard to detect" — the opposite.
+
+### Finding 4 — root cause of "benchmark has far more TNOs than Sorcha": population capping, not detection
+`gen_benchmark_tracklets_s3m.py` (`POPULATIONS` dict) caps MBA at 200,000 and Trojan at
+100,000 via random subsample **before** propagation/scoring, while NEO and TNO are
+uncapped (full true population fed in). This is a deliberate, documented choice to keep
+benchmark size (and especially digest2 runtime) tractable — not a bug, and not something
+this session broke. Effect: MBA is suppressed **~69×** below its true catalog share while
+TNO isn't suppressed at all, which is why TNO looks artificially dominant in the benchmark
+(e.g. 38.6% of the 0-20° antisun bin) relative to Sorcha's real output (where MBA's true
+13.88M-object dominance shows through). The Section 15/16 TNO forward/inverse injection
+experiments (above) were already probing this same artifact, just not traced to its root
+cause (the cap ratio) until this session.
+
+**Correction to earlier framing:** the "TNO recovery collapses to ~1% at mag 24-25" table
+computed earlier in this doc used the *subsampled* comparison file (`sample` step targets
+a fixed 500k non-NEO cap, applied at a uniform rate across all non-NEO types combined) —
+a different, far more diluted quantity than true object-level detection. That table is not
+wrong on its own terms (it does describe the final ROC-scoring dataset), but it does NOT
+mean Sorcha fails to detect TNOs — object-level recovery is 84-85% (Finding 3).
+
+### Two options for fixing the benchmark's population mix (decision needed)
+**Option A — "true catalog" benchmark (chosen, in progress).** Resize each population's
+input cap proportional to its true catalog share, keeping total output size ~475,027 (same
+VDP/digest2 compute cost as today). Back-solved through each population's own observed
+survival rate to hit proportional *final* counts:
+
+| Pop | true share | target final | survival rate | **new cap** |
+|---|---:|---:|---:|---:|
+| NEO | 1.87% | 8,868 | 68.8% | **12,900** |
+| MBA | 96.54% | 458,619 | 70.6% | **650,000** |
+| TNO | 0.34% | 1,610 | 100% | **1,600** |
+| Trojan | 1.25% | 5,944 | 100% | **6,000** |
+
+Gives a config-independent, principled "fair sky" benchmark. Does **not** reproduce any
+specific Sorcha run's output mix (see Option B) because populations differ in both
+tracklets/object and object-recovery-rate (Finding 3) — a proportional *input* can't
+correct for *survey-driven* output skew.
+
+**Option B — match a specific Sorcha case's output mix (deferred).** Reverse-engineer
+benchmark caps from a completed Sorcha case's actual final population proportions
+(its own tracklets/object × recovery rate per population). Gives a literal population-mix
+match to that one case, but the target is case-dependent (case1 vs case2 vs case3 will
+differ, especially since tk=3's 15-day window plausibly affects NEO/TNO differently than
+tk=1). Deferred until case2 (the real-LSST-linking case) completes, since that's the most
+meaningful target if this route is wanted later.
+
+**Decision (2026-07-06): proceeding with Option A now.** Produces a new
+`benchmark_comparison_s3m_v2.parquet`; the original benchmark is kept unchanged for
+continuity with the existing Section 15/16 TNO-injection analysis. Fully independent of
+case1/2/3 (different pipeline, no shared jobs) — neither blocks the other.
+
+### Results — all four runs complete (2026-07-06 → 2026-07-07)
+
+All three S3M linking cases and the Option A proportional benchmark finished cleanly.
+Pathological-orbit losses were consistent across every production run (same catalog
+region each time — instances ~849-898, i.e. the TNO/Trojan tail of the combined S3M
+input — confirming these are genuine per-object integrator issues, not run-specific
+flukes): case1 lost 2/899 instances (2 parts), case2 lost ~40/14,381 parts (retried
+twice: once at full concurrency, once at low concurrency, to rule out contention —
+16/24 initially-failed instances stayed failed both times, confirming determinism),
+case3 lost 2/899 instances (same two instances, 882 and 884, as seen in case1/case2).
+
+| Product | File | Rows | NEO | MBA | TNO | Trojan | other |
+|---|---|---:|---:|---:|---:|---:|---:|
+| case1 (tk=1, sep=0.5″) | `outputs/s3m_linking/case1/sorcha_comparison_case1.parquet` | 648,769 | 148,773 | 463,419 | 4,965 | 12,723 | 18,889 |
+| case2 (tk=3, sep=0.5″ — real LSST linking) | `outputs/s3m_linking/case2/sorcha_comparison_case2.parquet` | 624,783 | 124,748 | 463,831 | 4,742 | 12,788 | 18,674 |
+| case3 (tk=1, sep≈0) | `outputs/s3m_linking/case3/sorcha_comparison_case3.parquet` | 648,828 | 148,828 | 463,698 | 4,930 | 12,743 | 18,629 |
+| benchmark v2 (Option A, proportional caps) | `outputs/phase2_benchmark_s3m_v2/benchmark_comparison_s3m_v2.parquet` | 474,783 | 8,041 | 459,525 | 1,217 | 6,000 | — |
+
+**Headline observation:** TNO counts barely move across case1→case2→case3 (4,965 → 4,742
+→ 4,930, all within ~5% of each other) in the *subsample*. NEO shows a real, larger drop
+under case2's real linking (124,748 vs ~148,800 in case1/case3, ~16% down), consistent
+with `tk=3`'s 15-day window being a genuine constraint for some fraction of NEOs (fast,
+brief-visibility objects — Finding 3's NEO object-recovery rate was already the lowest of
+all four populations at 9.6%, so this population is evidently the more sensitive one to
+the multi-night requirement, not TNO as originally hypothesized). Full ROC/F1 comparison
+across the three cases + both benchmarks not yet run — data is fully local, no further
+SLURM jobs needed for that analysis.
+
+**Benchmark v2 vs v1 population share** (proportional caps working as intended):
+v1 TNO share ~10.3% of 475,027 vs v2 TNO share 0.26% of 474,783 — the proportional
+resample removed the artificial TNO-dominance the capped v1 benchmark had.
+
+### Known bug fixed during this run: benchmark VDP scoring picks wrong shard if
+### per-population files are left alongside the combined file
+`sorcha_phase2.py`'s `tracklet_paths()` globs `tracklets_*.parquet` and sorts
+alphabetically. With `--batch-size 1 --shard-index 0` (used by both
+`benchmark_score_vdp_s3m.sh` and `_v2.sh`), shard 0 is just the *first* file in that
+sorted list. Uppercase population-file names (`tracklets_MBA.parquet`, `tracklets_NEO...`)
+sort before the lowercase combined file (`tracklets_benchmark[_v2].parquet`) in ASCII, so
+if the four per-population files are still present when VDP scoring runs, it silently
+scores ONLY the alphabetically-first population (here: all-MBA, 459,525 rows) and drops
+the other three entirely. v1's directory happened to have only the combined file (the
+per-pop files had been cleaned up before scoring), so this never surfaced before. Fix
+applied for v2: delete the four `tracklets_{POP}.parquet` files after `--combine-only`,
+leaving only the combined file, before running `benchmark_score_vdp_s3m_v2.sh`. Worth
+fixing properly in `tracklet_paths()` (e.g. exclude per-population files, or take the
+combined file explicitly) if this benchmark pipeline is rerun again.
