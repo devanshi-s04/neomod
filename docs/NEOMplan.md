@@ -97,7 +97,10 @@ Every task below serves one of C1/C2/C3.
 | D5 | 1A go/no-go for production scale-up | T2.2 | you (criterion below) | after T2.1 |
 | D6 | Tier 4 real-data go | T5.2 | you (after T1.2 archive check) | any time |
 
-### D1 — the referee for NEOMOD3 claims  ⟶ RECOMMENDATION: option (a)
+### D1 — the referee for NEOMOD3 claims  ⟶ **EFFECTIVELY RESOLVED (2026-07-08): Kurlander set**
+The published, DOI-citable Kurlander et al. 2025 catalog (T1.1 Option A, verified byte-exact against
+CANFAR) is the referee. Remaining advisor touchpoint: bless the choice + the leakage rule. Original
+options kept below for the record.
 The evaluation-referee trap (F7): retrain to NEOMOD3, evaluate on S3M-drawn truth → F1 *drops* for a
 biased-referee reason, not a real one.
 - **(a) NEOMOD3-drawn Sorcha run** — NEO input sampled from `neomod3_sampler` (orbits + H), non-NEO
@@ -212,7 +215,27 @@ Operates only on existing parquet columns → Arnor.* Handoff artifact is always
     directly comparable to our v5 run.
   - Remaining work: bulk-copy outfiles → Hyak → our Phase-1 tracklet builder → Phase-2 VDP →
     Phase-3 digest2 → `sorcha_comparison_neomod3ref.parquet`. **No Sorcha run needed.**
-- **Option B (fallback, only if bulk access fails):** run it ourselves as originally planned
+- **Access + canonicality VERIFIED (2026-07-08, Arnor):**
+  - Epyc's disk is NFS-mounted on Arnor: `/astro/users/jkurla/public_html/LSST_Sorcha_predictions/`
+    — direct read, fast (200k rows / 0.4 s). Hyak needs an rsync (storage confirmed available).
+  - Sizes: s3m outfiles **479 GB** (2778 h5), neomod outfiles ~3.8 GB, trojanmod 21 GB, cfeps
+    8.9 GB, hildamod 4.8 GB. Schema note: NEO files carry KEP elements (a, ma), others COM (q, t_p).
+  - **CANFAR cross-check COMPLETE (byte-exact, via DOI 25.0062 README + listings):**
+    Epyc `neo_output_1.h5` (3,032,238,888 B) **= CANFAR `neo/outputs/large_neo_output.h5`**
+    (2.82 GB exact); `small_neo_output.h5` = 887.16 MB exact; s3m `0_0.h5` = 435.51 MB exact;
+    s3m outfiles = CANFAR `mba/outputs/{0-234}_{0-12}.h5` (2,777 files; ignore stray `old_tr`).
+    The `_022` / `.csv` files on Epyc are dev leftovers NOT in the DOI dataset — do not use.
+    Repo-root `s3m_colors.h5`/`s3m_orbits.h5` on Arnor = CANFAR `mba/inputs` (byte-exact).
+    CANFAR also publishes `config.ini` + `baseline_v3.4_10yrs.db` → full reproducibility.
+  - **Paper-number check:** large-NEO file: 112,855 linked ≈ paper's 1.1E5 (d≥10m) ✓; MJD
+    60796.0–64448.4 = exactly 10.0 yr from 2025-05-01 (v3.4 start) ✓; 406,758 NEOs observed ≥1×,
+    6.7M detections. README col spec: standard Sorcha outputs, `object_linked`→`Linked`, no
+    date_linked_MJD; NEO ObjID in small file = `{ObjID1}N{ObjID2}`.
+  - **One residual oddity:** canonical `small_neo_output.h5` has 42,348 Linked objects vs the
+    paper text's 3,026 raw (×4.425 → paper's 1.4E4). Inconsistent with Table 5 arithmetic —
+    **exclude d<10 m from our benchmark for now** (H≳28 is beyond NEOMOD3's debiased core anyway);
+    optionally ask Jake casually.
+- **Option B (fallback, only if Jake objects to reuse):** run it ourselves as originally planned
   (`neomod3_sampler` NEO input + S3M non-NEO, v5 config, days of wall time).
 - **Accept:** baseline VDP + d2 numbers on it are sane; this ALSO immediately measures how much the
   current S3M-trained classifiers degrade on debiased NEOs — a paper number by itself.
