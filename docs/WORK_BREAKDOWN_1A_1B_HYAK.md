@@ -1,4 +1,9 @@
 # Work Breakdown: 1A & 1B on Hyak
+
+> **⚠️ SUPERSEDED (2026-07-08): see `docs/NEOMplan.md` (v2) — the single live plan.**
+> Kept for history only. Note this doc predates the 1B closure: its 1B tasks are now dropped
+> (conditioning is not the bottleneck) and its 1A accept-criterion has been replaced (D5 in NEOMplan).
+
 **Date: 2026-07-08**
 
 ## Summary
