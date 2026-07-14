@@ -22,14 +22,15 @@ import pandas as pd
 sys.path.insert(0, "src")
 import velocity_density_pipeline_gmm as vdp
 
-PARQUET   = "outputs/phase2/sorcha_comparison_v5_masked.parquet"
-MAPDIR    = "prob_maps_grid"
+PARQUET   = os.environ.get("ONEB_PARQUET", "outputs/phase2/sorcha_comparison_v5_masked.parquet")
+MAPDIR    = os.environ.get("ONEB_MAPDIR", "prob_maps_grid")
 SUPP_MIN  = 1
 BAND      = (40.0, 70.0)          # antisun elongation band to interrogate
 GLON      = np.arange(-140, 141, 10)                                   # 29 lon centres
 GLAT      = np.array([0,1,-1,2,-2,3,-3,4,-4,5,-5,8,-8,12,-12,18,-18,   # 23 lat centres
                       25,-25,35,-35,50,-50])
 REPORT_ALL_BANDS = True           # also print baseline vs interp for every band
+OUTFILE   = os.environ.get("ONEB_OUTFILE", "outputs/oneB_falsification_scores.parquet")
 
 
 # ----------------------------------------------------------------------------- utils
@@ -70,7 +71,8 @@ def score_by_map(df_idx, vlam, vbeta, mag, map_lon, map_lat):
         path = map_name(dl, la)
         if not os.path.exists(path):
             continue
-        pm = vdp.ProbMapSet.from_npz(path, support_mask_min=SUPP_MIN)
+        pm = vdp.ProbMapSet.from_npz(path, support_mask_min=SUPP_MIN,
+                                     mask_radius_deg_per_day=np.inf)
         out = pm.score_visible(vlam[m], vbeta[m], mag[m])
         P[m] = out["NEO"]
         del pm
@@ -193,5 +195,8 @@ else:
 # save per-condition scores for later inspection
 out = band[["dlon", "ecl_lat", "mean_mag", "q_au", "is_neo", "P_NEO_d2"]].copy()
 out["P_assigned"] = P1; out["P_mis_plus"] = P2p; out["P_mis_minus"] = P2m; out["P_interp3"] = P3
-out.to_parquet("outputs/oneB_falsification_scores.parquet", index=False)
-print(f"\nsaved outputs/oneB_falsification_scores.parquet | total {time.time()-t0:.0f}s")
+out_dir = os.path.dirname(OUTFILE)
+if out_dir:
+    os.makedirs(out_dir, exist_ok=True)
+out.to_parquet(OUTFILE, index=False)
+print(f"\nsaved {OUTFILE} | total {time.time()-t0:.0f}s")
