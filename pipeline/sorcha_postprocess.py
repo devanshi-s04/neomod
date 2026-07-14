@@ -45,13 +45,12 @@ REQUIRED_COLUMNS = [
     "RARateCosDec_deg_day",
     "DecRate_deg_day",
     "PSFMag",
-    "x",
-    "y",
-    "z",
-    "xdot",
-    "ydot",
-    "zdot",
 ]
+
+# Cartesian state vectors (hybrid/Cartesian Sorcha runs) — used to derive a, e, q
+_CARTESIAN_COLUMNS = ["x", "y", "z", "xdot", "ydot", "zdot"]
+# COM orbital elements (S3M/COM Sorcha runs) — used as fallback to derive a, e, q
+_COM_COLUMNS = ["q", "e"]
 
 OPTIONAL_COLUMNS = [
     "optFilter",
@@ -60,7 +59,7 @@ OPTIONAL_COLUMNS = [
     "H_filter",
     "Range_LTC_km",
     "Obj_Sun_LTC_km",
-]
+] + _CARTESIAN_COLUMNS + _COM_COLUMNS
 
 OUTPUT_COLUMNS = [
     "tracklet_id",
@@ -290,18 +289,24 @@ def _pair_nanmean(
 
 def classify_population(states: pd.DataFrame) -> pd.DataFrame:
     states = states.drop_duplicates("ObjID").copy()
-    r_vec = states[["x", "y", "z"]].to_numpy(float)
-    v_vec = states[["xdot", "ydot", "zdot"]].to_numpy(float)
 
-    r = np.linalg.norm(r_vec, axis=1)
-    v2 = np.einsum("ij,ij->i", v_vec, v_vec)
-    energy = 0.5 * v2 - MU_SUN_AU3_DAY2 / r
-    a = np.where(energy != 0.0, -MU_SUN_AU3_DAY2 / (2.0 * energy), np.nan)
-
-    h_vec = np.cross(r_vec, v_vec)
-    e_vec = np.cross(v_vec, h_vec) / MU_SUN_AU3_DAY2 - r_vec / r[:, None]
-    ecc = np.linalg.norm(e_vec, axis=1)
-    q = np.where(np.isfinite(a), a * (1.0 - ecc), np.nan)
+    if "x" in states.columns and "xdot" in states.columns:
+        # Cartesian path (hybrid/Cartesian Sorcha output)
+        r_vec = states[["x", "y", "z"]].to_numpy(float)
+        v_vec = states[["xdot", "ydot", "zdot"]].to_numpy(float)
+        r = np.linalg.norm(r_vec, axis=1)
+        v2 = np.einsum("ij,ij->i", v_vec, v_vec)
+        energy = 0.5 * v2 - MU_SUN_AU3_DAY2 / r
+        a = np.where(energy != 0.0, -MU_SUN_AU3_DAY2 / (2.0 * energy), np.nan)
+        h_vec = np.cross(r_vec, v_vec)
+        e_vec = np.cross(v_vec, h_vec) / MU_SUN_AU3_DAY2 - r_vec / r[:, None]
+        ecc = np.linalg.norm(e_vec, axis=1)
+        q = np.where(np.isfinite(a), a * (1.0 - ecc), np.nan)
+    else:
+        # COM orbital elements path (S3M/COM Sorcha output — q and e are stored directly)
+        q = states["q"].to_numpy(float)
+        ecc = states["e"].to_numpy(float)
+        a = np.where(ecc != 1.0, q / (1.0 - ecc), np.nan)
 
     pop = np.full(len(states), "other", dtype=object)
     pop[np.isfinite(q) & (q < 1.3)] = "NEO"
@@ -407,7 +412,10 @@ def build_tracklets(
 
     out["mjd0_utc"] = Time(mjd0, format="mjd", scale="tai").utc.mjd
     out["mjd1_utc"] = Time(mjd1, format="mjd", scale="tai").utc.mjd
-    pop = classify_population(df[["ObjID", "x", "y", "z", "xdot", "ydot", "zdot"]])
+    if "x" in df.columns and "xdot" in df.columns:
+        pop = classify_population(df[["ObjID", "x", "y", "z", "xdot", "ydot", "zdot"]])
+    else:
+        pop = classify_population(df[["ObjID", "q", "e"]])
     out = out.merge(pop, on="ObjID", how="left")
     return out
 
