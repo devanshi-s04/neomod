@@ -97,10 +97,28 @@ Every task below serves one of C1/C2/C3.
 | D5 | 1A go/no-go for production scale-up | T2.2 | you (criterion below) | after T2.1 |
 | D6 | Tier 4 real-data go | T5.2 | you (after T1.2 archive check) | any time |
 
-### D1 — the referee for NEOMOD3 claims  ⟶ **EFFECTIVELY RESOLVED (2026-07-08): Kurlander set**
+**STATUS (2026-07-08 — advisor away until Jul 13; decisions taken solo, documented for review):**
+- **D1 DECIDED**: Kurlander set = referee/TEST set only (never a classifier ingredient); report both
+  referees. Advisor sanity-check Jul 13.
+- **D2 DECIDED v1**: full spec below (systematic grid, AR-restricted, uniform-in-ρ̇ + ρ² prior,
+  L0/L1/L2 ablation ladder with geometry frozen via L1↔digest2 calibration). All knobs parameterised.
+- **D3 (user)**: keep all benchmark parquets; T0.2 audit to be ready before the Mon Jul 13 advisor
+  meeting so the three versions (v1 caps / v2 proportional / v3) can be explained with evidence.
+- **D4**: clarified — it is only the paper-headline framing (NEOMOD3-first vs stack-first), decided
+  by the 1A outcome; nothing to do now, advisor call later.
+- **D5**: stays pre-registered as written (GO: rng F1 ≥ 0.839 or stack(VDP,rng) ≥ 0.862 on 40–70°;
+  kill < 0.80 after one iteration). Blocks nothing now; kept because criteria fixed before results
+  are what make solo results credible.
+- **D6 DONE**: NEOCP cron restarted 2026-07-07 by user; verify accumulation in ~1 week.
+
+### D1 — the referee for NEOMOD3 claims  ⟶ **DECIDED (2026-07-08, solo; advisor sanity-check Jul 13)**
 The published, DOI-citable Kurlander et al. 2025 catalog (T1.1 Option A, verified byte-exact against
-CANFAR) is the referee. Remaining advisor touchpoint: bless the choice + the leakage rule. Original
-options kept below for the record.
+CANFAR) is the referee. **Role clarification (user-confirmed): it is a TEST set only** — we score its
+tracklets with (a) the existing VDP maps, (b) digest2, (c) the new ranging term, and compare. It is
+never an ingredient of any classifier: no GMM training, no density tables, no priors derive from it.
+Classifier ingredients = NEOMOD3 model table (NEO numerator) + S3M census (non-NEO denominator) +
+existing hybrid/GMM maps. Every result is reported on BOTH referees (S3M-drawn v5 parquet AND the
+Kurlander NEOMOD3-drawn set) per D1-c. Original options kept below for the record.
 The evaluation-referee trap (F7): retrain to NEOMOD3, evaluate on S3M-drawn truth → F1 *drops* for a
 biased-referee reason, not a real one.
 - **(a) NEOMOD3-drawn Sorcha run** — NEO input sampled from `neomod3_sampler` (orbits + H), non-NEO
@@ -112,7 +130,59 @@ biased-referee reason, not a real one.
   evaluation pass, defuses the reviewer question "did you just move the target?" **Do this
   regardless** once (a) exists.
 
-### D2 — 1A ranging-term design (the three sub-questions)  ⟶ RECOMMENDATIONS inline
+### D2 — 1A ranging-term design  ⟶ **DECIDED v1 (2026-07-08, solo — advisor review Jul 13)**
+Papers reviewed: **Farnocchia, Chesley & Micheli 2015** (systematic ranging / Scout),
+**Spoto et al. 2018** (Admissible Region + MOV, OrbFit NEOCP scanner), **Solin & Granvik 2018**
+(neoranger, statistical/MCMC ranging). Every knob below is an explicit parameter for later tweaking.
+**Full concept-by-concept source map (section/equation/figure per paper): `docs/D2_detail.md`.**
+
+**Method class: systematic (ρ, ρ̇) grid, NOT statistical/MCMC ranging.** neoranger costs ~1–10 min
+per object (Solin & Granvik §4.4) — impossible at 10⁵–10⁶ tracklets. Scout/OrbFit's per-node cost is
+the constrained least-squares attributable fit — but **our tracklets have exactly 2 detections: the
+attributable A=(α,δ,α̇,δ̇) is determined EXACTLY (4 data = 4 params, χ²≡0), so no per-node fit
+exists**. The whole computation is closed-form numpy over (tracklet × node); the posterior over
+(ρ,ρ̇) is driven entirely by the prior/population structure — the very thing we upgrade.
+(Extension knob: for ≥3-detection tracklets adopt Scout's constrained fit; not needed for v1.)
+
+**v1 specification (engine = `P_NEO_rng`):**
+1. **ρ grid:** log₁₀-uniform, ρ ∈ [0.01, 100] au, N_ρ = 64. (Farnocchia log spacing; 100 au = AR
+   a_max and digest2's outer bound — do NOT truncate at 5 au or TNO/Trojan hypotheses vanish from
+   the denominator. ρ<0.01 au dropped = Earth-satellite region, Spoto cond. 2.)
+2. **ρ̇ sampling:** per-ρ-column admissible interval from the bounded-orbit energy condition
+   (heliocentric E < −k²/(2·100 au); Spoto §2.1 cond. 1 — quadratic in ρ̇, closed form, vectorises),
+   N_ρ̇ = 32 uniform inside it; node weight carries the interval length Δρ̇(ρ). Zero wasted nodes;
+   every node is a bound orbit. Shooting-star cut H(ρ) ≤ 34.5 (Milani/Spoto).
+3. **Node weight (prior):** w = [Δlog₁₀ρ · ln10 · ρ] (log measure, Farnocchia fn.4) × ρ^γ (spatial
+   factor; **γ=2 default** per Farnocchia §3.2 f′_prior ∝ ρ²; γ ∈ {0,2,4} switch) × Δρ̇(ρ)/N_ρ̇
+   (uniform in ρ̇ — Farnocchia's tested-best choice). **Jeffreys' prior explicitly rejected**
+   (Farnocchia Table 3: p-values 10⁻⁵–10⁻⁶ for TRUE MBA solutions; Solin & Granvik report the same
+   uniform-vs-Jeffreys pathology).
+4. **H rides the ρ-grid:** H = V − 5log₁₀(ρ·r_helio) − Φ_HG(phase, G=0.15) — exactly the Kurlander
+   input convention; observed filter mag → V via the same solar-color offsets our digest2 phase-3
+   uses (documented knob). This is digest2's V↔d↔H coupling; no extra grid axis.
+5. **Population factors:** numerator = NEOMOD3 4D table f(a,e,i,H) (`input_neomod3.dat`,
+   multilinear interp). Denominator = empirical S3M histogram in (q,e,i,H) for MBA+TNO+Trojans
+   (raw `.s3m` census, bin widths matched to NEOMOD3 axes: dH=0.25, da≈0.10, de=0.04, di=4°; light
+   1-bin Gaussian smoothing — both knobs). Wagg ×0.80 MBA rescale = calibration-only option
+   (AUC/ranking-neutral, threshold shift only).
+6. **Score = class ratio (the old NEO_H.py fatal-flaw fix):**
+   `P_NEO_rng = Σ w·f_NEO / (Σ w·f_NEO + Σ w·f_nonNEO)` — never a raw weight.
+7. **Ablation ladder — one engine, three population settings (validation + the C2 experiment):**
+   - **L0**: f ≡ 1 within the AR — geometric-only, ≈ Spoto et al.'s NEO "score".
+   - **L1**: f = S3M for all classes — a **digest2 replication**. Engine validation: L1 must
+     correlate strongly with stored `P_NEO_d2`. **All geometry knobs (γ, resolution, color table)
+     are frozen by maximising L1↔digest2 agreement on the 40–70° band.**
+   - **L2**: NEOMOD3 numerator ÷ S3M denominator — the classifier. **L2 − L1 = the isolated NEOMOD3
+     effect with every knob frozen** — no post-hoc tuning on the result of interest (the solo-work
+     discipline).
+8. **Convergence:** rerun a 10k subsample at 128×64; require |ΔF1| < 0.002.
+9. **Truth diagnostic (never scoring):** Kurlander rows carry true Range/RangeRate — compute
+   Farnocchia-style p-values of the truth under the L2 posterior on the (ρ,ρ̇) grid; flags prior
+   pathologies exactly as Farnocchia Table 3 flagged Jeffreys.
+10. **Cost:** 707k × ~2k nodes ≈ 1.4×10⁹ closed-form node evals → chunked numpy, tens of minutes on
+    one Hyak node; the 40–70° prototype band = minutes (Arnor-viable).
+
+Original recommendation (kept for the record):
 1. **(d, ḋ) grid:** log-spaced d from 0.05 to 100 AU (digest2's range — do NOT truncate at 5 AU or
    the denominator loses the distant-population hypotheses that suppress TNO/Trojan false positives),
    ~60 pts; ḋ ±0.05 AU/day (~±87 km/s, generous), ~40 pts; include the phase-space Jacobian
@@ -367,6 +437,278 @@ recs — say yes/no to each), preview D4.
 | "Physics, not a bug" as the whole mid-elongation story | F3: digest2 gets AUC 0.93 from identical observables |
 
 ---
+
+## §8. CONTINUOUS QA HARNESS (the Željko protocol)
+
+**Mechanism:** one living notebook `notebooks/qa/1A_engine_qa.ipynb`, sections QA0–QA5 matching the
+stages below. Every check runs on the **frozen QA subsample** `outputs/qa_subsample.parquet`
+(~20k tracklets from the v5 eval parquet, seed 0, stratified by class × elongation band) so plots are
+comparable run-to-run. Plots saved to `Figures/qa/` with stage-prefixed names. The engine exposes all
+intermediates (`debug=True` → per-node elements, H, weights, per-class sums) so the notebook never
+reimplements pipeline math. **Gate rule: no stage's code advances until its checks pass and the plots
+are in the notebook.** The notebook doubles as the Jul-13 advisor deck.
+
+| Stage | Check | What the plot shows | Pass looks like |
+|---|---|---|---|
+| **QA0 inputs** | QA0a NEOMOD3 marginals | 1D a,e,i,H marginals + (a,e) density at H=18 vs H=25 | Shapes match Nesvorný+24 figs; (a,e) shape CHANGES with H (the whole point of NEOMOD3) |
+| | QA0b S3M denominator | per-class q,e,i,H marginals + bin-occupancy histogram | MBA q≈1.8–3.3, Trojan a≈5.2, TNO q≳28; occupancy justifies smoothing choice |
+| | QA0c NEOMOD3/S3M-NEO ratio map | ratio in (a,e) and (H) | Shows WHERE 1A can differ from digest2; not flat |
+| **QA1 geometry** | QA1a truth round-trip | recovered (a,e,i,q) at TRUE (ρ,ρ̇) vs truth columns, 1:1 line | <1% scatter — validates Earth state, light-time, unit vectors, rates |
+| | QA1b Farnocchia Fig.-1 panels | e,q,i,H contours over (ρ,ρ̇) for 4 exemplar tracklets (NEO; MBA@antisun; MBA@60°; TNO) | Qualitatively matches F15 Fig. 1 (H contours ~vertical; AR boundary shape). **The eyeball check** |
+| | QA1c AR sanity | admissible fraction vs ρ per elongation, H=34.5 line overlaid | AR closes at large ρ; no admissible nodes with E>0 |
+| **QA2 prior (L0)** | QA2a weight maps | w(ρ,ρ̇) for γ=0/2/4, same 4 exemplars | Smooth; γ visibly shifts mass outward |
+| | QA2b L0 score by class | score distributions NEO/MBA/TNO/Trojan on 40–70° band | Some separation already (S18's score works); record AUC as floor |
+| | QA2c truth p-values | F15-Table-3-style p-value histogram of TRUE (ρ,ρ̇) under posterior, per γ | ~Uniform. Spike at 0 = pathological prior (how F15 convicted Jeffreys) |
+| **QA3 L1=digest2 replication** | QA3a L1 vs P_NEO_d2 | scatter + corr + binned calibration curve | High corr; monotone calibration |
+| | QA3b knob freeze | L1↔d2 agreement over (γ, resolution, color table) | Pick max, FREEZE, record values here |
+| | QA3c disagreement anatomy | L1−d2 residual vs elongation/mag/rate | Interpretable (obs-error machinery, binning), not structured by class |
+| **QA4 L2=result** | QA4a L2 vs L1 by class | scatter colored by truth | NEOs move up / MBAs down where NEOMOD3≠S3M |
+| | QA4b headline table | F1/AUC per band, BOTH referees, vs pre-registered D5 bar | Judged against D5 (0.839 / 0.862), no re-litigation |
+| | QA4c the money plot | (a,e,i,H) location of tracklets whose class flipped L1→L2 | Matches QA0c ratio map — result explained by the model difference |
+| | QA4d reliability | P(NEO) vs empirical NEO fraction, both referees | Calibrated-ish; note Wagg-0.80 effect |
+| **QA5 referee pipeline** | QA5a tracklet QA | dt distribution, nightly counts, class mix vs Kurlander paper Fig. 2 | Pairs ~30 min; ~3×10⁵ det/night |
+| | QA5b **antisun density maps** | (v_λ,v_β) per-class density at antisun + 60°, side-by-side with same maps from our v5 run | Same physics, same shapes — Željko's canonical check |
+| | QA5c baseline scores | P_NEO_vdp + P_NEO_d2 distributions and per-band F1 on Kurlander tracklets vs v5 run | Sane baselines before any L2 claim |
+
+## §9. WORK LOG + DETAILED STEP PLANS (living section — update as work proceeds)
+
+**Design reference:** `docs/D2_detail.md` (paper-by-paper source map for every D2 choice).
+
+### Step A — ranging engine + L0/L1 prototype (Arnor; me; target: before Jul 13)
+- **Files:** `src/ranging_engine.py` (module) + `notebooks/qa/1A_engine_qa.ipynb` (QA0–QA3).
+- **Module layout:** `build_grid(A, obs_state)` (log-ρ columns, per-column admissible ρ̇ via the
+  energy quadratic) → `elements_from_nodes()` (heliocentric state → a,e,i,q; vectorised) →
+  `H_from_nodes()` (V from filter mag via phase-3 color table; HG G=0.15) → `node_weights(γ)` →
+  `class_score(pop_tables, level=L0|L1|L2)`. `debug=True` returns all intermediates for QA.
+- **Inputs (all on Arnor):** `input_neomod3.dat`; `.s3m` census files (repo root); v5 masked parquet
+  (`ra0/dec0/mjd0_utc/ra1/dec1/mjd1_utc/mag0/filter0` per tracklet); astropy Earth state.
+- **Order:** QA0 input checks → geometry + QA1 (truth round-trip on benchmark/Kurlander pilot rows,
+  Fig.-1 panels) → weights + QA2 → S3M tables + L1 + QA3 (freeze knobs) → L0/L1 scores on the
+  40–70° band of the v5 parquet.
+- **Output:** `outputs/rng_prototype_L0L1_40_70.parquet`; QA0–QA3 pages in the notebook.
+- **Gate to Step D:** QA3a corr healthy + knobs frozen and recorded in §8 table.
+
+### Step B — T0.2 benchmark audit + T0.1 stack banking (Arnor; me; target: before Mon Jul 13)
+- **T0.2 (Monday ammunition):** extract exact filters/flags from `benchmark_v5_normalisation_s3m`
+  + v2 notebooks; re-score a one-map subsample with `support_mask_min=1, mask_radius=np.inf` per §6;
+  identify why raw-parquet columns are degenerate (prime suspect: F2-class mask flag at scoring
+  time); produce a one-page summary of the three benchmark versions (v1 caps / v2 proportional /
+  v3 cases) with the honest numbers for each. → appended under D3.
+- **T0.1:** `src/stack_vdp_d2.py` per §4 T0.1 (logit-logistic, 50/50 seed 0, §6 protocol);
+  outputs `outputs/stack_scores_{hybrid,s3m}.parquet` + ROC/F1 figure + paper table. Accept:
+  reproduces F1 0.865/0.879 ±0.002.
+
+### Step C — Kurlander referee build (Hyak; user rsync + my adapter; target: as rsync lands)
+- **C1 rsync — DONE (2026-07-08, user):** `/astro/users/jkurla/public_html/LSST_Sorcha_predictions/`
+  → `/mmfs1/gscratch/dirac/ds2004/kurlander2025/` (dirac allocation). Steps C2–C4 now unblocked.
+  First action on Hyak: verify byte counts/row counts match the Arnor-side numbers logged in T1.1
+  (large_neo_output.h5 = 3,032,238,888 B; 112,855 linked NEOs; s3m outfiles = 2,777 files).
+- **C2 schema adapter (me, can prototype on Arnor over NFS before rsync completes):** map Jake's
+  57-col outputs → our phase-1 inputs: `RA_deg/Dec_deg` (noisy astrometry) → ra/dec;
+  `fieldMJD_TAI` → time (convert TAI→UTC as our pipeline expects); `trailedSourceMag`+`optFilter` →
+  mag/filter; `ObjID` → object id; truth: NEO ⇔ q<1.3 with q=a(1−e) (KEP files) or q direct (COM);
+  `Linked` kept as a column (enables linked-only sensitivity cut). **Never read** Range/RangeRate/
+  elements during scoring — truth/diagnostic columns only.
+- **C3 tracklet build (Hyak):** same-night detection pairs, same rules as v5 phase-1 (min separation
+  as in production config); exclude small-NEO file (paper-number oddity, see T1.1 card) and Hildas
+  (v1). → `tracklets_kurlander.parquet`.
+- **C4 scoring (Hyak):** Phase-2 VDP (667 maps, §6 flags) + Phase-3 digest2 →
+  `sorcha_comparison_neomod3ref.parquet` (v5-compatible schema). QA5 checks in the notebook.
+
+### Step D — L2 on both referees → D5 (Hyak run, Arnor evaluation; after A+C)
+- Run matrix: {L0, L1, L2} × {v5 S3M referee, Kurlander NEOMOD3 referee}, full sets (L2 first on
+  the 40–70° band, then full sky). Fixed knobs from QA3b — no retuning after this point.
+- Evaluate per §6; apply the pre-registered D5 criterion; QA4 pages; assemble the Jul-13 deck
+  (QA notebook + stack result + T0.2 one-pager + this plan).
+
+### Log
+- 2026-07-08 (**RESULT 3 — the decisive symmetric test, CONFIRMED**, Opus).
+  `notebooks/qa/qa5_kurlander_referee.py` → `outputs/qa5_kurlander_scores.parquet`.
+  Eval: 120k tracklets, NEO frac forced to 0.293 (v5-matched, for F1 comparability). Knobs frozen
+  by QA3 (γ=2, 128×64). Bootstrap B=300.
+
+  **The pre-registered symmetric flip is significant:**
+  | referee (truth NEOs from) | L2 − L1 (F1) | P(dF1>0) |
+  |---|---|---|
+  | v5 (**S3M**-drawn) | **−0.0021 ± 0.0009** | 0.01 |
+  | Kurlander (**NEOMOD3**-drawn), per_H_match | +0.0008 ± 0.0004 | 0.97 |
+  | Kurlander (**NEOMOD3**-drawn), absolute | **+0.0028 ± 0.0004** | 1.000 |
+
+  The classifier prefers whichever NEO model generated the truth. Since only the NEO population
+  differs between referees (both use the same S3M non-NEO, which is also our denominator), this is a
+  clean one-variable experiment.
+
+  **Per-elongation ramp (the robust signal), L2_perH − L1:** monotone across five bins,
+  −0.0026±0.0005 (0–20°, antisun) → −0.0006 (20–40°) → +0.0017±0.0007 (40–70°) →
+  +0.0061±0.0016 (70–110°) → **+0.0116±0.0035 (110–180°, sunward)**. Crosses zero between 20–40 and
+  40–70. Physically coherent: |Δλ|→180° looks sunward where Atens/IEOs dominate — exactly the
+  low-a region QA0c flagged as NEOMOD3's biggest enrichment over S3M.
+
+  **Mechanism identified — 1A alone is hamstrung; use 1A+2B.** `absolute` is positive in EVERY band
+  (antisun +0.0027±0.0006, sunward +0.0119±0.0033). The antisun mag-split proves why:
+  dF1(per_H_match) goes −0.0011 → −0.0055 with faintness while dF1(absolute) goes −0.0005 → **+0.0067**.
+  This is exactly QA0c's prediction: per_H_match inherits S3M-NEO's H≈25 cutoff, zeroing the NEO
+  numerator for faint tracklets. **Recommendation: NEOMOD3 must be run with its own N(H)
+  (`neomod3_norm='absolute'`), i.e. items 1A and 2B are not separable in practice.**
+
+  ⚠️ **CONFOUND (must control before publishing the faint-end claim).** The Kurlander referee's
+  non-NEO population is the SAME S3M (Wagg-scaled) that our denominator uses, with the same
+  magnitude cutoff. So "no faint MBAs" is true *in this referee by construction*, and the faint-end
+  gain of `absolute` is **partly circular** — it may not transfer to real Rubin data, where faint
+  MBAs exist. The **elongation ramp is NOT affected** (it is driven by NEO orbital structure, not
+  the MBA cutoff) and is therefore the robust, quotable result. Required control: repeat with a
+  magnitude cut where the S3M non-NEO census is complete, and/or an extrapolated faint MBA N(H).
+
+  ⚠️ **Referee construction caveat:** we took ALL NEO tracklets (1.85M) but only a 1/200 object-batch
+  subset of MBA → the "natural" NEO fraction (0.419) is an ARTIFACT, not the Rubin ratio. Only the
+  forced-0.293 eval set is meaningful. A full-population build fixes this.
+
+  **Honest hierarchy of effect sizes.** Engine vs digest2 = **+0.067 F1** (RESULT 1). NEOMOD3 vs S3M
+  prior = **+0.003 F1** aggregate (up to +0.012 sunward). *The classifier's implementation matters
+  ~20× more than the debiased population model at Rubin depths* — except in the sunward/faint regime
+  where the debiased model is measurably, significantly better. That is the paper's real story.
+
+  STILL MISSING for the full 4-way table: digest2 and VDP-map scores on the Kurlander referee.
+
+  **VENUE DECISION (corrected).** The decisive test ran on Arnor because it was a ~5 min job on a
+  random object subset — that was fine. But the *full-population* build was briefly queued on Arnor
+  and **killed**: it reads 479 GB across the **shared Epyc NFS mount**, which is slower and
+  inconsiderate to other astro users, and defeats the purpose of the rsync that made the data local
+  to Hyak. Two jobs are genuinely Hyak-only / Hyak-appropriate and are handed off in
+  **`docs/HYAK_HANDOFF_2026-07-08.md`**:
+    (A) **digest2 on the Kurlander referee** — the `digest2` binary is NOT installed on Arnor; this
+        is the last cell of the 4-way table and answers "does the engine still beat digest2 when the
+        truth is NEOMOD3-drawn?"
+    (B) **full-population tracklet build** (40-way Slurm array, ~5 min) — removes the 1/200 MBA
+        subset caveat and gives the true natural population ratio.
+  I cannot launch these: `ssh ds2004@klone` from Arnor → `Permission denied` (needs password/2FA).
+  New artifacts: `pipeline/kurlander/score_digest2.py`, `pipeline/kurlander/merge_shards.py`,
+  `pipeline/kurlander/slurm_build_tracklets.sbatch`, `outputs/kurlander/referee_eval.parquet`
+  (the exact 120k rows scored on Arnor, so digest2 lands on identical tracklets).
+- 2026-07-08 (**Step C: Kurlander referee built — far cheaper than planned**, Opus).
+  `pipeline/kurlander/build_tracklets.py` (+ `slurm_build_tracklets.sbatch`, `merge_shards.py`),
+  `notebooks/qa/qa5_kurlander_referee.py`.
+  **Cost re-estimate kills the "long Hyak job" premise.** Kurlander files are partitioned by OBJECT
+  BATCH, not time, so (a) any subset of chunks is a uniformly random object subsample, and (b) 69%
+  of object-nights already have ≥2 detections *within one chunk* → tracklets form with no cross-file
+  join. Also: the naive per-group Python loop cost 36–45 s/file (→ ~30 h for 2778 files); the
+  **vectorised groupby is 1.9 s/file, bit-identical (max diff 1e-13)** → full scan ≈ 88 min
+  single-threaded, ~5 min on a 40-way array. Built on Arnor over Epyc NFS in ~2 min:
+  **1,852,257 NEO tracklets** (complete canonical file) + 2,565,532 MBA (random subset) + Trojan/TNO.
+  **Why this referee is a clean experiment:** its non-NEO population is the SAME S3M our denominator
+  uses; only the NEO population changes (NEOMOD3 ← S3M). Exactly one variable moves.
+  **Methodological trap recorded:** F1 is prevalence-dependent → the eval set is subsampled to the
+  v5 NEO fraction (0.293) so F1 is comparable across referees; AUC (prevalence-independent) is also
+  reported on the natural mix. Never compare F1 across referees with different NEO fractions.
+- 2026-07-08: D1/D2 decided solo (see §3 status block); D2_detail.md written; QA harness designed
+  (§8); step plans A–D added. Rsync to Hyak started by user. NEOCP cron restarted 2026-07-07.
+- 2026-07-08 (Step A build, Opus): ranging engine written + validated. Artifacts:
+  `src/ranging_engine.py` (build_grid/elements/H/weights/class_score/score_tracklets, all knobs),
+  `src/build_population_cache.py` → `outputs/pop_cache_wide.npz` (S3M neo/mba/trojan/tno on wide
+  (H,log10a,e,i) grid; MBA 13.9M rows), `notebooks/qa/qa1a_truth_roundtrip.py`. Fixed NEOMOD3 file
+  path (symlink NEOMOD3/→root). Installed jplephem.
+  **Three latent bugs in old NEO_H.py found + fixed:** (1) equatorial vs ecliptic inclination
+  (~23°), (2) barycentric vs heliocentric state (Sun offset ~1.5e6 km), (3) missing observer diurnal
+  velocity (~0.46 km/s → ~3% in a). Also fixed the two original design flaws: H now rides the grid
+  (was hardcoded 19.0), score is a class ratio (was raw weight sum).
+  **QA1a truth round-trip PASS:** on 861 Kurlander NEO detections, median |rel| error a=0.007%,
+  e=0.007%, i=0.003%, q=0.003% (was 2.5% before the 3 fixes). Geometry validated to ground truth.
+  **Engine smoke test PASS** (800 stratified v5 tracklets, balanced NEO/MBA):
+  L0 geometric AUC=0.777 (corr_d2 0.54); **L1 S3M AUC=0.972, corr_d2=0.905** (NEO medP 1.000, MBA
+  0.001) vs stored digest2 AUC 0.942. L1↔digest2 replication confirmed (QA3 gate essentially met on
+  first try). Speed: ~0.5 s / 800 tracklets after table load; earth-state ephemeris is the bottleneck
+  (~tens of min for full 707k, matches estimate). IERS polar-motion warning for post-2025 dates =
+  arcsec-level, ignorable.
+  **L2 smoke test PASS** (same 800 sample): AUC=0.970 (≈L1 0.972); L2−L1 mean +0.003, corr 0.9987;
+  effect asymmetric in the right direction — true NEOs +0.0057, MBAs +0.0002 (NEOMOD3 lifts genuine
+  NEOs). Small on a balanced sample as expected; the mid-elongation overlap (40–70° band) is where it
+  should matter — that is QA4b.
+  NEXT: QA notebook then QA3 knob-freeze, QA4 L2-vs-L1 on the 40–70° band vs D5 bar.
+- 2026-07-08 (QA harness built + executed, Opus): `notebooks/qa/qa_lib.py` (plotting fns),
+  `notebooks/qa/build_notebook.py` → **`notebooks/qa/1A_engine_qa.ipynb` executed, 8 figures embedded,
+  0 errors** (kernel `neofast_py310`; installed nbformat/nbclient/ipykernel). Figures also in
+  `Figures/qa/`. Fixed: earth_observer_state now accepts numeric MJD; engine default cache path is
+  module-absolute (`DEFAULT_CACHE`) so it works from any CWD.
+  **QA verdicts (all pass):**
+  - QA1a geometry round-trip: 0.007% (already logged).
+  - QA1b (Farnocchia Fig-1 eyeball): **strong match** — H contours ~vertical (V↔d↔H coupling), AR
+    closes at large ρ, and the **TNO exemplar shows Spoto's second admissible component at ρ≈40 au**
+    (distant-object two-component AR, q>28). Geometry qualitatively correct across NEO/MBA/TNO.
+  - QA2b: L0 geometric score ranks NEO(0.64) > MBA(0.44) > Trojan(0.29) > TNO(0.00) — correct.
+  - QA2c: **no pathological spike at p=0** (unlike Jeffreys, Farnocchia Table 3); prior healthy.
+    High-skew toward p~0.8 flagged as a γ-tuning candidate for QA3.
+  - **QA0c — strategically important finding:** S3M-NEO's N(H) peaks at H≈24–25 and cuts off while
+    NEOMOD3 rises to 28. The default L2 per-H normalisation isolates orbital *shape* (clean 1A test)
+    but structurally inherits S3M's faint cutoff → **1A alone is a modest orbital-shape effect; the
+    large faint-end NEOMOD3 gain lives in 2B (N(H) renormalisation).** This confirms the 1A/2B split
+    is the right decomposition and tempers expectations for 1A alone (consistent with the small
+    L2−L1 in the smoke test). Actionable: when 1A is evaluated (QA4/D5), also plan a 2B variant
+    (`neomod3_norm='absolute'` — a knob to add) to expose the faint-end effect.
+- 2026-07-08 (**QA3 + QA4 — the two headline results**, Opus). Artifacts:
+  `notebooks/qa/qa3_knob_sweep.py`, `notebooks/qa/qa4_L2_eval.py`, `outputs/qa3_knob_sweep.csv`,
+  `outputs/qa4_band_scores.parquet`, `Figures/qa/qa3_knob_sweep.png`, `Figures/qa/qa4_L2_vs_L1.png`.
+
+  **BUG FOUND + FIXED (RA-rate convention).** The v5 parquet's `mean_dra` is the RAW α̇, **not**
+  α̇·cos δ. Verified on 2-detection tracklets against the wrap-safe finite difference of (ra0,ra1):
+  raw hypothesis corr = 0.999990 (median|rel| 2.6e-3) vs cos-δ hypothesis corr = 0.939 (median|rel|
+  3.1e-2 ≈ 1−cos(13°) = median |dec|). The engine expects the proper-motion convention (α̇·cos δ),
+  which Kurlander's `RARateCosDec_deg_day` supplies — which is why QA1a never caught it. Engine now
+  takes an explicit `dra_cosdec` flag (declare, don't guess); v5 callers pass `dra_cosdec=False`.
+  Fixing it improved L1 band F1 0.893 → 0.905.
+
+  **KNOB FREEZE (QA3).** γ: the literal protocol ("max L1↔digest2 agreement") picks γ=0
+  (Spearman 0.80), but γ=0 is a *worse classifier* (AUC 0.965 / F1 0.890) than γ=2 (AUC 0.971 /
+  F1 0.905) — maximising agreement means inheriting digest2's suboptimality. **Adopted γ=2 as a
+  pre-registered literature default** (Farnocchia 2015 §3.2 ρ² spatial factor, with f_pop supplied
+  separately = exactly our structure), independently confirmed by AUC. The γ-vs-agreement trend is
+  reported as a diagnostic (digest2's effective prior looks flatter, cf. Farnocchia §3.3
+  ρ^{2−5η} ≈ flat), **not** used to select. Grid: 128×64 (64×32 within 0.001 AUC; ΔF1 non-monotone
+  at ~0.004 = subsample noise). p-value KS ≈ 0.52 for all γ → not γ-discriminating; the pass
+  condition (no spike at 0) stands, but this diagnostic is weaker than hoped.
+
+  **DIGEST2 BASELINE AUDIT (fairness).** `run_digest2_comparison_gmm.py` feeds digest2 exactly **2
+  observations synthesised from the same (position, rate)** we use (`ra1 = ra0 + dra·dt`, no cos δ
+  divide — independently confirming the raw-α̇ convention). So digest2 has *identical information*;
+  we are not advantaged. `P_NEO_d2` reaching 1.98 is a handful of parse glitches (frac>1 ≈ 5e-5, all
+  NEO); AUC is identical clipped (0.9303) → the column is a sound digest2 score. Residual caveats:
+  digest2's score is quantised at 0.01 (inherent handicap), and our filter→V colour correction is
+  still **unapplied** (a knob that should only help us further).
+
+  ### RESULT 1 — the ranging ENGINE beats digest2 (20k tracklets, 40–70° band, knobs frozen)
+  | scorer | F1 | AUC |
+  |---|---|---|
+  | **L1 (our engine, S3M prior)** | **0.9007** | **0.9672** |
+  | L2 (NEOMOD3, per_H_match) = 1A | 0.8985 | 0.9650 |
+  | L2 (NEOMOD3, absolute) = 1A+2B | 0.8990 | 0.9653 |
+  | digest2 (reference) | 0.8334 | 0.9241 |
+
+  **L1 − digest2 = +0.0673 F1 / +0.0431 AUC**, using the *same S3M population* and the *same two
+  detections*. **The mid-elongation gap was never "orbit-space beats velocity-space" — it was a
+  digest2 *implementation* gap** (coarse binning, quantised score, 2011-era machinery). This closes
+  and reverses the −0.080 band gap (F3) that motivated the entire program. **D5 pre-registered bar
+  (band F1 ≥ 0.839): cleared by the ENGINE alone (0.9007) → GO.**
+
+  ### RESULT 2 — NEOMOD3 cannot win on an S3M referee (the trap, demonstrated)
+  L2 − L1 = **−0.0022 F1** (per_H_match) / −0.0017 (absolute). NEOMOD3 *does* lift true NEOs
+  (mean +0.0081 vs +0.0001 for non-NEOs) and QA4c confirms the flips land exactly where QA0c
+  predicted (near q=1.3 and low-a Atens, 3.7% of tracklets) — but it loses AUC. **This is expected
+  and is the referee trap (F7/D1) made empirical:** the v5 truth is drawn from S3M, so an S3M prior
+  is optimal *by construction* and no better model of reality can win. The result is therefore
+  **not evidence against NEOMOD3** — it is a validation that the harness detects prior/truth
+  mismatch.
+  → **Sharpened, symmetric, pre-registered prediction for the Kurlander referee (rsync landed):**
+  **L1 > L2 on the S3M-drawn v5 referee (shown: −0.002) AND L2 > L1 on the NEOMOD3-drawn Kurlander
+  referee.** A two-sided flip is far stronger evidence than a one-sided gain, and it is exactly what
+  D1's dual-referee rule was designed to deliver. If the flip does not appear, NEOMOD3's orbital
+  shape genuinely does not help at Rubin depths and C2 falls back to 2B/2D.
+
+  **Strategic consequence (feeds D4).** The paper's headline candidate is now RESULT 1: a modern
+  vectorised systematic-ranging classifier beats digest2 at mid-elongation on identical inputs;
+  VDP remains the antisun winner; the stack should now be VDP + ranging (not VDP + digest2).
+  NEOMOD3 becomes the *prior-fidelity* demonstration (RESULT 2's symmetric flip), not the headline.
+  NEXT: Step C (Kurlander referee build on Hyak) is now the critical path and the decisive
+  experiment. Also queued: filter→V colour correction knob; re-run the C1 stack with L1 replacing
+  digest2; full-band (221k) confirmation of RESULT 1.
 
 ## Logistics (unchanged)
 Git: code (`src/`, scripts, docs) committed on the machine that made it; **no `Co-Authored-By`**;

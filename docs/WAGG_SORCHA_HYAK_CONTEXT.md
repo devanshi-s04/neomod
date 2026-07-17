@@ -2706,4 +2706,44 @@ per-pop files had been cleaned up before scoring), so this never surfaced before
 applied for v2: delete the four `tracklets_{POP}.parquet` files after `--combine-only`,
 leaving only the combined file, before running `benchmark_score_vdp_s3m_v2.sh`. Worth
 fixing properly in `tracklet_paths()` (e.g. exclude per-population files, or take the
-combined file explicitly) if this benchmark pipeline is rerun again.
+combined file explicitly) if this benchmark pipeline is rerun again. (Same fix applied
+again for v3 below — this bug will keep recurring until `tracklet_paths()` is fixed.)
+
+### Benchmark v3 — proportional caps + busiest-night epoch match (2026-07-07)
+
+Advisor request: for a fair comparison, find which single night across all three S3M
+linking cases (case1/2/3, above) has the most tracklets, and rebuild the benchmark at
+that epoch instead of the original MJD 61041 (which — per the earlier "Sorcha night
+distribution" analysis in this doc — was one of the *worst* nights of the whole survey,
+only 2 tracklets, because the survey was just starting).
+
+**Busiest night, found independently in all three cases:** MJD 61642 (2027-08-25) —
+case1: 4,316 tracklets, case2: 4,490, case3: 4,353 (highest single night in every case,
+and highest combined total across all three: 13,159). Same night that was already
+identified as the survey's busiest back in the original single-night ROC test (§ "Time
+of sorcha field" discussion) — consistent across the old un-linked run and all three new
+linked cases.
+
+**Implementation:** maps are antisun-relative and epoch-independent
+(`sorcha_gen_maps_grid.py`), so only `REF_OBSTIME` in `gen_benchmark_tracklets_s3m.py`
+needed to change (`2026-01-01T00:00:00` → `2027-08-25T00:00:00`); grid geometry and cell
+assignment are unaffected. v3 combines this epoch match with v2's proportional population
+caps (Option A) — same cap values (NEO 12,900 / MBA 650,000 / TNO 1,600 / Trojan 6,000),
+just propagated to the new epoch. Output versioned to a new directory
+(`outputs/benchmark_tracklets_s3m_v3/`, `outputs/phase2_benchmark_s3m_v3/`) so v1 and v2
+remain untouched. Hit the same `tracklet_paths()` alphabetical-shard bug as v2 (see
+above) — same fix applied (delete per-population files before VDP scoring).
+
+**Result:** `benchmark_comparison_s3m_v3.parquet` — 460,083 rows, all 4 populations
+present, no NaN scores.
+
+| Pop | Rows | Share | True catalog share |
+|---|---:|---:|---:|
+| MBA | 445,578 | 96.85% | 96.54% |
+| NEO | 8,089 | 1.76% | 1.87% |
+| Trojan | 5,141 | 1.12% | 1.25% |
+| TNO | 1,275 | 0.28% | 0.34% |
+
+v3 is now both population-representative (Option A) *and* epoch-representative (matches
+the busiest real Sorcha survey night) — the most directly comparable benchmark to
+case1/2/3 produced so far. ROC/F1 comparison against case1/2/3 not yet run.
