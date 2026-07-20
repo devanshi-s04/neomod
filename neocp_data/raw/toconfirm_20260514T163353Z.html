@@ -1,0 +1,1014 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1">
+<base href="/iau/">
+
+
+  <link rel="stylesheet" type="text/css" href="/stylesheets/mpc.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/table-sorter.css">
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+
+  <link media="all" rel="stylesheet" href="/css/all.css">
+
+  <link rel="icon" type="image/png" href="/iau/figs/MPClogo16.png">
+  <meta name="description" content="We are the official body that deals with
+      astrometric observations and orbits of minor planets (asteroids) and comets.">
+
+  <meta name="keywords" content="astrometry, observations, orbits,
+      minor planets, asteroids, comets, near earth objects, 
+      potentially hazardous asteroids">
+
+  <script type="text/javascript" src="/js/jquery-latest.js"></script>
+<!--  <script type="text/javascript" src="/js/jquery.main.js"></script> -->
+<!--  <script type="text/javascript" src="/js/jquery.metadata.js"></script> -->
+  <script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
+  <script type="text/javascript" src="/js/webtrends.js"></script>
+  <script type="text/javascript" src="/js/track_pdfs.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Arvo:400,700,400italic,700italic|PT+Sans:400,700,400italic,700italic|PT+Sans+Narrow:400,700' rel='stylesheet' type='text/css'>
+
+
+<title>The NEO Confirmation Page</title>
+<META name="description" content="We are the official body that deals
+with astrometric observations and orbits of minor planets (asteroids) and
+comets.">
+<META name="keywords" content="astrometry, observations, observation, orbits,
+orbit, minor planets, minor planet, asteroids, asteroid, comets, comet">
+</head>
+
+<!-- Body preamble -->
+
+<body>
+  <!-- wrapper -->
+  <div id="wrapper">
+    <div class="w1">
+      <!-- header -->
+      <header id="header">
+        <div class="holder">
+          <!-- logo -->
+          <h1 class="logo"><a href="/">The International Astronomical Union Minor Planet Center</a></h1>
+          <div class="area">
+            <!-- top-nav -->
+            <nav class="top-nav">
+              <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+		<li><a href="/mpcops/contact/">Contact</a></li>
+                <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+              </ul>
+            </nav>
+            <!-- search-form -->
+            <div class="form-holder">
+              <!-- This commented code opens a new page for the search. -->
+              <!--<form class="search-form" method="get" action="https://www.google.com/search" target="_blank">-->
+              <form class="search-form" method="get" action="https://www.google.com/search">
+                <fieldset>
+                  <!--<label for="search">Search</label>-->
+                  <input type="hidden" name="sitesearch" value="minorplanetcenter.net">
+                  <input type="text" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" id="search" name="q" value="Search MPC">
+                </fieldset>
+              </form>
+            </div>
+            <div class="social-bar">
+<!--              <a href="https://twitter.com/MinorPlanetCtr"><span class="social twitter">L</span></a> -->
+<!--              <a href="https://www.facebook.com/MinorPlanetCenter"><span class="social facebook">F</span></a> -->
+<!--              <a href="https://www.youtube.com/channel/UCtALMOQHuBxh5XMsYNiDhMg"><span class="social youtube">X</span></a> -->
+<!--              <a href="/iau/rss/mpc_feeds.html"><span class="social rss">R</span></a> -->
+            </div>
+          </div>
+        </div>
+        <nav class="nav-holder">
+          <!-- main navigation -->
+          <ul id="nav">
+            <li>
+              <a href="/iau/mpc.html"><span>OBSERVERS</span></a>
+              <ul>
+                <li><a href="/iau/MPEph/MPEph.html">Ephemeris Service</a></li>
+                <li><a href="/mpec/RecentMPECs.html">MPECs</a></li>
+                <li><a href="/iau/NEO/toconfirm_tabular.html">NEO Confirmation</a></li>
+                <li><a href="/iau/NEO/pccp_tabular.html">Possible Comet Confirmation</a></li>
+                <li><a href="/mpcops/submissions/cometary/">Report Cometary Activity</a></li>
+                <li><a href="/db_search">Orbits/Observations Database</a></li>				
+                <li><a href="/iau/Ephemerides/EphemOrbEls.html" class="nested">Orbital Elements</a>
+                  <ul>
+                    <li><a href="/iau/MPCORB.html">MPCORB</a></li>
+                    <li><a href="/iau/ECS/MPCAT/MPCAT.html">MPCAT</a></li>
+                    <li><a href="/iau/ECS/MPCUPDATE/MPCUPDATE.html">MPCUPDATE</a></li>
+                    <li><a href="/iau/Ephemerides/SoftwareEls.html">Orbital Elements for Software</a></li>
+                  </ul>                
+                </li>
+                <li><a href="/iau/services/MPCServices.html">Publications Overview</a></li>
+                <li><a href="/iau/ECS/MPCArchive/MPCArchive_TBL.html">Publications Archive</a></li>              
+                <li><a href="/iau/NEO/TheNEOPage.html" class="nested">NEO Services</a>
+                  <ul>
+                    <li><a href="/iau/NEO/toconfirm_tabular.html">Confirmation</a></li>
+                    <li><a href="/iau/NEO/PossNEO.html">Ratings</a></li>
+                    <li><a href="/cgi-bin/neaobs.cgi">Observation Planning Aid</a></li>
+                    <li><a href="/neocp_followup_report/">NEOCP Followup Report Form</a></li>
+                    <li><a href="/neocp_followup_reports/">NEOCP Followup Reports</a></li>
+                    <li><a href="/neocp_obs">NEOCP Recent Observations</a></li>
+                    <li><a href="/mpcops/neocp/neocp_plots/">NEOCP Plots</a></li>		    
+                    <li><a href="/iau/recovery/recovery.html">NEO Recovery</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="" class="nested">Observations</a>
+                  <ul>
+                    <li><a href="/wamo/">WAMO</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/mpcops/orbits/" class="nested">Orbits</a>
+                  <ul>
+                    <li><a href="https://data.minorplanetcenter.net/comparison/index.html">Orbit Comparison Tool</a></li>
+                    <li><a href="/mpcops/orbits/no-orbits-astrometry/">Request for archival astrometry</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/iau/services/WebCSAccess.html" class="nested">Other Observer Services</a>
+                  <ul>
+                    <li><a href="/whatsup">Observing Target List</a></li>
+                    <li><a href="/iau/NatSats/NaturalSatellites.html">Natural Satellite Ephemerides</a></li>
+                    <li><a href="/iau/MPEph/NewObjEphems.html">New Object Ephemerides</a></li>
+                    <li><a href="/cgi-bin/checkmp.cgi">MPChecker</a></li>
+<!-- THIS PAGE IS NO LONGER SUPPORTED   <li><a href="/iau/artsats/artsats.html">Distant Artificial Satellites</a></li> -->
+                    <li><a href="/iau/lists/Customize.html">Observing List Customizer</a></li>
+                    <li><a href="/iau/delays/neocp_delay.html">Processing Times</a></li>		    
+                  </ul>
+                </li>
+		
+		<li><a href="/" class="nested">Identifications</a>
+		  <ul>
+		    <li><a href="/mpcops/documentation/identifications/">Documentation</a></li>		    
+		    <li><a href="/mpcops/documentation/identifications/submission-format/">Submission Format</a></li>
+                    <li><a href="/mpcops/submissions/identifications/">Submit</a></li>
+		  </ul>
+		</li>
+
+                <li><a href="/iau/ECS/MPCAT-OBS/MPCAT-OBS.html">MPCAT-OBS</a></li>
+                <li><a href="/iau/SkyCoverage.html">Sky Coverage</a></li>
+                <li><a href="/iau/MPC_Documentation.html" class="nested">Documentation</a>
+                  <ul>
+                    <li><a href="/iau/info/TechInfo.html">MPC Submission Info</a></li>
+                    <li><a href="/iau/info/Astrometry.html">Astrometry Guide</a></li>
+                    <li><a href="/mpcops/documentation/artificial-satellites/">Artificial Satellites</a></li>
+                    <li><a href="/submit_action_code">Submit Action Code</a></li>		    
+                    <li><a href="/mpcops/documentation/">Other</a></li>		    
+                    <!-- <li><a href="/iau/WhatsNew.html">What's New</a></li> -->
+                  </ul>                
+                </li>
+                <li><a href="/iau/lists/Lists.html" class="nested">Lists and Plots</a>
+                  <ul>
+                    <li><a href="/iau/lists/MPLists.html">Minor Planets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/t_atens.html">Atens</a></li>
+                        <li><a href="/iau/lists/t_apollos.html">Apollos</a></li>
+                        <li><a href="/iau/lists/t_amors.html">Amors</a></li>
+                        <li><a href="/iau/lists/t_centaurs.html">Centaurs and Scattered Disk Objects</a></li>
+                        <li><a href="/iau/lists/t_tnos.html">Transneptunian Objects</a></li>
+                        <li><a href="/iau/lists/t_others.html">Other Unusual Objects</a></li>
+                        <li><a href="/iau/lists/t_dangerous.html">Potentially Hazardous Asteroids</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/CometLists.html">Comets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/LastCometObs.html">Date of Last Observation</a></li>
+                        <li><a href="/iau/lists/LastYear.html">Designations from the Past Year</a></li>
+                        <li><a href="http://www.icq.eps.harvard.edu/CometMags.html">Comet Magnitude Estimates</a></li>
+                        <li><a href="/iau/lists/ClosestComets.html">Closest Approaches</a></li>
+                        <li><a href="/iau/lists/PeriodicCodes.html">Periodic Comets</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/ObsCodesF.html">Observatory Codes</a></li>		    
+                    <li><a href="/iau/Animations/Animations.html">Animations</a></li>
+                  </ul>                
+                </li>
+                <!--<li><%= link_to 'Summary', :controller => 'mpc', :action => 'summary' %></li>-->
+                <li><a href='/mpc/obs_stats_2014_2018'>2014-18 NEO Obs Statistics</a></li>
+                <li><a href='/mpc/summary'>Summary of Latest Data</a></li>
+                <li><a href='/deprecated-pages.html'>Deprecated Webpages</a></li>		
+              </ul>
+            </li>
+            <li><a href="/data"><span>DATA</span></a></li>
+	    
+            <li><a href="/"><span>NEW</span></a>
+	      <ul>
+		<li><a href="/mpcops/new/developments/">Developments</a></li>
+<!--		<li><a href="/mpcops/new/releases/">New Releases</a></li> -->
+		<li><a href="/mpcops/new/existing-upgrades/">Existing Upgrades</a></li>
+		<li><a href="/mpcops/new/newsletters/">Newsletters</a></li>
+	      </ul>
+	    </li>
+	
+
+            <li><a href="/iau/MPCStatus.html"><span style="color:GoldenRod">STATUS</a></li>
+
+	    <li><a href="/mpcops/documentation/"><span>DOCUMENTATION</span></a></li>
+	    
+            <li><a href="/"><span>EXTERNAL</span></a>
+	      <ul id="external">
+	        <li><a href="https://mpcmug.astro.umd.edu/" target="_blank">MPC User Group (MUG)</a></li>
+		<li><a href="http://iawn.net/" target="_blank">IAWN</a></li>
+		<li><a href="https://sbnmpc.astro.umd.edu/" target="_blank">SBN Annex</a></li>
+		<li><a href="https://www.wgsbn-iau.org/" target="_blank">WGSBN</a></li>
+                <li><a href='http://alcdef.org'>Light Curve Database</a></li>
+	      </ul>
+	    </li>
+
+          </ul>
+        </nav>
+      </header>
+
+   <script type="text/javascript">
+          document.addEventListener('DOMContentLoaded', function () {
+            const listItems = document.querySelectorAll('#nav li ');
+            function getDirectTextContent(element) {
+                let directTextContent = '';
+                element.childNodes.forEach(node => {
+                    if (node.textContent.trim().includes('OBSERVERS') || node.textContent.trim().includes('DATA') || node.textContent.trim().includes('NEW') || node.textContent.trim().includes('STATUS') || node.textContent.trim().includes('DOCUMENTATION') || node.textContent.trim().includes('EXTERNAL')){
+                        directTextContent += node.textContent.trim();
+                    }
+                });
+                return directTextContent;
+            }
+
+            listItems.forEach(function (li) {
+                const directText = getDirectTextContent(li);
+                const textLength = directText.length;  
+
+                // Log the length of each item to the console
+                //console.log(`Text: "${li.textContent.trim()}", Length: ${textLength}`);
+
+                // Apply class based on length
+                if (textLength <= 5) {
+                    li.classList.add('short-word');
+                } else if (textLength <= 10) {
+                    li.classList.add('medium-word');
+                } else {
+                    li.classList.add('long-word');
+                }
+            });
+        });
+    </script>
+
+      <!-- main -->
+      <div id="main">
+
+
+<!-- Navigation Menu block -->
+
+<li class="yuimenuitemlabel alert"> Preparation <a href="/iau/info/MPCOpStatus.html">(Info)</a></li>
+
+
+
+
+<!-- Main content block -->
+
+<br>
+<p>
+
+<h2>The NEO Confirmation Page</h2>
+Please ensure you are familiar with the <a href="/iau/NEO/toconfirm_tabular.html#notes">notes at the bottom
+of this page</a>.<br>
+Also, additional notes on the NEOCP and
+information on how we remove objects on the NEOCP are also available <a href="/iau/NEO/NEOCPNotes.html">here</a>.
+<p class="rj">
+Page last updated on May 14.689 UTC.
+<p><!-- mkneocp_files.py 14-MAY-2026 16:32:02.83 -->
+<a href="https://cgi.minorplanetcenter.net/cgi-bin/feedback.cgi?U=/iau/NEO/toconfirm_tabular.html&amp;S=Problem">Problems?</a>
+<a href="https://cgi.minorplanetcenter.net/cgi-bin/feedback.cgi?U=/iau/NEO/toconfirm_tabular.html&amp;S=Commment">Comments?</a>
+<p><hr><p>
+<FORM METHOD=POST ACTION="https://cgi.minorplanetcenter.net/cgi-bin/confirmeph2.cgi">
+<input type=submit value=" Get ephemerides "> <input type=reset value=" Reset form "><p>
+<p>Select object(s) from the current list of objects needing confirmation
+(NEO desirability score, discovery date, rough current position and magnitude given,
+as well as number of observations, arc, nominal <i>H</i> and number of days
+since it was last observed).  Objects flagged with an "S" in the Note column are
+<a href="https://minorplanetcenter.net/mpcops/documentation/artificial-satellites/">possibly in geocentric orbit</a> 
+and might soon be removed. Objects flagged with an "B" in the Note column have a possible bad tracklet or failed orbit fit and the ephemeris might not be correct. "B" flag does not overwrite the "S" flag.
+<p><input type="radio" name="W" VALUE="a">All objects
+with <i>V</i> =
+<input name="mb" maxlength=4 size=4 value="-30"> to
+<input name="mf" maxlength=4 size=4 value="30">, with Decl. between
+<input name="dl" maxlength=5 size=5 value="-90">&#176; and
+<input name="du" maxlength=5 size=5 value="+90">&#176;, with an
+NEO desirability score of
+<input name="nl" maxlength=3 size=3 value="0">&#37; to
+<input name="nu" maxlength=3 size=3 value="100">&#37;
+<input type="hidden" name="sort" value="d">
+<p><input type="radio" name="W" VALUE="j" CHECKED>or just the objects selected below:
+<input type=button value="Deselect All"
+  onclick="var i; var ff = document.getElementsByTagName('input');
+           for (i = 0; i < ff.length; i++) {
+             if (ff[i].type == 'checkbox') {
+               ff[i].checked=false;}}">
+<input type=button value="Select All"
+  onclick="var i; var ff = document.getElementsByTagName('input');
+           for (i = 0; i < ff.length; i++) {
+             if (ff[i].type == 'checkbox') {
+               ff[i].checked=true;}}">
+<p>
+<table class="tablesorter">
+  <thead>
+    <tr>
+      <th>&nbsp;&nbsp;Temp Desig&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;Score&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;Discovery</th>
+      <th>&nbsp;&nbsp;R.A.&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;Decl.&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;V&nbsp;&nbsp;</th>
+      <th>Updated</th>
+      <th>&nbsp;Note&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;NObs&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;Arc&nbsp;&nbsp;</th>
+      <th>&nbsp;H&nbsp;&nbsp;</th>
+      <th>&nbsp;Not Seen/dys&nbsp;&nbsp;</th>
+    </tr>
+  </thead>
+
+  <tbody>
+<tr><td><span style="display:none">P12nc1w</span>&nbsp;<input type="checkbox" name="obj" VALUE="P12nc1w"> P12nc1w</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.5&nbsp;&nbsp;</td>
+<td><span style="display:none">243.2563</span>&nbsp;&nbsp;16 13.0&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">084.2805</span>&nbsp;&nbsp;-05 43&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.1</span>&nbsp;&nbsp;20.9&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.082468</span>&nbsp;Added May 14.58 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.04&nbsp;</td>
+<td align="right">&nbsp;23.6&nbsp;</td>
+<td align="right">&nbsp; 0.173&nbsp;</td><tr>
+<tr><td><span style="display:none">P12nc1d</span>&nbsp;<input type="checkbox" name="obj" VALUE="P12nc1d"> P12nc1d</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.5&nbsp;&nbsp;</td>
+<td><span style="display:none">253.9484</span>&nbsp;&nbsp;16 55.8&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">084.5850</span>&nbsp;&nbsp;-05 24&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.7</span>&nbsp;&nbsp;21.3&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.077772</span>&nbsp;Added May 14.58 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.04&nbsp;</td>
+<td align="right">&nbsp;22.8&nbsp;</td>
+<td align="right">&nbsp; 0.168&nbsp;</td><tr>
+<tr><td><span style="display:none">P12nc1c</span>&nbsp;<input type="checkbox" name="obj" VALUE="P12nc1c"> P12nc1c</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.5&nbsp;&nbsp;</td>
+<td><span style="display:none">252.2659</span>&nbsp;&nbsp;16 49.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">083.1854</span>&nbsp;&nbsp;-06 48&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.2</span>&nbsp;&nbsp;21.8&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.077703</span>&nbsp;Added May 14.58 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.04&nbsp;</td>
+<td align="right">&nbsp;22.6&nbsp;</td>
+<td align="right">&nbsp; 0.169&nbsp;</td><tr>
+<tr><td><span style="display:none">RFD0300</span>&nbsp;<input type="checkbox" name="obj" VALUE="RFD0300"> RFD0300</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.0&nbsp;&nbsp;</td>
+<td><span style="display:none">349.0206</span>&nbsp;&nbsp;23 16.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">051.9980</span>&nbsp;&nbsp;-38 00&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">26.5</span>&nbsp;&nbsp;23.5&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.020767</span>&nbsp;Added May 14.52 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   2&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;29.5&nbsp;</td>
+<td align="right">&nbsp; 1.663&nbsp;</td><tr>
+<tr><td><span style="display:none">P12nc08</span>&nbsp;<input type="checkbox" name="obj" VALUE="P12nc08"> P12nc08</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.4&nbsp;&nbsp;</td>
+<td><span style="display:none">239.8686</span>&nbsp;&nbsp;15 59.5&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">071.4225</span>&nbsp;&nbsp;-18 34&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.0</span>&nbsp;&nbsp;21.0&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.020277</span>&nbsp;Added May 14.52 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.02&nbsp;</td>
+<td align="right">&nbsp;17.5&nbsp;</td>
+<td align="right">&nbsp; 0.224&nbsp;</td><tr>
+<tr><td><span style="display:none">CEMAUH2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEMAUH2"> CEMAUH2</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.4&nbsp;&nbsp;</td>
+<td><span style="display:none">247.8345</span>&nbsp;&nbsp;16 31.3&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">094.3471</span>&nbsp;&nbsp;+04 20&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.7</span>&nbsp;&nbsp;21.3&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.962144</span>&nbsp;Updated May 14.46 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   6&nbsp;</td>
+<td align="right">&nbsp;  0.07&nbsp;</td>
+<td align="right">&nbsp;24.0&nbsp;</td>
+<td align="right">&nbsp; 0.250&nbsp;</td><tr>
+<tr><td><span style="display:none">CEMAY32</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEMAY32"> CEMAY32</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.4&nbsp;&nbsp;</td>
+<td><span style="display:none">251.0182</span>&nbsp;&nbsp;16 44.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">094.2078</span>&nbsp;&nbsp;+04 12&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.7</span>&nbsp;&nbsp;20.3&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.966576</span>&nbsp;Updated May 14.47 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   9&nbsp;</td>
+<td align="right">&nbsp;  0.07&nbsp;</td>
+<td align="right">&nbsp;23.8&nbsp;</td>
+<td align="right">&nbsp; 0.228&nbsp;</td><tr>
+<tr><td><span style="display:none">C46A061</span>&nbsp;<input type="checkbox" name="obj" VALUE="C46A061"> C46A061</td>
+<td align="right"><span style="display:none">098</span> 98&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.4&nbsp;&nbsp;</td>
+<td><span style="display:none">226.5215</span>&nbsp;&nbsp;15 06.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">085.6923</span>&nbsp;&nbsp;-04 18&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">32.2</span>&nbsp;&nbsp;17.8&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.112577</span>&nbsp;Updated May 14.61 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  19&nbsp;</td>
+<td align="right">&nbsp;  0.16&nbsp;</td>
+<td align="right">&nbsp;30.5&nbsp;</td>
+<td align="right">&nbsp; 0.152&nbsp;</td><tr>
+<tr><td><span style="display:none">CEMANR2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEMANR2"> CEMANR2</td>
+<td align="right"><span style="display:none">098</span> 98&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.4&nbsp;&nbsp;</td>
+<td><span style="display:none">245.4341</span>&nbsp;&nbsp;16 21.7&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">093.7836</span>&nbsp;&nbsp;+03 47&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.2</span>&nbsp;&nbsp;19.8&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.174957</span>&nbsp;Updated May 14.67 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  14&nbsp;</td>
+<td align="right">&nbsp;  0.29&nbsp;</td>
+<td align="right">&nbsp;21.2&nbsp;</td>
+<td align="right">&nbsp; 0.036&nbsp;</td><tr>
+<tr><td><span style="display:none">C469ZZ1</span>&nbsp;<input type="checkbox" name="obj" VALUE="C469ZZ1"> C469ZZ1</td>
+<td align="right"><span style="display:none">098</span> 98&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.4&nbsp;&nbsp;</td>
+<td><span style="display:none">210.7077</span>&nbsp;&nbsp;14 02.8&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">097.5680</span>&nbsp;&nbsp;+07 34&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">32.5</span>&nbsp;&nbsp;17.5&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.004916</span>&nbsp;Updated May 14.50 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  21&nbsp;</td>
+<td align="right">&nbsp;  0.13&nbsp;</td>
+<td align="right">&nbsp;26.9&nbsp;</td>
+<td align="right">&nbsp; 0.204&nbsp;</td><tr>
+<tr><td><span style="display:none">ST26E67</span>&nbsp;<input type="checkbox" name="obj" VALUE="ST26E67"> ST26E67</td>
+<td align="right"><span style="display:none">098</span> 98&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">240.9620</span>&nbsp;&nbsp;16 03.8&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">090.1572</span>&nbsp;&nbsp;+00 09&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.4</span>&nbsp;&nbsp;19.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.162528</span>&nbsp;Updated May 14.66 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  11&nbsp;</td>
+<td align="right">&nbsp;  0.30&nbsp;</td>
+<td align="right">&nbsp;30.0&nbsp;</td>
+<td align="right">&nbsp; 0.070&nbsp;</td><tr>
+<tr><td><span style="display:none">CEMA5R2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEMA5R2"> CEMA5R2</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">232.8989</span>&nbsp;&nbsp;15 31.6&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">096.6618</span>&nbsp;&nbsp;+06 39&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.9</span>&nbsp;&nbsp;20.1&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.168014</span>&nbsp;Updated May 14.67 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  16&nbsp;</td>
+<td align="right">&nbsp;  0.15&nbsp;</td>
+<td align="right">&nbsp;23.8&nbsp;</td>
+<td align="right">&nbsp; 0.215&nbsp;</td><tr>
+<tr><td><span style="display:none">ST26E61</span>&nbsp;<input type="checkbox" name="obj" VALUE="ST26E61"> ST26E61</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">241.0176</span>&nbsp;&nbsp;16 04.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">089.9460</span>&nbsp;&nbsp;-00 03&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.7</span>&nbsp;&nbsp;20.3&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.869384</span>&nbsp;Updated May 14.37 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   6&nbsp;</td>
+<td align="right">&nbsp;  0.05&nbsp;</td>
+<td align="right">&nbsp;28.7&nbsp;</td>
+<td align="right">&nbsp; 0.326&nbsp;</td><tr>
+<tr><td><span style="display:none">CEM9MQ2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEM9MQ2"> CEM9MQ2</td>
+<td align="right"><span style="display:none">098</span> 98&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">223.3792</span>&nbsp;&nbsp;14 53.5&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">091.3905</span>&nbsp;&nbsp;+01 23&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.7</span>&nbsp;&nbsp;20.3&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.909105</span>&nbsp;Updated May 14.41 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   8&nbsp;</td>
+<td align="right">&nbsp;  0.09&nbsp;</td>
+<td align="right">&nbsp;28.6&nbsp;</td>
+<td align="right">&nbsp; 0.289&nbsp;</td><tr>
+<tr><td><span style="display:none">CEM9DH2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEM9DH2"> CEM9DH2</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">224.3416</span>&nbsp;&nbsp;14 57.4&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">091.1081</span>&nbsp;&nbsp;+01 06&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.3</span>&nbsp;&nbsp;20.7&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.920249</span>&nbsp;Updated May 14.42 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  10&nbsp;</td>
+<td align="right">&nbsp;  0.10&nbsp;</td>
+<td align="right">&nbsp;24.3&nbsp;</td>
+<td align="right">&nbsp; 0.282&nbsp;</td><tr>
+<tr><td><span style="display:none">CEM9AR2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEM9AR2"> CEM9AR2</td>
+<td align="right"><span style="display:none">098</span> 98&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">223.6019</span>&nbsp;&nbsp;14 54.4&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">091.6668</span>&nbsp;&nbsp;+01 40&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.5</span>&nbsp;&nbsp;21.5&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.904218</span>&nbsp;Updated May 14.40 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   8&nbsp;</td>
+<td align="right">&nbsp;  0.09&nbsp;</td>
+<td align="right">&nbsp;26.1&nbsp;</td>
+<td align="right">&nbsp; 0.297&nbsp;</td><tr>
+<tr><td><span style="display:none">ST26E59</span>&nbsp;<input type="checkbox" name="obj" VALUE="ST26E59"> ST26E59</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">228.1146</span>&nbsp;&nbsp;15 12.5&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">088.3890</span>&nbsp;&nbsp;-01 36&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.0</span>&nbsp;&nbsp;20.0&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.882583</span>&nbsp;Updated May 14.38 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  14&nbsp;</td>
+<td align="right">&nbsp;  0.07&nbsp;</td>
+<td align="right">&nbsp;26.8&nbsp;</td>
+<td align="right">&nbsp; 0.319&nbsp;</td><tr>
+<tr><td><span style="display:none">ST26E57</span>&nbsp;<input type="checkbox" name="obj" VALUE="ST26E57"> ST26E57</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">226.8020</span>&nbsp;&nbsp;15 07.2&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">086.6070</span>&nbsp;&nbsp;-03 23&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.8</span>&nbsp;&nbsp;19.2&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.833300</span>&nbsp;Updated May 14.33 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   8&nbsp;</td>
+<td align="right">&nbsp;  0.05&nbsp;</td>
+<td align="right">&nbsp;27.0&nbsp;</td>
+<td align="right">&nbsp; 0.365&nbsp;</td><tr>
+<tr><td><span style="display:none">CEM83E2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEM83E2"> CEM83E2</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">210.4398</span>&nbsp;&nbsp;14 01.8&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">090.9307</span>&nbsp;&nbsp;+00 55&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.4</span>&nbsp;&nbsp;20.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.858277</span>&nbsp;Updated May 14.36 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   6&nbsp;</td>
+<td align="right">&nbsp;  0.09&nbsp;</td>
+<td align="right">&nbsp;24.4&nbsp;</td>
+<td align="right">&nbsp; 0.340&nbsp;</td><tr>
+<tr><td><span style="display:none">CEM7YT2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEM7YT2"> CEM7YT2</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.3&nbsp;&nbsp;</td>
+<td><span style="display:none">199.4418</span>&nbsp;&nbsp;13 17.8&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">092.3446</span>&nbsp;&nbsp;+02 20&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.0</span>&nbsp;&nbsp;20.0&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.863324</span>&nbsp;Updated May 14.36 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   8&nbsp;</td>
+<td align="right">&nbsp;  0.09&nbsp;</td>
+<td align="right">&nbsp;21.7&nbsp;</td>
+<td align="right">&nbsp; 0.337&nbsp;</td><tr>
+<tr><td><span style="display:none">ST26E52</span>&nbsp;<input type="checkbox" name="obj" VALUE="ST26E52"> ST26E52</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 14.2&nbsp;&nbsp;</td>
+<td><span style="display:none">204.1155</span>&nbsp;&nbsp;13 36.5&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">096.2496</span>&nbsp;&nbsp;+06 14&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.1</span>&nbsp;&nbsp;19.9&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.882813</span>&nbsp;Updated May 14.38 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   9&nbsp;</td>
+<td align="right">&nbsp;  0.09&nbsp;</td>
+<td align="right">&nbsp;25.9&nbsp;</td>
+<td align="right">&nbsp; 0.353&nbsp;</td><tr>
+<tr><td><span style="display:none">MZ26075</span>&nbsp;<input type="checkbox" name="obj" VALUE="MZ26075"> MZ26075</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.8&nbsp;&nbsp;</td>
+<td><span style="display:none">250.7399</span>&nbsp;&nbsp;16 43.0&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">087.9756</span>&nbsp;&nbsp;-02 01&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.5</span>&nbsp;&nbsp;19.5&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.634556</span>&nbsp;Added May 14.13 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.01&nbsp;</td>
+<td align="right">&nbsp;25.1&nbsp;</td>
+<td align="right">&nbsp; 0.870&nbsp;</td><tr>
+<tr><td><span style="display:none">A11CmCW</span>&nbsp;<input type="checkbox" name="obj" VALUE="A11CmCW"> A11CmCW</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.3&nbsp;&nbsp;</td>
+<td><span style="display:none">069.6246</span>&nbsp;&nbsp;04 38.5&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">012.4360</span>&nbsp;&nbsp;-77 33&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">31.0</span>&nbsp;&nbsp;19.0&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.252998</span>&nbsp;Added May 13.75 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.02&nbsp;</td>
+<td align="right">&nbsp;24.5&nbsp;</td>
+<td align="right">&nbsp; 1.318&nbsp;</td><tr>
+<tr><td><span style="display:none">A11CmCS</span>&nbsp;<input type="checkbox" name="obj" VALUE="A11CmCS"> A11CmCS</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.3&nbsp;&nbsp;</td>
+<td><span style="display:none">248.3042</span>&nbsp;&nbsp;16 33.2&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">051.8521</span>&nbsp;&nbsp;-38 08&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.9</span>&nbsp;&nbsp;19.1&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.250294</span>&nbsp;Added May 13.75 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.04&nbsp;</td>
+<td align="right">&nbsp;25.4&nbsp;</td>
+<td align="right">&nbsp; 1.377&nbsp;</td><tr>
+<tr><td><span style="display:none">OCA1642</span>&nbsp;<input type="checkbox" name="obj" VALUE="OCA1642"> OCA1642</td>
+<td align="right"><span style="display:none">084</span> 84&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.1&nbsp;&nbsp;</td>
+<td><span style="display:none">206.4053</span>&nbsp;&nbsp;13 45.6&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">058.8150</span>&nbsp;&nbsp;-31 11&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.6</span>&nbsp;&nbsp;19.4&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.061804</span>&nbsp;Added May 13.56 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.02&nbsp;</td>
+<td align="right">&nbsp;13.4&nbsp;</td>
+<td align="right">&nbsp; 1.565&nbsp;</td><tr>
+<tr><td><span style="display:none">P22nay8</span>&nbsp;<input type="checkbox" name="obj" VALUE="P22nay8"> P22nay8</td>
+<td align="right"><span style="display:none">022</span> 22&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.4&nbsp;&nbsp;</td>
+<td><span style="display:none">236.2583</span>&nbsp;&nbsp;15 45.0&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">087.9771</span>&nbsp;&nbsp;-02 01&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.2</span>&nbsp;&nbsp;21.8&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.088338</span>&nbsp;Updated May 14.59 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  16&nbsp;</td>
+<td align="right">&nbsp; 18.97&nbsp;</td>
+<td align="right">&nbsp;20.1&nbsp;</td>
+<td align="right">&nbsp; 0.203&nbsp;</td><tr>
+<tr><td><span style="display:none">P22nawA</span>&nbsp;<input type="checkbox" name="obj" VALUE="P22nawA"> P22nawA</td>
+<td align="right"><span style="display:none">078</span> 78&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.4&nbsp;&nbsp;</td>
+<td><span style="display:none">227.8228</span>&nbsp;&nbsp;15 11.3&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">086.8600</span>&nbsp;&nbsp;-03 08&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.8</span>&nbsp;&nbsp;21.2&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.086339</span>&nbsp;Updated May 14.59 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  33&nbsp;</td>
+<td align="right">&nbsp; 16.14&nbsp;</td>
+<td align="right">&nbsp;24.7&nbsp;</td>
+<td align="right">&nbsp; 0.243&nbsp;</td><tr>
+<tr><td><span style="display:none">A11Cmv6</span>&nbsp;<input type="checkbox" name="obj" VALUE="A11Cmv6"> A11Cmv6</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 13.0&nbsp;&nbsp;</td>
+<td><span style="display:none">128.2964</span>&nbsp;&nbsp;08 33.2&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">039.5715</span>&nbsp;&nbsp;-50 25&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">31.2</span>&nbsp;&nbsp;18.8&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.598312</span>&nbsp;Updated May 14.10 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  10&nbsp;</td>
+<td align="right">&nbsp;  0.91&nbsp;</td>
+<td align="right">&nbsp;18.6&nbsp;</td>
+<td align="right">&nbsp; 0.728&nbsp;</td><tr>
+<tr><td><span style="display:none">P22n4V7</span>&nbsp;<input type="checkbox" name="obj" VALUE="P22n4V7"> P22n4V7</td>
+<td align="right"><span style="display:none">084</span> 84&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 12.4&nbsp;&nbsp;</td>
+<td><span style="display:none">215.4100</span>&nbsp;&nbsp;14 21.6&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">070.5401</span>&nbsp;&nbsp;-19 27&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.0</span>&nbsp;&nbsp;22.0&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.009128</span>&nbsp;Updated May 14.51 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  29&nbsp;</td>
+<td align="right">&nbsp;  2.05&nbsp;</td>
+<td align="right">&nbsp;21.3&nbsp;</td>
+<td align="right">&nbsp; 0.253&nbsp;</td><tr>
+<tr><td><span style="display:none">P22n4V6</span>&nbsp;<input type="checkbox" name="obj" VALUE="P22n4V6"> P22n4V6</td>
+<td align="right"><span style="display:none">079</span> 79&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 12.4&nbsp;&nbsp;</td>
+<td><span style="display:none">208.6512</span>&nbsp;&nbsp;13 54.6&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">066.9994</span>&nbsp;&nbsp;-23 00&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.3</span>&nbsp;&nbsp;21.7&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461175.003708</span>&nbsp;Updated May 14.50 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  37&nbsp;</td>
+<td align="right">&nbsp;  2.01&nbsp;</td>
+<td align="right">&nbsp;23.6&nbsp;</td>
+<td align="right">&nbsp; 0.295&nbsp;</td><tr>
+<tr><td><span style="display:none">P22n4PC</span>&nbsp;<input type="checkbox" name="obj" VALUE="P22n4PC"> P22n4PC</td>
+<td align="right"><span style="display:none">055</span> 55&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 12.4&nbsp;&nbsp;</td>
+<td><span style="display:none">209.5136</span>&nbsp;&nbsp;13 58.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">076.7044</span>&nbsp;&nbsp;-13 17&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.4</span>&nbsp;&nbsp;20.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.709747</span>&nbsp;Updated May 14.21 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  17&nbsp;</td>
+<td align="right">&nbsp;  1.83&nbsp;</td>
+<td align="right">&nbsp;21.0&nbsp;</td>
+<td align="right">&nbsp; 0.500&nbsp;</td><tr>
+<tr><td><span style="display:none">CEM26R2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEM26R2"> CEM26R2</td>
+<td align="right"><span style="display:none">013</span> 13&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 12.4&nbsp;&nbsp;</td>
+<td><span style="display:none">248.8944</span>&nbsp;&nbsp;16 35.6&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">105.4416</span>&nbsp;&nbsp;+15 26&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.4</span>&nbsp;&nbsp;20.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.749363</span>&nbsp;Updated May 14.25 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  21&nbsp;</td>
+<td align="right">&nbsp;  2.69&nbsp;</td>
+<td align="right">&nbsp;17.0&nbsp;</td>
+<td align="right">&nbsp; 0.453&nbsp;</td><tr>
+<tr><td><span style="display:none">CEM1XD2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CEM1XD2"> CEM1XD2</td>
+<td align="right"><span style="display:none">013</span> 13&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 12.3&nbsp;&nbsp;</td>
+<td><span style="display:none">217.5441</span>&nbsp;&nbsp;14 30.2&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">107.4946</span>&nbsp;&nbsp;+17 29&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">27.8</span>&nbsp;&nbsp;22.2&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.721589</span>&nbsp;Updated May 14.22 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  20&nbsp;</td>
+<td align="right">&nbsp;  6.88&nbsp;</td>
+<td align="right">&nbsp;19.2&nbsp;</td>
+<td align="right">&nbsp; 0.483&nbsp;</td><tr>
+<tr><td><span style="display:none">SO0005e</span>&nbsp;<input type="checkbox" name="obj" VALUE="SO0005e"> SO0005e</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 11.7&nbsp;&nbsp;</td>
+<td><span style="display:none">001.0798</span>&nbsp;&nbsp;00 04.3&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">095.2035</span>&nbsp;&nbsp;+05 12&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">23.6</span>&nbsp;&nbsp;26.4&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.846828</span>&nbsp;Updated May 14.35 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;28.9&nbsp;</td>
+<td align="right">&nbsp; 2.981&nbsp;</td><tr>
+<tr><td><span style="display:none">SO0005d</span>&nbsp;<input type="checkbox" name="obj" VALUE="SO0005d"> SO0005d</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 11.7&nbsp;&nbsp;</td>
+<td><span style="display:none">285.0033</span>&nbsp;&nbsp;19 00.0&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">064.7079</span>&nbsp;&nbsp;-25 17&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.4</span>&nbsp;&nbsp;21.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.844897</span>&nbsp;Updated May 14.34 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;28.2&nbsp;</td>
+<td align="right">&nbsp; 2.980&nbsp;</td><tr>
+<tr><td><span style="display:none">SO0005c</span>&nbsp;<input type="checkbox" name="obj" VALUE="SO0005c"> SO0005c</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 11.7&nbsp;&nbsp;</td>
+<td><span style="display:none">336.7919</span>&nbsp;&nbsp;22 27.2&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">059.2216</span>&nbsp;&nbsp;-30 46&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">26.8</span>&nbsp;&nbsp;23.2&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.844212</span>&nbsp;Updated May 14.34 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;28.6&nbsp;</td>
+<td align="right">&nbsp; 3.034&nbsp;</td><tr>
+<tr><td><span style="display:none">SO0005b</span>&nbsp;<input type="checkbox" name="obj" VALUE="SO0005b"> SO0005b</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 11.6&nbsp;&nbsp;</td>
+<td><span style="display:none">343.1379</span>&nbsp;&nbsp;22 52.6&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">080.7651</span>&nbsp;&nbsp;-09 14&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">27.8</span>&nbsp;&nbsp;22.2&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.843111</span>&nbsp;Updated May 14.34 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;26.6&nbsp;</td>
+<td align="right">&nbsp; 3.045&nbsp;</td><tr>
+<tr><td><span style="display:none">CELXZH2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CELXZH2"> CELXZH2</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 11.3&nbsp;&nbsp;</td>
+<td><span style="display:none">221.3210</span>&nbsp;&nbsp;14 45.3&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">114.3222</span>&nbsp;&nbsp;+24 19&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">27.7</span>&nbsp;&nbsp;22.3&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.850675</span>&nbsp;Updated May 14.35 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.01&nbsp;</td>
+<td align="right">&nbsp;25.0&nbsp;</td>
+<td align="right">&nbsp; 3.344&nbsp;</td><tr>
+<tr><td><span style="display:none">ST26E34</span>&nbsp;<input type="checkbox" name="obj" VALUE="ST26E34"> ST26E34</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 10.5&nbsp;&nbsp;</td>
+<td><span style="display:none">222.9626</span>&nbsp;&nbsp;14 51.9&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">108.5213</span>&nbsp;&nbsp;+18 31&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">25.7</span>&nbsp;&nbsp;24.3&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.847272</span>&nbsp;Updated May 14.35 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   2&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;28.6&nbsp;</td>
+<td align="right">&nbsp; 4.231&nbsp;</td><tr>
+<tr><td><span style="display:none">6E94521</span>&nbsp;<input type="checkbox" name="obj" VALUE="6E94521"> 6E94521</td>
+<td align="right"><span style="display:none">010</span> 10&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 10.4&nbsp;&nbsp;</td>
+<td><span style="display:none">294.9204</span>&nbsp;&nbsp;19 39.7&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">026.0657</span>&nbsp;&nbsp;-63 56&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">30.5</span>&nbsp;&nbsp;19.5&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.919823</span>&nbsp;Updated May 14.42 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  44&nbsp;</td>
+<td align="right">&nbsp;  4.03&nbsp;</td>
+<td align="right">&nbsp;19.0&nbsp;</td>
+<td align="right">&nbsp; 0.296&nbsp;</td><tr>
+<tr><td><span style="display:none">CELRZD2</span>&nbsp;<input type="checkbox" name="obj" VALUE="CELRZD2"> CELRZD2</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 09.2&nbsp;&nbsp;</td>
+<td><span style="display:none">185.9025</span>&nbsp;&nbsp;12 23.6&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">127.0164</span>&nbsp;&nbsp;+37 00&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">27.2</span>&nbsp;&nbsp;22.8&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.842446</span>&nbsp;Updated May 14.34 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   8&nbsp;</td>
+<td align="right">&nbsp;  0.10&nbsp;</td>
+<td align="right">&nbsp;23.0&nbsp;</td>
+<td align="right">&nbsp; 5.344&nbsp;</td><tr>
+<tr><td><span style="display:none">ST26E14</span>&nbsp;<input type="checkbox" name="obj" VALUE="ST26E14"> ST26E14</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 08.4&nbsp;&nbsp;</td>
+<td><span style="display:none">199.7043</span>&nbsp;&nbsp;13 18.8&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">087.2239</span>&nbsp;&nbsp;-02 46&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">31.8</span>&nbsp;&nbsp;18.2&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.846286</span>&nbsp;Updated May 14.35 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   2&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;17.3&nbsp;</td>
+<td align="right">&nbsp; 6.267&nbsp;</td><tr>
+<tr><td><span style="display:none">P22n0fQ</span>&nbsp;<input type="checkbox" name="obj" VALUE="P22n0fQ"> P22n0fQ</td>
+<td align="right"><span style="display:none">097</span> 97&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 07.4&nbsp;&nbsp;</td>
+<td><span style="display:none">225.2237</span>&nbsp;&nbsp;15 00.9&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">100.8597</span>&nbsp;&nbsp;+10 51&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.3</span>&nbsp;&nbsp;21.7&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461173.842508</span>&nbsp;Updated May 13.34 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.04&nbsp;</td>
+<td align="right">&nbsp;23.4&nbsp;</td>
+<td align="right">&nbsp; 7.285&nbsp;</td><tr>
+<tr><td><span style="display:none">S001563</span>&nbsp;<input type="checkbox" name="obj" VALUE="S001563"> S001563</td>
+<td align="right"><span style="display:none">073</span> 73&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 07.0&nbsp;&nbsp;</td>
+<td><span style="display:none">194.7472</span>&nbsp;&nbsp;12 59.0&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">062.9145</span>&nbsp;&nbsp;-27 05&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.5</span>&nbsp;&nbsp;21.5&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461174.843567</span>&nbsp;Updated May 14.34 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.03&nbsp;</td>
+<td align="right">&nbsp;17.5&nbsp;</td>
+<td align="right">&nbsp; 7.615&nbsp;</td><tr>
+<tr><td><span style="display:none">C1EUYV5</span><center>C1EUYV5</center></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Moved to the <a href="/iau/NEO/pccp_tabular.html">PCCP</a></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td><td></td></tr>
+  </tbody>
+</table>
+
+The information in the table (including any PCCP objects) is available in a <a href="/iau/NEO/neocp.txt">text
+file</a>.  The layout of this file matches the table layout exactly, except that the
+R.A. is converted to decimal hours and the Decl. to decimal degrees.
+<p><hr><p>Select your viewing point:
+<p><input type="radio" name="Parallax" VALUE="0">Geocentric
+<input type="radio" name="Parallax" VALUE="1" CHECKED><a href="/iau/lists/ObsCodes.html">Observatory code</a>
+<input name="obscode" maxlength=3 size=3 VALUE="500">
+<p><input type="radio" name="Parallax" VALUE="2">
+Longitude <input name="long" maxlength=8 size=8 value=""> &#176; E,
+latitude <input name="lat" maxlength=8 size=8 value=""> &#176;,
+altitude <input name="alt" maxlength=6 size=6 value=""> m.
+<p>Longitudes and latitudes should be entered in decimal degrees.
+<p><hr><p>Other options:
+<p>Ephemeris interval: <input type="radio" name="int" value="0" CHECKED> 1 hour
+<input type="radio" name="int" value="1"> 30 mins
+<input type="radio" name="int" value="2"> 10 mins
+<input type="radio" name="int" value="3"> 1 min
+<p>Start ephemerides at now + <input name="start" value="0" maxlength=5 size=5> hours
+<p>Display positions in: <input type="radio" name="raty" value="h"> truncated sexagesimal or
+<input type="radio" name="raty" value="a" CHECKED> full sexagesimal or
+<input type="radio" name="raty" value="d"> decimal units
+<p>Display motions as: <input type="radio" name="mot" value="s"> "/sec,
+<input type="radio" name="mot" value="m" CHECKED> "/min,
+<input type="radio" name="mot" value="h"> "/hr or
+<input type="radio" name="mot" value="d"> &#176;/day.
+<p><input type="radio" name="dmot" value="p" CHECKED> Total motion and direction
+<input type="radio" name="dmot" value="r"> Separate R.A. and Decl. coordinate motions
+<input type="radio" name="dmot" value="s"> Separate R.A. and Decl. sky motions
+<p><input type="radio" name="out" value="f" CHECKED> Full output  <input type="radio" name="out" value="b"> Brief output
+<p>Suppress output at
+<select name="sun">
+<option value="x"> &lt;never&gt;
+<option value="s" checked> sunset/rise
+<option value="c"> civil twilight
+<option value="n"> nautical twilight
+<option value="a"> astronomical twilight
+</select> or when object's altitude is below
+<input name="oalt" maxlength=3 size=3 value="20">&#176;.
+<p><input type=submit value=" Get ephemerides "> <input type=reset value=" Reset form "><p>
+</form>
+<p><hr><p>
+<a name="ActionCodes"></a>
+If you need to delete one of your discoveries as "does not exist" or "artificial", or flag it as "cometary", etc., please submit the corresponding "action code" through our <a href="/submit_action_code">Submit Action Code Form</a>
+</p>
+<a name="ObsComm"></a>
+<p><hr><p>
+<a name="notes"><a href="/iau/info/Astrometry.html">Notes on how to begin your own
+astrometric program</a> are available.
+<p>
+Please ensure that you have read the <a href="/iau/NEO/NEOCPNotes.html">additional
+notes on the NEOCP</a>.
+<p><b>Please do not report observations of non-NEOCP objects in the same
+message as observations of objects on this page!</b>
+<p><a href="/iau/NEO/PossNEO.html">Get NEO Ratings to see whether you
+should report a possible NEO.</a>
+<p>Please report unsuccessful attempts to detect objects listed here that
+are NOT listed as `updated' or that have not been updated in the past 24 hours
+using <a href="https://minorplanetcenter.net/NEOCPblog/">the NEOCP Blog</a>.
+<p><b>Please note that observations and orbits of objects accessible via
+this service are made available only for your personal use.  They
+are not to be promulgated via any medium.  The data are preliminary until
+they appear on an <i>MPEC</i> or <i>MPS</i>.</b>
+<p>It is possible that some of the objects listed here are comets,
+either recognised or currently unrecognised as such.  
+All reports of new cometary activity should be made using the following
+<a href="https://minorplanetcenter.net/mpcops/submissions/cometary/" target="_blank">web form</a>
+(Reports of activity for known comets made to the above web form will be
+ignored.) <br>
+New reports of cometary activity must be made using
+this web form in order to be considered for inclusion in any resulting MPEC
+announcing cometary status.  We do not
+flag suspected comets on this page because we do not wish to influence
+observers.
+<p>You can now access ephemerides for the variant
+orbits used in the uncertainty plots from the pages listing the offsets
+from the nominal solutions.
+<p>Please <a href="/iau/MPCStatus.html">read</a>
+(or <a href="/iau/NEO/NEOCPNotes.html">here</a>)
+about the coloration used in the uncertainty plots.
+<p>You are reminded that a cross-reference of
+designations that have appeared here previously is available
+<a href="/iau/NEO/ToConfirm_PrevDes.html">elsewhere</a>.
+<p>If none of these objects are within the capabilities of your system,
+check out the <a href="/iau/NEO/LastObsNEO.html">Dates of Last Observation of
+NEOs not seen recently</a> (<a href="/iau/NEO/LastObsNEORA.html">in R.A.
+order</a>), the <a href="/iau/NEO/BrightRecovery.html">list of bright
+recovery opportunities</a>, or the <a href="http://neo.ssa.esa.int/web/guest/priority-list">
+Spaceguard Central Node's Priority List</a> for alternate useful targets.
+<!-- Body postamble -->
+      </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <footer id="footer">
+    <div class="holder">
+      <nav class="nav">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About</a></li>
+	  <!-- Contact link changed to Jira and name changed to helpdesk.
+	       Should be consistent with top right of banner -->
+          <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+<!-- PP REMOVED 28 Feb 2023 - does not work MPC does not have one          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li> -->
+        </ul>
+      </nav>
+      
+      <a href="https://www.cfa.harvard.edu">
+      <img src="/images/CfA_Logo_Vertical_CMYK.png" width="110" height="47"></a>
+      <p>
+      <p>
+      <p>
+      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div> 
+  </footer>
+
+<script type="text/javascript">
+  $(window).on('load', (function() {
+    $("table").tablesorter();
+  })); 
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+var _tag=new WebTrends();
+_tag.dcsGetId();
+//]]>
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+_tag.dcsCustom=function(){
+// Add custom parameters here.
+//_tag.DCSext.param_name=param_value;
+}
+_tag.dcsCollect();
+//]]>
+</script>
+
+<noscript>
+<div><img alt="DCSIMG" id="DCSIMG" width="1" height="1" src="//logs1.smithsonian.museum/dcsa7yzrmbdzpxzrosrn4tyep_5i1d/njs.gif?dcsuri=/nojavascript&amp;WT.js=No&amp;WT.tv=9.4.0&amp;dcssip=www.minorplanetcenter.net"/></div>
+</noscript>
+</body>
+
+
+</html>

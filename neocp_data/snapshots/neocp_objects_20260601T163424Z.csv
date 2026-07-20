@@ -1,0 +1,13 @@
+snapshot_id,fetched_at_utc,designation,score,score_0_1,discovery_date_mpc,ra_hours,ra_deg,dec_deg,v_mag,status,updated_mpc,note,nobs,arc_days,h_mag,not_seen_days,source_url
+20260601T163424Z,2026-06-01T16:34:24.566456Z,C1F9WZ5,100,1.0,2026-06-01.30,17.0646,255.969,28.3717,21.4,Updated,June 1.46 UT,,12,0.12,24.9,0.237,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,A11D0Xd,100,1.0,2026-05-30.00,19.3165,289.7475,-41.4154,18.9,Updated,June 1.42 UT,,4,0.01,24.0,2.651,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,NAOCYLA,100,1.0,2026-05-27.70,16.2348,243.522,-20.5526,20.9,Updated,June 1.43 UT,,4,0.13,21.6,4.824,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,C07PYDZ,100,1.0,2026-05-27.20,14.3143,214.7145,47.8248,21.7,Updated,June 1.43 UT,,4,0.02,19.6,5.49,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,C1F4195,100,1.0,2026-05-26.40,16.1912,242.86799999999997,13.3574,23.6,Updated,June 1.43 UT,,7,0.07,27.6,6.243,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,C1F3245,48,0.48,2026-05-25.40,16.8742,253.11299999999997,9.9265,22.6,Updated,June 1.43 UT,,11,1.0,20.2,6.246,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,C1F2HL5,100,1.0,2026-05-25.40,17.0693,256.0395,-12.9711,22.7,Updated,June 1.43 UT,,8,0.07,26.1,7.268,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,NAOCLYL,85,0.85,2026-05-23.80,15.9289,238.9335,-13.5623,22.1,Updated,June 1.43 UT,,4,0.1,21.6,8.839,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,A11CQzo,100,1.0,2026-05-24.40,22.6955,340.4325,-14.9923,23.6,Updated,June 1.43 UT,,5,0.05,29.9,8.261,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,oKr0080,100,1.0,2026-05-23.90,23.5012,352.51800000000003,18.7222,20.2,Updated,June 1.42 UT,,3,0.0,13.5,8.805,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,6EN3D21,100,1.0,2026-05-24.20,15.1969,227.9535,-81.6313,18.9,Updated,June 1.42 UT,,3,0.01,16.5,8.46,https://minorplanetcenter.net/iau/NEO/neocp.txt
+20260601T163424Z,2026-06-01T16:34:24.566456Z,P12nfaz,43,0.43,2026-05-20.30,13.1859,197.7885,-26.3254,22.0,Updated,June 1.43 UT,,12,2.87,18.3,9.503,https://minorplanetcenter.net/iau/NEO/neocp.txt

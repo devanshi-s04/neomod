@@ -1,0 +1,1494 @@
+=== NEOCP loop started 2026-05-09T23:11:55Z interval=14400s ===
+--- 2026-05-09T23:11:55Z collecting ---
+20260509T231155Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-09T23:11:57Z sleeping 14400s ---
+=== NEOCP loop started 2026-05-09T23:29:39Z interval=3600s ===
+--- 2026-05-09T23:29:39Z collecting ---
+20260509T232939Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-09T23:29:40Z sleeping 3600s ---
+--- 2026-05-10T00:29:40Z collecting ---
+20260510T002940Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-10T00:29:41Z sleeping 3600s ---
+--- 2026-05-10T01:29:41Z collecting ---
+20260510T012942Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-10T01:29:43Z sleeping 3600s ---
+--- 2026-05-10T02:29:43Z collecting ---
+20260510T022943Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-10T02:29:44Z sleeping 3600s ---
+--- 2026-05-10T03:29:44Z collecting ---
+20260510T032944Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-10T03:29:45Z sleeping 3600s ---
+--- 2026-05-10T04:29:45Z collecting ---
+20260510T042946Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-10T04:29:47Z sleeping 3600s ---
+--- 2026-05-10T05:29:47Z collecting ---
+20260510T052947Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-10T05:29:48Z sleeping 3600s ---
+--- 2026-05-10T06:29:48Z collecting ---
+20260510T062948Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-10T06:29:50Z sleeping 3600s ---
+--- 2026-05-10T07:29:50Z collecting ---
+20260510T072950Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-10T07:29:53Z sleeping 3600s ---
+--- 2026-05-10T08:29:53Z collecting ---
+20260510T082953Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-10T08:29:55Z sleeping 3600s ---
+--- 2026-05-10T09:29:55Z collecting ---
+20260510T092955Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-10T09:29:56Z sleeping 3600s ---
+--- 2026-05-10T10:29:57Z collecting ---
+20260510T102957Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-10T10:29:58Z sleeping 3600s ---
+--- 2026-05-10T11:29:58Z collecting ---
+20260510T112959Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-10T11:30:00Z sleeping 3600s ---
+--- 2026-05-10T12:30:00Z collecting ---
+20260510T123000Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-10T12:30:02Z sleeping 3600s ---
+--- 2026-05-10T13:30:02Z collecting ---
+20260510T133002Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-10T13:30:03Z sleeping 3600s ---
+--- 2026-05-10T14:30:03Z collecting ---
+20260510T143003Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-10T14:30:05Z sleeping 3600s ---
+--- 2026-05-10T15:30:05Z collecting ---
+20260510T153005Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-10T15:30:06Z sleeping 3600s ---
+--- 2026-05-10T16:30:06Z collecting ---
+20260510T163006Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-10T16:30:08Z sleeping 3600s ---
+--- 2026-05-10T17:30:08Z collecting ---
+20260510T173008Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-10T17:30:09Z sleeping 3600s ---
+--- 2026-05-10T18:30:09Z collecting ---
+20260510T183009Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-10T18:30:10Z sleeping 3600s ---
+--- 2026-05-10T19:30:10Z collecting ---
+20260510T193010Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-10T19:30:12Z sleeping 3600s ---
+--- 2026-05-10T20:30:12Z collecting ---
+20260510T203012Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-10T20:30:13Z sleeping 3600s ---
+--- 2026-05-10T21:30:13Z collecting ---
+20260510T213013Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-10T21:30:14Z sleeping 3600s ---
+--- 2026-05-10T22:30:14Z collecting ---
+20260510T223014Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-10T22:30:16Z sleeping 3600s ---
+--- 2026-05-10T23:30:16Z collecting ---
+20260510T233016Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-10T23:30:17Z sleeping 3600s ---
+--- 2026-05-11T00:30:17Z collecting ---
+20260511T003017Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-11T00:30:18Z sleeping 3600s ---
+--- 2026-05-11T01:30:18Z collecting ---
+20260511T013018Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-11T01:30:20Z sleeping 3600s ---
+--- 2026-05-11T02:30:20Z collecting ---
+20260511T023020Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-11T02:30:21Z sleeping 3600s ---
+--- 2026-05-11T03:30:21Z collecting ---
+20260511T033021Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-11T03:30:22Z sleeping 3600s ---
+--- 2026-05-11T04:30:22Z collecting ---
+20260511T043023Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-11T04:30:24Z sleeping 3600s ---
+--- 2026-05-11T05:30:24Z collecting ---
+20260511T053024Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-11T05:30:25Z sleeping 3600s ---
+--- 2026-05-11T06:30:25Z collecting ---
+20260511T063026Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-11T06:30:27Z sleeping 3600s ---
+--- 2026-05-11T07:30:27Z collecting ---
+20260511T073027Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-11T07:30:28Z sleeping 3600s ---
+--- 2026-05-11T08:30:28Z collecting ---
+20260511T083029Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-11T08:30:30Z sleeping 3600s ---
+--- 2026-05-11T09:30:30Z collecting ---
+20260511T093031Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-11T09:30:32Z sleeping 3600s ---
+--- 2026-05-11T10:30:32Z collecting ---
+20260511T103032Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-11T10:30:34Z sleeping 3600s ---
+--- 2026-05-11T11:30:34Z collecting ---
+20260511T113034Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-11T11:30:35Z sleeping 3600s ---
+--- 2026-05-11T12:30:35Z collecting ---
+20260511T123035Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-11T12:30:37Z sleeping 3600s ---
+--- 2026-05-11T13:30:37Z collecting ---
+20260511T133037Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-11T13:30:38Z sleeping 3600s ---
+--- 2026-05-11T14:30:38Z collecting ---
+20260511T143038Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-11T14:30:39Z sleeping 3600s ---
+--- 2026-05-11T15:30:39Z collecting ---
+20260511T153039Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-11T15:30:41Z sleeping 3600s ---
+--- 2026-05-11T16:30:41Z collecting ---
+20260511T163041Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-11T16:30:42Z sleeping 3600s ---
+--- 2026-05-11T17:30:42Z collecting ---
+20260511T173042Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-11T17:30:44Z sleeping 3600s ---
+--- 2026-05-11T18:30:44Z collecting ---
+20260511T183044Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-11T18:30:45Z sleeping 3600s ---
+--- 2026-05-11T19:30:45Z collecting ---
+20260511T193045Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-11T19:30:46Z sleeping 3600s ---
+--- 2026-05-11T20:30:46Z collecting ---
+20260511T203046Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-11T20:30:48Z sleeping 3600s ---
+--- 2026-05-11T21:30:48Z collecting ---
+20260511T213048Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-11T21:30:49Z sleeping 3600s ---
+--- 2026-05-11T22:30:49Z collecting ---
+20260511T223050Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-11T22:30:52Z sleeping 3600s ---
+--- 2026-05-11T23:30:52Z collecting ---
+20260511T233052Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-11T23:30:54Z sleeping 3600s ---
+--- 2026-05-12T00:30:54Z collecting ---
+20260512T003055Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-12T00:30:56Z sleeping 3600s ---
+--- 2026-05-12T01:30:56Z collecting ---
+20260512T013056Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-12T01:30:58Z sleeping 3600s ---
+--- 2026-05-12T02:30:58Z collecting ---
+20260512T023058Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-12T02:30:59Z sleeping 3600s ---
+--- 2026-05-12T03:30:59Z collecting ---
+20260512T033100Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-12T03:31:01Z sleeping 3600s ---
+--- 2026-05-12T04:31:01Z collecting ---
+20260512T043101Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-12T04:31:03Z sleeping 3600s ---
+--- 2026-05-12T05:31:03Z collecting ---
+20260512T053103Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-12T05:31:04Z sleeping 3600s ---
+--- 2026-05-12T06:31:04Z collecting ---
+20260512T063105Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-12T06:31:06Z sleeping 3600s ---
+--- 2026-05-12T07:31:06Z collecting ---
+20260512T073107Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-12T07:31:08Z sleeping 3600s ---
+--- 2026-05-12T08:31:08Z collecting ---
+20260512T083109Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-12T08:31:10Z sleeping 3600s ---
+--- 2026-05-12T09:31:10Z collecting ---
+20260512T093110Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-12T09:31:12Z sleeping 3600s ---
+--- 2026-05-12T10:31:12Z collecting ---
+20260512T103112Z: status=ok, objects=39, active=37, ephemeris_rows=925
+--- 2026-05-12T10:31:13Z sleeping 3600s ---
+--- 2026-05-12T11:31:13Z collecting ---
+20260512T113114Z: status=ok, objects=42, active=40, ephemeris_rows=1000
+--- 2026-05-12T11:31:15Z sleeping 3600s ---
+--- 2026-05-12T12:31:15Z collecting ---
+20260512T123115Z: status=ok, objects=42, active=40, ephemeris_rows=1000
+--- 2026-05-12T12:31:17Z sleeping 3600s ---
+--- 2026-05-12T13:31:17Z collecting ---
+20260512T133117Z: status=ok, objects=42, active=40, ephemeris_rows=1000
+--- 2026-05-12T13:31:18Z sleeping 3600s ---
+--- 2026-05-12T14:31:18Z collecting ---
+20260512T143119Z: status=ok, objects=40, active=38, ephemeris_rows=950
+--- 2026-05-12T14:31:20Z sleeping 3600s ---
+--- 2026-05-12T15:31:20Z collecting ---
+20260512T153120Z: status=ok, objects=40, active=38, ephemeris_rows=950
+--- 2026-05-12T15:31:21Z sleeping 3600s ---
+--- 2026-05-12T16:31:21Z collecting ---
+20260512T163122Z: status=ok, objects=42, active=40, ephemeris_rows=1000
+--- 2026-05-12T16:31:23Z sleeping 3600s ---
+--- 2026-05-12T17:31:23Z collecting ---
+20260512T173123Z: status=ok, objects=41, active=39, ephemeris_rows=975
+--- 2026-05-12T17:31:25Z sleeping 3600s ---
+--- 2026-05-12T18:31:25Z collecting ---
+20260512T183125Z: status=ok, objects=41, active=39, ephemeris_rows=975
+--- 2026-05-12T18:31:27Z sleeping 3600s ---
+--- 2026-05-12T19:31:27Z collecting ---
+20260512T193127Z: status=ok, objects=41, active=39, ephemeris_rows=975
+--- 2026-05-12T19:31:28Z sleeping 3600s ---
+--- 2026-05-12T20:31:28Z collecting ---
+20260512T203128Z: status=ok, objects=41, active=39, ephemeris_rows=975
+--- 2026-05-12T20:31:29Z sleeping 3600s ---
+--- 2026-05-12T21:31:29Z collecting ---
+20260512T213130Z: status=ok, objects=37, active=35, ephemeris_rows=875
+--- 2026-05-12T21:31:31Z sleeping 3600s ---
+--- 2026-05-12T22:31:31Z collecting ---
+20260512T223131Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-12T22:31:33Z sleeping 3600s ---
+--- 2026-05-12T23:31:33Z collecting ---
+20260512T233133Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-12T23:31:34Z sleeping 3600s ---
+--- 2026-05-13T00:31:34Z collecting ---
+20260513T003134Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-13T00:31:36Z sleeping 3600s ---
+--- 2026-05-13T01:31:36Z collecting ---
+20260513T013136Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-13T01:31:37Z sleeping 3600s ---
+--- 2026-05-13T02:31:37Z collecting ---
+20260513T023137Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-13T02:31:38Z sleeping 3600s ---
+--- 2026-05-13T03:31:38Z collecting ---
+20260513T033139Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-13T03:31:41Z sleeping 3600s ---
+--- 2026-05-13T04:31:41Z collecting ---
+20260513T043141Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-13T04:31:42Z sleeping 3600s ---
+--- 2026-05-13T05:31:42Z collecting ---
+20260513T053142Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-13T05:31:44Z sleeping 3600s ---
+--- 2026-05-13T06:31:44Z collecting ---
+20260513T063144Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-13T06:31:45Z sleeping 3600s ---
+--- 2026-05-13T07:31:45Z collecting ---
+20260513T073145Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-13T07:31:47Z sleeping 3600s ---
+--- 2026-05-13T08:31:49Z collecting ---
+20260513T083234Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-13T08:32:35Z sleeping 3600s ---
+--- 2026-05-13T09:32:35Z collecting ---
+20260513T093235Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-13T09:32:37Z sleeping 3600s ---
+--- 2026-05-13T10:32:37Z collecting ---
+20260513T103237Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-13T10:32:38Z sleeping 3600s ---
+--- 2026-05-13T11:32:38Z collecting ---
+20260513T113239Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-13T11:32:40Z sleeping 3600s ---
+--- 2026-05-13T12:32:40Z collecting ---
+20260513T123240Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-13T12:32:42Z sleeping 3600s ---
+--- 2026-05-13T13:32:42Z collecting ---
+20260513T133242Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-13T13:32:44Z sleeping 3600s ---
+--- 2026-05-13T14:32:44Z collecting ---
+20260513T143244Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-13T14:32:45Z sleeping 3600s ---
+--- 2026-05-13T15:32:45Z collecting ---
+20260513T153246Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-13T15:32:47Z sleeping 3600s ---
+--- 2026-05-13T16:32:47Z collecting ---
+20260513T163247Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-13T16:32:49Z sleeping 3600s ---
+--- 2026-05-13T17:32:49Z collecting ---
+20260513T173252Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-13T17:32:54Z sleeping 3600s ---
+--- 2026-05-13T18:32:54Z collecting ---
+20260513T183254Z: status=ok, objects=36, active=35, ephemeris_rows=875
+--- 2026-05-13T18:32:56Z sleeping 3600s ---
+--- 2026-05-13T19:32:56Z collecting ---
+20260513T193256Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-13T19:32:58Z sleeping 3600s ---
+--- 2026-05-13T20:32:58Z collecting ---
+20260513T203258Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-13T20:32:59Z sleeping 3600s ---
+--- 2026-05-13T21:32:59Z collecting ---
+20260513T213300Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-13T21:33:01Z sleeping 3600s ---
+--- 2026-05-13T22:33:01Z collecting ---
+20260513T223302Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-13T22:33:03Z sleeping 3600s ---
+--- 2026-05-13T23:33:03Z collecting ---
+20260513T233303Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-13T23:33:05Z sleeping 3600s ---
+--- 2026-05-14T00:33:05Z collecting ---
+20260514T003305Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-14T00:33:07Z sleeping 3600s ---
+--- 2026-05-14T01:33:07Z collecting ---
+20260514T013308Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-14T01:33:09Z sleeping 3600s ---
+--- 2026-05-14T02:33:09Z collecting ---
+20260514T023309Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-14T02:33:11Z sleeping 3600s ---
+--- 2026-05-14T03:33:11Z collecting ---
+20260514T033311Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-14T03:33:13Z sleeping 3600s ---
+--- 2026-05-14T04:33:13Z collecting ---
+20260514T043313Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-14T04:33:15Z sleeping 3600s ---
+--- 2026-05-14T05:33:15Z collecting ---
+20260514T053315Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-14T05:33:17Z sleeping 3600s ---
+--- 2026-05-14T06:33:17Z collecting ---
+20260514T063317Z: status=ok, objects=28, active=27, ephemeris_rows=675
+--- 2026-05-14T06:33:19Z sleeping 3600s ---
+--- 2026-05-14T07:33:19Z collecting ---
+20260514T073319Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-14T07:33:20Z sleeping 3600s ---
+--- 2026-05-14T08:33:20Z collecting ---
+20260514T083321Z: status=ok, objects=39, active=38, ephemeris_rows=950
+--- 2026-05-14T08:33:23Z sleeping 3600s ---
+--- 2026-05-14T09:33:23Z collecting ---
+20260514T093339Z: status=ok, objects=42, active=41, ephemeris_rows=1025
+--- 2026-05-14T09:33:41Z sleeping 3600s ---
+--- 2026-05-14T10:33:41Z collecting ---
+20260514T103341Z: status=ok, objects=41, active=40, ephemeris_rows=1000
+--- 2026-05-14T10:33:43Z sleeping 3600s ---
+--- 2026-05-14T11:33:43Z collecting ---
+20260514T113343Z: status=ok, objects=41, active=40, ephemeris_rows=1000
+--- 2026-05-14T11:33:45Z sleeping 3600s ---
+--- 2026-05-14T12:33:45Z collecting ---
+20260514T123345Z: status=ok, objects=43, active=42, ephemeris_rows=1050
+--- 2026-05-14T12:33:47Z sleeping 3600s ---
+--- 2026-05-14T13:33:47Z collecting ---
+20260514T133347Z: status=ok, objects=43, active=42, ephemeris_rows=1050
+--- 2026-05-14T13:33:49Z sleeping 3600s ---
+--- 2026-05-14T14:33:49Z collecting ---
+20260514T143349Z: status=ok, objects=46, active=45, ephemeris_rows=1125
+--- 2026-05-14T14:33:51Z sleeping 3600s ---
+--- 2026-05-14T15:33:51Z collecting ---
+20260514T153351Z: status=ok, objects=45, active=44, ephemeris_rows=1100
+--- 2026-05-14T15:33:52Z sleeping 3600s ---
+--- 2026-05-14T16:33:53Z collecting ---
+20260514T163353Z: status=ok, objects=45, active=44, ephemeris_rows=1100
+--- 2026-05-14T16:33:55Z sleeping 3600s ---
+--- 2026-05-14T17:33:55Z collecting ---
+20260514T173355Z: status=ok, objects=37, active=36, ephemeris_rows=900
+--- 2026-05-14T17:33:56Z sleeping 3600s ---
+--- 2026-05-14T18:33:56Z collecting ---
+20260514T183356Z: status=ok, objects=37, active=36, ephemeris_rows=900
+--- 2026-05-14T18:33:58Z sleeping 3600s ---
+--- 2026-05-14T19:33:58Z collecting ---
+20260514T193358Z: status=ok, objects=36, active=35, ephemeris_rows=875
+--- 2026-05-14T19:33:59Z sleeping 3600s ---
+--- 2026-05-14T20:33:59Z collecting ---
+20260514T203359Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-14T20:34:01Z sleeping 3600s ---
+--- 2026-05-14T21:34:01Z collecting ---
+20260514T213401Z: status=ok, objects=35, active=34, ephemeris_rows=850
+--- 2026-05-14T21:34:02Z sleeping 3600s ---
+--- 2026-05-14T22:34:02Z collecting ---
+20260514T223403Z: status=ok, objects=35, active=34, ephemeris_rows=850
+--- 2026-05-14T22:34:04Z sleeping 3600s ---
+--- 2026-05-14T23:34:04Z collecting ---
+20260514T233404Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-14T23:34:06Z sleeping 3600s ---
+--- 2026-05-15T00:34:06Z collecting ---
+20260515T003406Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-15T00:34:07Z sleeping 3600s ---
+--- 2026-05-15T01:34:07Z collecting ---
+20260515T013407Z: status=ok, objects=33, active=32, ephemeris_rows=800
+--- 2026-05-15T01:34:09Z sleeping 3600s ---
+--- 2026-05-15T02:34:09Z collecting ---
+20260515T023409Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-15T02:34:11Z sleeping 3600s ---
+--- 2026-05-15T03:34:11Z collecting ---
+20260515T033411Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-15T03:34:12Z sleeping 3600s ---
+--- 2026-05-15T04:34:12Z collecting ---
+20260515T043412Z: status=ok, objects=31, active=30, ephemeris_rows=750
+--- 2026-05-15T04:34:14Z sleeping 3600s ---
+--- 2026-05-15T05:34:14Z collecting ---
+20260515T053414Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-15T05:34:16Z sleeping 3600s ---
+--- 2026-05-15T06:34:16Z collecting ---
+20260515T063416Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-15T06:34:17Z sleeping 3600s ---
+--- 2026-05-15T07:34:17Z collecting ---
+20260515T073418Z: status=ok, objects=28, active=27, ephemeris_rows=675
+--- 2026-05-15T07:34:19Z sleeping 3600s ---
+--- 2026-05-15T08:34:19Z collecting ---
+20260515T083419Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-15T08:34:21Z sleeping 3600s ---
+--- 2026-05-15T09:34:21Z collecting ---
+20260515T093421Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-15T09:34:23Z sleeping 3600s ---
+--- 2026-05-15T10:34:23Z collecting ---
+20260515T103423Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-15T10:34:25Z sleeping 3600s ---
+--- 2026-05-15T11:34:25Z collecting ---
+20260515T113425Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-15T11:34:26Z sleeping 3600s ---
+--- 2026-05-15T12:34:26Z collecting ---
+20260515T123426Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-15T12:34:28Z sleeping 3600s ---
+--- 2026-05-15T13:34:28Z collecting ---
+20260515T133428Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-15T13:34:29Z sleeping 3600s ---
+--- 2026-05-15T14:34:29Z collecting ---
+20260515T143429Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-15T14:34:30Z sleeping 3600s ---
+--- 2026-05-15T15:34:30Z collecting ---
+20260515T153431Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-15T15:34:32Z sleeping 3600s ---
+--- 2026-05-15T16:34:32Z collecting ---
+20260515T163434Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-15T16:34:35Z sleeping 3600s ---
+--- 2026-05-15T17:34:35Z collecting ---
+20260515T173435Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-15T17:34:36Z sleeping 3600s ---
+--- 2026-05-15T18:34:36Z collecting ---
+20260515T183436Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-15T18:34:40Z sleeping 3600s ---
+--- 2026-05-15T19:34:41Z collecting ---
+20260515T193442Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-15T19:34:43Z sleeping 3600s ---
+--- 2026-05-15T20:34:43Z collecting ---
+20260515T203443Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-15T20:34:44Z sleeping 3600s ---
+--- 2026-05-15T21:34:44Z collecting ---
+20260515T213444Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-15T21:34:46Z sleeping 3600s ---
+--- 2026-05-15T22:34:46Z collecting ---
+20260515T223446Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-15T22:34:49Z sleeping 3600s ---
+--- 2026-05-15T23:34:49Z collecting ---
+20260515T233449Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-15T23:34:51Z sleeping 3600s ---
+--- 2026-05-16T00:34:51Z collecting ---
+20260516T003451Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-16T00:34:53Z sleeping 3600s ---
+--- 2026-05-16T01:34:53Z collecting ---
+20260516T013453Z: status=ok, objects=26, active=25, ephemeris_rows=625
+--- 2026-05-16T01:34:55Z sleeping 3600s ---
+--- 2026-05-16T02:34:55Z collecting ---
+20260516T023456Z: status=ok, objects=26, active=25, ephemeris_rows=625
+--- 2026-05-16T02:34:58Z sleeping 3600s ---
+--- 2026-05-16T03:34:58Z collecting ---
+20260516T033458Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-16T03:34:59Z sleeping 3600s ---
+--- 2026-05-16T04:34:59Z collecting ---
+20260516T043500Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-16T04:35:01Z sleeping 3600s ---
+--- 2026-05-16T05:35:01Z collecting ---
+20260516T053501Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-16T05:35:03Z sleeping 3600s ---
+--- 2026-05-16T06:35:03Z collecting ---
+20260516T063503Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-16T06:35:05Z sleeping 3600s ---
+--- 2026-05-16T07:35:05Z collecting ---
+20260516T073505Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-16T07:35:07Z sleeping 3600s ---
+--- 2026-05-16T08:35:07Z collecting ---
+20260516T083508Z: status=ok, objects=32, active=31, ephemeris_rows=775
+--- 2026-05-16T08:35:09Z sleeping 3600s ---
+--- 2026-05-16T09:35:09Z collecting ---
+20260516T093510Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-16T09:35:12Z sleeping 3600s ---
+--- 2026-05-16T10:35:12Z collecting ---
+20260516T103512Z: status=ok, objects=34, active=33, ephemeris_rows=825
+--- 2026-05-16T10:35:14Z sleeping 3600s ---
+--- 2026-05-16T11:35:14Z collecting ---
+20260516T113514Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-16T11:35:16Z sleeping 3600s ---
+--- 2026-05-16T12:35:16Z collecting ---
+20260516T123516Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-16T12:35:18Z sleeping 3600s ---
+--- 2026-05-16T13:35:18Z collecting ---
+20260516T133518Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-16T13:35:22Z sleeping 3600s ---
+--- 2026-05-16T14:35:22Z collecting ---
+20260516T143522Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-16T14:35:23Z sleeping 3600s ---
+--- 2026-05-16T15:35:23Z collecting ---
+20260516T153524Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-16T15:35:25Z sleeping 3600s ---
+--- 2026-05-16T16:35:25Z collecting ---
+20260516T163526Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-16T16:35:27Z sleeping 3600s ---
+--- 2026-05-16T17:35:27Z collecting ---
+20260516T173527Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-16T17:35:29Z sleeping 3600s ---
+--- 2026-05-16T18:35:29Z collecting ---
+20260516T183529Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-16T18:35:30Z sleeping 3600s ---
+--- 2026-05-16T19:35:30Z collecting ---
+20260516T193530Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-16T19:35:32Z sleeping 3600s ---
+--- 2026-05-16T20:35:32Z collecting ---
+20260516T203532Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-16T20:35:33Z sleeping 3600s ---
+--- 2026-05-16T21:35:33Z collecting ---
+20260516T213533Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-16T21:35:35Z sleeping 3600s ---
+--- 2026-05-16T22:35:35Z collecting ---
+20260516T223535Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-16T22:35:36Z sleeping 3600s ---
+--- 2026-05-16T23:35:36Z collecting ---
+20260516T233537Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-16T23:35:38Z sleeping 3600s ---
+--- 2026-05-17T00:35:38Z collecting ---
+20260517T003538Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-17T00:35:39Z sleeping 3600s ---
+--- 2026-05-17T01:35:39Z collecting ---
+20260517T013539Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-17T01:35:41Z sleeping 3600s ---
+--- 2026-05-17T02:35:41Z collecting ---
+20260517T023541Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-17T02:35:42Z sleeping 3600s ---
+--- 2026-05-17T03:35:42Z collecting ---
+20260517T033542Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-17T03:35:44Z sleeping 3600s ---
+--- 2026-05-17T04:35:44Z collecting ---
+20260517T043544Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-17T04:35:45Z sleeping 3600s ---
+--- 2026-05-17T05:35:45Z collecting ---
+20260517T053545Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-17T05:35:47Z sleeping 3600s ---
+--- 2026-05-17T06:35:47Z collecting ---
+20260517T063547Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-17T06:35:48Z sleeping 3600s ---
+--- 2026-05-17T07:35:48Z collecting ---
+20260517T073548Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-17T07:35:50Z sleeping 3600s ---
+--- 2026-05-17T08:35:50Z collecting ---
+20260517T083550Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-17T08:35:52Z sleeping 3600s ---
+--- 2026-05-17T09:35:52Z collecting ---
+20260517T093552Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-17T09:35:54Z sleeping 3600s ---
+--- 2026-05-17T10:35:54Z collecting ---
+20260517T103554Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-17T10:35:55Z sleeping 3600s ---
+--- 2026-05-17T11:35:55Z collecting ---
+20260517T113555Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-17T11:35:57Z sleeping 3600s ---
+--- 2026-05-17T12:35:57Z collecting ---
+20260517T123557Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-17T12:35:58Z sleeping 3600s ---
+--- 2026-05-17T13:35:58Z collecting ---
+20260517T133558Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-17T13:36:00Z sleeping 3600s ---
+--- 2026-05-17T14:36:00Z collecting ---
+20260517T143600Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-17T14:36:01Z sleeping 3600s ---
+--- 2026-05-17T15:36:01Z collecting ---
+20260517T153601Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-17T15:36:02Z sleeping 3600s ---
+--- 2026-05-17T16:36:02Z collecting ---
+20260517T163602Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-17T16:36:04Z sleeping 3600s ---
+--- 2026-05-17T17:36:04Z collecting ---
+20260517T173604Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-17T17:36:05Z sleeping 3600s ---
+--- 2026-05-17T18:36:05Z collecting ---
+20260517T183605Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-17T18:36:06Z sleeping 3600s ---
+--- 2026-05-17T19:36:06Z collecting ---
+20260517T193606Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-17T19:36:08Z sleeping 3600s ---
+--- 2026-05-17T20:36:08Z collecting ---
+20260517T203608Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-17T20:36:09Z sleeping 3600s ---
+--- 2026-05-17T21:36:09Z collecting ---
+20260517T213609Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-17T21:36:10Z sleeping 3600s ---
+--- 2026-05-17T22:36:10Z collecting ---
+20260517T223610Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-17T22:36:11Z sleeping 3600s ---
+--- 2026-05-17T23:36:11Z collecting ---
+20260517T233612Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-17T23:36:13Z sleeping 3600s ---
+--- 2026-05-18T00:36:13Z collecting ---
+20260518T003613Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-18T00:36:14Z sleeping 3600s ---
+--- 2026-05-18T01:36:14Z collecting ---
+20260518T013614Z: status=ok, objects=22, active=19, ephemeris_rows=475
+--- 2026-05-18T01:36:16Z sleeping 3600s ---
+--- 2026-05-18T02:36:16Z collecting ---
+20260518T023616Z: status=ok, objects=22, active=19, ephemeris_rows=475
+--- 2026-05-18T02:36:17Z sleeping 3600s ---
+--- 2026-05-18T03:36:17Z collecting ---
+20260518T033618Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T03:36:19Z sleeping 3600s ---
+--- 2026-05-18T04:36:19Z collecting ---
+20260518T043619Z: status=ok, objects=20, active=17, ephemeris_rows=425
+--- 2026-05-18T04:36:21Z sleeping 3600s ---
+--- 2026-05-18T05:36:21Z collecting ---
+20260518T053621Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T05:36:22Z sleeping 3600s ---
+--- 2026-05-18T06:36:22Z collecting ---
+20260518T063622Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T06:36:23Z sleeping 3600s ---
+--- 2026-05-18T07:36:23Z collecting ---
+20260518T073623Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T07:36:25Z sleeping 3600s ---
+--- 2026-05-18T08:36:25Z collecting ---
+20260518T083625Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T08:36:26Z sleeping 3600s ---
+--- 2026-05-18T09:36:27Z collecting ---
+20260518T093627Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T09:36:28Z sleeping 3600s ---
+--- 2026-05-18T10:36:28Z collecting ---
+20260518T103628Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T10:36:30Z sleeping 3600s ---
+--- 2026-05-18T11:36:30Z collecting ---
+20260518T113630Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T11:36:31Z sleeping 3600s ---
+--- 2026-05-18T12:36:31Z collecting ---
+20260518T123631Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T12:36:32Z sleeping 3600s ---
+--- 2026-05-18T13:36:32Z collecting ---
+20260518T133632Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-18T13:36:34Z sleeping 3600s ---
+--- 2026-05-18T14:36:34Z collecting ---
+20260518T143634Z: status=ok, objects=17, active=14, ephemeris_rows=350
+--- 2026-05-18T14:36:35Z sleeping 3600s ---
+--- 2026-05-18T15:36:35Z collecting ---
+20260518T153635Z: status=ok, objects=17, active=14, ephemeris_rows=350
+--- 2026-05-18T15:36:36Z sleeping 3600s ---
+--- 2026-05-18T16:36:36Z collecting ---
+20260518T163637Z: status=ok, objects=17, active=14, ephemeris_rows=350
+--- 2026-05-18T16:36:38Z sleeping 3600s ---
+--- 2026-05-18T17:36:38Z collecting ---
+20260518T173638Z: status=ok, objects=17, active=14, ephemeris_rows=350
+--- 2026-05-18T17:36:39Z sleeping 3600s ---
+--- 2026-05-18T18:36:39Z collecting ---
+20260518T183713Z: status=ok, objects=18, active=15, ephemeris_rows=375
+--- 2026-05-18T18:37:15Z sleeping 3600s ---
+--- 2026-05-18T19:37:16Z collecting ---
+20260518T193759Z: status=ok, objects=15, active=12, ephemeris_rows=300
+--- 2026-05-18T19:38:04Z sleeping 3600s ---
+--- 2026-05-18T20:38:04Z collecting ---
+20260518T203844Z: status=ok, objects=14, active=11, ephemeris_rows=275
+--- 2026-05-18T20:38:47Z sleeping 3600s ---
+--- 2026-05-18T21:38:47Z collecting ---
+20260518T213921Z: status=ok, objects=14, active=11, ephemeris_rows=275
+--- 2026-05-18T21:39:24Z sleeping 3600s ---
+--- 2026-05-18T22:39:24Z collecting ---
+20260518T223934Z: status=ok, objects=14, active=11, ephemeris_rows=275
+--- 2026-05-18T22:39:36Z sleeping 3600s ---
+--- 2026-05-18T23:39:36Z collecting ---
+20260518T233936Z: status=ok, objects=13, active=10, ephemeris_rows=250
+--- 2026-05-18T23:39:37Z sleeping 3600s ---
+--- 2026-05-19T00:39:37Z collecting ---
+20260519T003937Z: status=ok, objects=13, active=10, ephemeris_rows=250
+--- 2026-05-19T00:39:39Z sleeping 3600s ---
+--- 2026-05-19T01:39:39Z collecting ---
+20260519T013939Z: status=ok, objects=13, active=10, ephemeris_rows=250
+--- 2026-05-19T01:39:40Z sleeping 3600s ---
+--- 2026-05-19T02:39:40Z collecting ---
+20260519T023940Z: status=ok, objects=14, active=11, ephemeris_rows=275
+--- 2026-05-19T02:39:42Z sleeping 3600s ---
+--- 2026-05-19T03:39:42Z collecting ---
+20260519T033942Z: status=ok, objects=15, active=12, ephemeris_rows=300
+--- 2026-05-19T03:39:43Z sleeping 3600s ---
+--- 2026-05-19T04:39:43Z collecting ---
+20260519T043943Z: status=ok, objects=15, active=12, ephemeris_rows=300
+--- 2026-05-19T04:39:45Z sleeping 3600s ---
+--- 2026-05-19T05:39:45Z collecting ---
+20260519T053945Z: status=ok, objects=16, active=13, ephemeris_rows=325
+--- 2026-05-19T05:39:46Z sleeping 3600s ---
+--- 2026-05-19T06:39:46Z collecting ---
+20260519T063947Z: status=ok, objects=17, active=14, ephemeris_rows=350
+--- 2026-05-19T06:39:48Z sleeping 3600s ---
+--- 2026-05-19T07:39:48Z collecting ---
+20260519T073948Z: status=ok, objects=20, active=17, ephemeris_rows=425
+--- 2026-05-19T07:39:50Z sleeping 3600s ---
+--- 2026-05-19T08:39:50Z collecting ---
+20260519T083950Z: status=ok, objects=20, active=17, ephemeris_rows=425
+--- 2026-05-19T08:39:51Z sleeping 3600s ---
+--- 2026-05-19T09:39:51Z collecting ---
+20260519T093951Z: status=ok, objects=20, active=17, ephemeris_rows=425
+--- 2026-05-19T09:39:53Z sleeping 3600s ---
+--- 2026-05-19T10:39:53Z collecting ---
+20260519T103953Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-19T10:39:55Z sleeping 3600s ---
+--- 2026-05-19T11:39:55Z collecting ---
+20260519T113955Z: status=ok, objects=21, active=18, ephemeris_rows=450
+--- 2026-05-19T11:39:56Z sleeping 3600s ---
+--- 2026-05-19T12:39:56Z collecting ---
+20260519T123956Z: status=ok, objects=22, active=19, ephemeris_rows=475
+--- 2026-05-19T12:39:58Z sleeping 3600s ---
+--- 2026-05-19T13:39:58Z collecting ---
+20260519T134001Z: status=ok, objects=22, active=19, ephemeris_rows=475
+--- 2026-05-19T13:40:02Z sleeping 3600s ---
+--- 2026-05-19T14:40:02Z collecting ---
+20260519T144005Z: status=ok, objects=22, active=19, ephemeris_rows=475
+--- 2026-05-19T14:40:06Z sleeping 3600s ---
+--- 2026-05-19T15:40:06Z collecting ---
+20260519T154008Z: status=ok, objects=20, active=17, ephemeris_rows=425
+--- 2026-05-19T15:40:10Z sleeping 3600s ---
+--- 2026-05-19T16:40:10Z collecting ---
+20260519T164013Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-19T16:40:14Z sleeping 3600s ---
+--- 2026-05-19T17:40:14Z collecting ---
+20260519T174016Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-19T17:40:18Z sleeping 3600s ---
+--- 2026-05-19T18:40:18Z collecting ---
+20260519T184028Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-19T18:40:29Z sleeping 3600s ---
+--- 2026-05-19T19:40:29Z collecting ---
+20260519T194031Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-19T19:40:32Z sleeping 3600s ---
+--- 2026-05-19T20:40:32Z collecting ---
+20260519T204035Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-19T20:40:36Z sleeping 3600s ---
+--- 2026-05-19T21:40:36Z collecting ---
+20260519T214039Z: status=ok, objects=18, active=16, ephemeris_rows=400
+--- 2026-05-19T21:40:40Z sleeping 3600s ---
+--- 2026-05-19T22:40:40Z collecting ---
+20260519T224042Z: status=ok, objects=17, active=15, ephemeris_rows=375
+--- 2026-05-19T22:40:44Z sleeping 3600s ---
+--- 2026-05-19T23:40:44Z collecting ---
+20260519T234046Z: status=ok, objects=17, active=15, ephemeris_rows=375
+--- 2026-05-19T23:40:48Z sleeping 3600s ---
+--- 2026-05-20T00:40:48Z collecting ---
+20260520T004050Z: status=ok, objects=16, active=14, ephemeris_rows=350
+--- 2026-05-20T00:40:51Z sleeping 3600s ---
+--- 2026-05-20T01:40:51Z collecting ---
+20260520T014054Z: status=ok, objects=15, active=13, ephemeris_rows=325
+--- 2026-05-20T01:40:55Z sleeping 3600s ---
+--- 2026-05-20T02:40:56Z collecting ---
+20260520T024058Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T02:40:59Z sleeping 3600s ---
+--- 2026-05-20T03:40:59Z collecting ---
+20260520T034100Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T03:41:02Z sleeping 3600s ---
+--- 2026-05-20T04:41:02Z collecting ---
+20260520T044104Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T04:41:05Z sleeping 3600s ---
+--- 2026-05-20T05:41:05Z collecting ---
+20260520T054107Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T05:41:08Z sleeping 3600s ---
+--- 2026-05-20T06:41:08Z collecting ---
+20260520T064110Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T06:41:11Z sleeping 3600s ---
+--- 2026-05-20T07:41:12Z collecting ---
+20260520T074112Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T07:41:13Z sleeping 3600s ---
+--- 2026-05-20T08:41:13Z collecting ---
+20260520T084113Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T08:41:15Z sleeping 3600s ---
+--- 2026-05-20T09:41:15Z collecting ---
+20260520T094115Z: status=ok, objects=14, active=12, ephemeris_rows=300
+--- 2026-05-20T09:41:16Z sleeping 3600s ---
+--- 2026-05-20T10:41:16Z collecting ---
+20260520T104116Z: status=ok, objects=18, active=16, ephemeris_rows=400
+--- 2026-05-20T10:41:17Z sleeping 3600s ---
+--- 2026-05-20T11:41:17Z collecting ---
+20260520T114118Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-20T11:41:19Z sleeping 3600s ---
+--- 2026-05-20T12:41:19Z collecting ---
+20260520T124119Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-20T12:41:20Z sleeping 3600s ---
+--- 2026-05-20T13:41:20Z collecting ---
+20260520T134123Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-20T13:41:25Z sleeping 3600s ---
+--- 2026-05-20T14:41:25Z collecting ---
+20260520T144129Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-20T14:41:30Z sleeping 3600s ---
+--- 2026-05-20T15:41:30Z collecting ---
+20260520T154130Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-20T15:41:32Z sleeping 3600s ---
+--- 2026-05-20T16:41:32Z collecting ---
+20260520T164132Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-20T16:41:34Z sleeping 3600s ---
+--- 2026-05-20T17:41:34Z collecting ---
+20260520T174134Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-20T17:41:35Z sleeping 3600s ---
+--- 2026-05-20T18:41:35Z collecting ---
+20260520T184135Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-20T18:41:37Z sleeping 3600s ---
+--- 2026-05-20T19:41:37Z collecting ---
+20260520T194137Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-20T19:41:38Z sleeping 3600s ---
+--- 2026-05-20T20:41:38Z collecting ---
+20260520T204138Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-20T20:41:39Z sleeping 3600s ---
+--- 2026-05-20T21:41:39Z collecting ---
+20260520T214140Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-20T21:41:41Z sleeping 3600s ---
+--- 2026-05-20T22:41:41Z collecting ---
+20260520T224141Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-20T22:41:42Z sleeping 3600s ---
+--- 2026-05-20T23:41:42Z collecting ---
+20260520T234142Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-20T23:41:43Z sleeping 3600s ---
+--- 2026-05-21T00:41:43Z collecting ---
+20260521T004144Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-21T00:41:45Z sleeping 3600s ---
+--- 2026-05-21T01:41:45Z collecting ---
+20260521T014145Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-21T01:41:47Z sleeping 3600s ---
+--- 2026-05-21T02:41:47Z collecting ---
+20260521T024147Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-21T02:41:48Z sleeping 3600s ---
+--- 2026-05-21T03:41:48Z collecting ---
+20260521T034148Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-21T03:41:50Z sleeping 3600s ---
+--- 2026-05-21T04:41:50Z collecting ---
+20260521T044150Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-21T04:41:51Z sleeping 3600s ---
+--- 2026-05-21T05:41:51Z collecting ---
+20260521T054151Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-21T05:41:53Z sleeping 3600s ---
+--- 2026-05-21T06:41:53Z collecting ---
+20260521T064153Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-21T06:41:54Z sleeping 3600s ---
+--- 2026-05-21T07:41:54Z collecting ---
+20260521T074154Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-21T07:41:56Z sleeping 3600s ---
+--- 2026-05-21T08:41:56Z collecting ---
+20260521T084156Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-21T08:41:57Z sleeping 3600s ---
+--- 2026-05-21T09:41:57Z collecting ---
+20260521T094157Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-21T09:41:59Z sleeping 3600s ---
+--- 2026-05-21T10:41:59Z collecting ---
+20260521T104159Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-21T10:42:01Z sleeping 3600s ---
+--- 2026-05-21T11:42:01Z collecting ---
+20260521T114201Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-21T11:42:02Z sleeping 3600s ---
+--- 2026-05-21T12:42:02Z collecting ---
+20260521T124202Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-21T12:42:04Z sleeping 3600s ---
+--- 2026-05-21T13:42:04Z collecting ---
+20260521T134204Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-21T13:42:05Z sleeping 3600s ---
+--- 2026-05-21T14:42:05Z collecting ---
+20260521T144205Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-21T14:42:07Z sleeping 3600s ---
+--- 2026-05-21T15:42:07Z collecting ---
+20260521T154207Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-21T15:42:08Z sleeping 3600s ---
+--- 2026-05-21T16:42:08Z collecting ---
+20260521T164209Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-21T16:42:10Z sleeping 3600s ---
+--- 2026-05-21T17:42:10Z collecting ---
+20260521T174210Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-21T17:42:11Z sleeping 3600s ---
+--- 2026-05-21T18:42:11Z collecting ---
+20260521T184211Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-21T18:42:13Z sleeping 3600s ---
+--- 2026-05-21T19:42:13Z collecting ---
+20260521T194213Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-21T19:42:14Z sleeping 3600s ---
+--- 2026-05-21T20:42:14Z collecting ---
+20260521T204214Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-21T20:42:16Z sleeping 3600s ---
+--- 2026-05-21T21:42:16Z collecting ---
+20260521T214216Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-21T21:42:17Z sleeping 3600s ---
+--- 2026-05-21T22:42:17Z collecting ---
+20260521T224217Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-21T22:42:19Z sleeping 3600s ---
+--- 2026-05-21T23:42:19Z collecting ---
+20260521T234219Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-21T23:42:20Z sleeping 3600s ---
+--- 2026-05-22T00:42:20Z collecting ---
+20260522T004220Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-22T00:42:22Z sleeping 3600s ---
+--- 2026-05-22T01:42:22Z collecting ---
+20260522T014222Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-22T01:42:23Z sleeping 3600s ---
+--- 2026-05-22T02:42:23Z collecting ---
+20260522T024223Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-22T02:42:25Z sleeping 3600s ---
+--- 2026-05-22T03:42:25Z collecting ---
+20260522T034225Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-22T03:42:26Z sleeping 3600s ---
+--- 2026-05-22T04:42:26Z collecting ---
+20260522T044226Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-22T04:42:28Z sleeping 3600s ---
+--- 2026-05-22T05:42:28Z collecting ---
+20260522T054228Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-22T05:42:29Z sleeping 3600s ---
+--- 2026-05-22T06:42:29Z collecting ---
+20260522T064229Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-22T06:42:31Z sleeping 3600s ---
+--- 2026-05-22T07:42:31Z collecting ---
+20260522T074231Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-22T07:42:32Z sleeping 3600s ---
+--- 2026-05-22T08:42:32Z collecting ---
+20260522T084232Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-22T08:42:34Z sleeping 3600s ---
+--- 2026-05-22T09:42:34Z collecting ---
+20260522T094234Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-22T09:42:36Z sleeping 3600s ---
+--- 2026-05-22T10:42:36Z collecting ---
+20260522T104236Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-22T10:42:37Z sleeping 3600s ---
+--- 2026-05-22T11:42:37Z collecting ---
+20260522T114237Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-22T11:42:39Z sleeping 3600s ---
+--- 2026-05-22T12:42:39Z collecting ---
+20260522T124239Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-22T12:42:41Z sleeping 3600s ---
+--- 2026-05-22T13:42:41Z collecting ---
+20260522T134241Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-22T13:42:42Z sleeping 3600s ---
+--- 2026-05-22T14:42:42Z collecting ---
+20260522T144243Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-22T14:42:44Z sleeping 3600s ---
+--- 2026-05-22T15:42:44Z collecting ---
+20260522T154244Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-22T15:42:45Z sleeping 3600s ---
+--- 2026-05-22T16:42:45Z collecting ---
+20260522T164246Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-22T16:42:47Z sleeping 3600s ---
+--- 2026-05-22T17:42:47Z collecting ---
+20260522T174247Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-22T17:42:48Z sleeping 3600s ---
+--- 2026-05-22T18:42:48Z collecting ---
+20260522T184249Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-22T18:42:50Z sleeping 3600s ---
+--- 2026-05-22T19:42:50Z collecting ---
+20260522T194250Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-22T19:42:51Z sleeping 3600s ---
+--- 2026-05-22T20:42:51Z collecting ---
+20260522T204251Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-22T20:42:53Z sleeping 3600s ---
+--- 2026-05-22T21:42:53Z collecting ---
+20260522T214253Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-22T21:42:54Z sleeping 3600s ---
+--- 2026-05-22T22:42:54Z collecting ---
+20260522T224254Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-22T22:42:55Z sleeping 3600s ---
+--- 2026-05-22T23:42:55Z collecting ---
+20260522T234255Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-22T23:42:56Z sleeping 3600s ---
+--- 2026-05-23T00:42:56Z collecting ---
+20260523T004257Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-23T00:42:58Z sleeping 3600s ---
+--- 2026-05-23T01:42:58Z collecting ---
+20260523T014259Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-23T01:43:00Z sleeping 3600s ---
+--- 2026-05-23T02:43:00Z collecting ---
+20260523T024300Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-23T02:43:01Z sleeping 3600s ---
+--- 2026-05-23T03:43:01Z collecting ---
+20260523T034301Z: status=ok, objects=20, active=18, ephemeris_rows=450
+--- 2026-05-23T03:43:03Z sleeping 3600s ---
+--- 2026-05-23T04:43:03Z collecting ---
+20260523T044303Z: status=ok, objects=18, active=16, ephemeris_rows=400
+--- 2026-05-23T04:43:04Z sleeping 3600s ---
+--- 2026-05-23T05:43:04Z collecting ---
+20260523T054304Z: status=ok, objects=17, active=15, ephemeris_rows=375
+--- 2026-05-23T05:43:05Z sleeping 3600s ---
+--- 2026-05-23T06:43:05Z collecting ---
+20260523T064305Z: status=ok, objects=19, active=17, ephemeris_rows=425
+--- 2026-05-23T06:43:07Z sleeping 3600s ---
+--- 2026-05-23T07:43:07Z collecting ---
+20260523T074307Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-23T07:43:09Z sleeping 3600s ---
+--- 2026-05-23T08:43:09Z collecting ---
+20260523T084309Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-23T08:43:10Z sleeping 3600s ---
+--- 2026-05-23T09:43:10Z collecting ---
+20260523T094311Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-23T09:43:13Z sleeping 3600s ---
+--- 2026-05-23T10:43:13Z collecting ---
+20260523T104313Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-23T10:43:14Z sleeping 3600s ---
+--- 2026-05-23T11:43:14Z collecting ---
+20260523T114314Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-23T11:43:16Z sleeping 3600s ---
+--- 2026-05-23T12:43:16Z collecting ---
+20260523T124316Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-23T12:43:17Z sleeping 3600s ---
+--- 2026-05-23T13:43:17Z collecting ---
+20260523T134317Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-23T13:43:19Z sleeping 3600s ---
+--- 2026-05-23T14:43:19Z collecting ---
+20260523T144319Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-23T14:43:21Z sleeping 3600s ---
+--- 2026-05-23T15:43:21Z collecting ---
+20260523T154321Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-23T15:43:22Z sleeping 3600s ---
+--- 2026-05-23T16:43:22Z collecting ---
+20260523T164322Z: status=ok, objects=25, active=23, ephemeris_rows=575
+--- 2026-05-23T16:43:24Z sleeping 3600s ---
+--- 2026-05-23T17:43:24Z collecting ---
+20260523T174324Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-23T17:43:26Z sleeping 3600s ---
+--- 2026-05-23T18:43:26Z collecting ---
+20260523T184326Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-23T18:43:27Z sleeping 3600s ---
+--- 2026-05-23T19:43:27Z collecting ---
+20260523T194327Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-23T19:43:28Z sleeping 3600s ---
+--- 2026-05-23T20:43:28Z collecting ---
+20260523T204328Z: status=ok, objects=23, active=21, ephemeris_rows=525
+--- 2026-05-23T20:43:29Z sleeping 3600s ---
+--- 2026-05-23T21:43:29Z collecting ---
+20260523T214329Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-23T21:43:31Z sleeping 3600s ---
+--- 2026-05-23T22:43:31Z collecting ---
+20260523T224331Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-23T22:43:32Z sleeping 3600s ---
+--- 2026-05-23T23:43:32Z collecting ---
+20260523T234332Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-23T23:43:33Z sleeping 3600s ---
+--- 2026-05-24T00:43:33Z collecting ---
+20260524T004333Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-24T00:43:34Z sleeping 3600s ---
+--- 2026-05-24T01:43:34Z collecting ---
+20260524T014334Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-24T01:43:36Z sleeping 3600s ---
+--- 2026-05-24T02:43:36Z collecting ---
+20260524T024336Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-24T02:43:37Z sleeping 3600s ---
+--- 2026-05-24T03:43:37Z collecting ---
+20260524T034337Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-24T03:43:38Z sleeping 3600s ---
+--- 2026-05-24T04:43:39Z collecting ---
+20260524T044339Z: status=ok, objects=21, active=19, ephemeris_rows=475
+--- 2026-05-24T04:43:40Z sleeping 3600s ---
+--- 2026-05-24T05:43:40Z collecting ---
+20260524T054340Z: status=ok, objects=22, active=20, ephemeris_rows=500
+--- 2026-05-24T05:43:41Z sleeping 3600s ---
+--- 2026-05-24T06:43:41Z collecting ---
+20260524T064341Z: status=ok, objects=24, active=22, ephemeris_rows=550
+--- 2026-05-24T06:43:42Z sleeping 3600s ---
+--- 2026-05-24T07:43:42Z collecting ---
+20260524T074343Z: status=ok, objects=26, active=24, ephemeris_rows=600
+--- 2026-05-24T07:43:44Z sleeping 3600s ---
+--- 2026-05-24T08:43:44Z collecting ---
+20260524T084344Z: status=ok, objects=27, active=25, ephemeris_rows=625
+--- 2026-05-24T08:43:46Z sleeping 3600s ---
+--- 2026-05-24T09:43:46Z collecting ---
+20260524T094346Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-24T09:43:48Z sleeping 3600s ---
+--- 2026-05-24T10:43:48Z collecting ---
+20260524T104348Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-24T10:43:49Z sleeping 3600s ---
+--- 2026-05-24T11:43:50Z collecting ---
+20260524T114350Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-24T11:43:51Z sleeping 3600s ---
+--- 2026-05-24T12:43:51Z collecting ---
+20260524T124352Z: status=ok, objects=37, active=35, ephemeris_rows=875
+--- 2026-05-24T12:43:54Z sleeping 3600s ---
+--- 2026-05-24T13:43:54Z collecting ---
+20260524T134354Z: status=ok, objects=37, active=35, ephemeris_rows=875
+--- 2026-05-24T13:43:55Z sleeping 3600s ---
+--- 2026-05-24T14:43:55Z collecting ---
+20260524T144356Z: status=ok, objects=37, active=35, ephemeris_rows=875
+--- 2026-05-24T14:43:57Z sleeping 3600s ---
+--- 2026-05-24T15:43:57Z collecting ---
+20260524T154357Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-24T15:43:58Z sleeping 3600s ---
+--- 2026-05-24T16:43:58Z collecting ---
+20260524T164358Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-24T16:44:00Z sleeping 3600s ---
+--- 2026-05-24T17:44:00Z collecting ---
+20260524T174400Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-24T17:44:01Z sleeping 3600s ---
+--- 2026-05-24T18:44:01Z collecting ---
+20260524T184401Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-24T18:44:02Z sleeping 3600s ---
+--- 2026-05-24T19:44:02Z collecting ---
+20260524T194402Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-24T19:44:04Z sleeping 3600s ---
+--- 2026-05-24T20:44:04Z collecting ---
+20260524T204404Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-24T20:44:05Z sleeping 3600s ---
+--- 2026-05-24T21:44:05Z collecting ---
+20260524T214405Z: status=ok, objects=38, active=36, ephemeris_rows=900
+--- 2026-05-24T21:44:06Z sleeping 3600s ---
+--- 2026-05-24T22:44:06Z collecting ---
+20260524T224406Z: status=ok, objects=37, active=35, ephemeris_rows=875
+--- 2026-05-24T22:44:08Z sleeping 3600s ---
+--- 2026-05-24T23:44:08Z collecting ---
+20260524T234408Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-24T23:44:09Z sleeping 3600s ---
+--- 2026-05-25T00:44:09Z collecting ---
+20260525T004409Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-25T00:44:10Z sleeping 3600s ---
+--- 2026-05-25T01:44:10Z collecting ---
+20260525T014411Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-25T01:44:12Z sleeping 3600s ---
+--- 2026-05-25T02:44:12Z collecting ---
+20260525T024412Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-25T02:44:16Z sleeping 3600s ---
+--- 2026-05-25T03:44:16Z collecting ---
+20260525T034416Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-25T03:44:17Z sleeping 3600s ---
+--- 2026-05-25T04:44:17Z collecting ---
+20260525T044418Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-25T04:44:19Z sleeping 3600s ---
+--- 2026-05-25T05:44:19Z collecting ---
+20260525T054419Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-25T05:44:20Z sleeping 3600s ---
+--- 2026-05-25T06:44:20Z collecting ---
+20260525T064420Z: status=ok, objects=28, active=26, ephemeris_rows=650
+--- 2026-05-25T06:44:21Z sleeping 3600s ---
+--- 2026-05-25T07:44:21Z collecting ---
+20260525T074422Z: status=ok, objects=29, active=27, ephemeris_rows=675
+--- 2026-05-25T07:44:23Z sleeping 3600s ---
+--- 2026-05-25T08:44:23Z collecting ---
+20260525T084423Z: status=ok, objects=30, active=28, ephemeris_rows=700
+--- 2026-05-25T08:44:25Z sleeping 3600s ---
+--- 2026-05-25T09:44:25Z collecting ---
+20260525T094425Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-25T09:44:27Z sleeping 3600s ---
+--- 2026-05-25T10:44:27Z collecting ---
+20260525T104427Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-25T10:44:29Z sleeping 3600s ---
+--- 2026-05-25T11:44:29Z collecting ---
+20260525T114429Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-25T11:44:30Z sleeping 3600s ---
+--- 2026-05-25T12:44:30Z collecting ---
+20260525T124430Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-25T12:44:32Z sleeping 3600s ---
+--- 2026-05-25T13:44:32Z collecting ---
+20260525T134432Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-25T13:44:33Z sleeping 3600s ---
+--- 2026-05-25T14:44:33Z collecting ---
+20260525T144433Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-25T14:44:34Z sleeping 3600s ---
+--- 2026-05-25T15:44:34Z collecting ---
+20260525T154435Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-25T15:44:36Z sleeping 3600s ---
+--- 2026-05-25T16:44:36Z collecting ---
+20260525T164436Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-25T16:44:37Z sleeping 3600s ---
+--- 2026-05-25T17:44:37Z collecting ---
+20260525T174437Z: status=ok, objects=35, active=33, ephemeris_rows=825
+--- 2026-05-25T17:44:38Z sleeping 3600s ---
+--- 2026-05-25T18:44:38Z collecting ---
+20260525T184439Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-25T18:44:40Z sleeping 3600s ---
+--- 2026-05-25T19:44:40Z collecting ---
+20260525T194440Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-25T19:44:41Z sleeping 3600s ---
+--- 2026-05-25T20:44:41Z collecting ---
+20260525T204441Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-25T20:44:43Z sleeping 3600s ---
+--- 2026-05-25T21:44:43Z collecting ---
+20260525T214443Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-25T21:44:44Z sleeping 3600s ---
+--- 2026-05-25T22:44:44Z collecting ---
+20260525T224444Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-25T22:44:45Z sleeping 3600s ---
+--- 2026-05-25T23:44:45Z collecting ---
+20260525T234445Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-25T23:44:47Z sleeping 3600s ---
+--- 2026-05-26T00:44:47Z collecting ---
+20260526T004447Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-26T00:44:48Z sleeping 3600s ---
+--- 2026-05-26T01:44:48Z collecting ---
+20260526T014448Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-26T01:44:49Z sleeping 3600s ---
+--- 2026-05-26T02:44:49Z collecting ---
+20260526T024450Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-26T02:44:51Z sleeping 3600s ---
+--- 2026-05-26T03:44:51Z collecting ---
+20260526T034451Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-26T03:44:52Z sleeping 3600s ---
+--- 2026-05-26T04:44:52Z collecting ---
+20260526T044453Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-26T04:44:54Z sleeping 3600s ---
+--- 2026-05-26T05:44:54Z collecting ---
+20260526T054454Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-26T05:44:55Z sleeping 3600s ---
+--- 2026-05-26T06:44:55Z collecting ---
+20260526T064456Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-26T06:44:57Z sleeping 3600s ---
+--- 2026-05-26T07:44:57Z collecting ---
+20260526T074457Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-26T07:44:59Z sleeping 3600s ---
+--- 2026-05-26T08:44:59Z collecting ---
+20260526T084500Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-26T08:45:03Z sleeping 3600s ---
+--- 2026-05-26T09:45:03Z collecting ---
+20260526T094503Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-26T09:45:05Z sleeping 3600s ---
+--- 2026-05-26T10:45:05Z collecting ---
+20260526T104505Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-26T10:45:07Z sleeping 3600s ---
+--- 2026-05-26T11:45:07Z collecting ---
+20260526T114507Z: status=ok, objects=36, active=34, ephemeris_rows=850
+--- 2026-05-26T11:45:08Z sleeping 3600s ---
+--- 2026-05-26T12:45:08Z collecting ---
+20260526T124508Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-26T12:45:10Z sleeping 3600s ---
+--- 2026-05-26T13:45:10Z collecting ---
+20260526T134510Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-26T13:45:11Z sleeping 3600s ---
+--- 2026-05-26T14:45:11Z collecting ---
+20260526T144512Z: status=ok, objects=33, active=31, ephemeris_rows=775
+--- 2026-05-26T14:45:13Z sleeping 3600s ---
+--- 2026-05-26T15:45:13Z collecting ---
+20260526T154513Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-26T15:45:14Z sleeping 3600s ---
+--- 2026-05-26T16:45:14Z collecting ---
+20260526T164514Z: status=ok, objects=34, active=32, ephemeris_rows=800
+--- 2026-05-26T16:45:15Z sleeping 3600s ---
+--- 2026-05-26T17:45:16Z collecting ---
+20260526T174520Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-26T17:45:28Z sleeping 3600s ---
+--- 2026-05-26T18:45:29Z collecting ---
+20260526T184529Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-26T18:45:31Z sleeping 3600s ---
+--- 2026-05-26T19:45:31Z collecting ---
+20260526T194531Z: status=ok, objects=32, active=30, ephemeris_rows=750
+--- 2026-05-26T19:45:32Z sleeping 3600s ---
+--- 2026-05-26T20:45:32Z collecting ---
+20260526T204532Z: status=ok, objects=31, active=29, ephemeris_rows=725
+--- 2026-05-26T20:45:34Z sleeping 3600s ---
+--- 2026-05-26T21:45:34Z collecting ---
+20260526T214534Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-26T21:45:35Z sleeping 3600s ---
+--- 2026-05-26T22:45:35Z collecting ---
+20260526T224535Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-26T22:45:37Z sleeping 3600s ---
+--- 2026-05-26T23:45:37Z collecting ---
+20260526T234537Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-26T23:45:38Z sleeping 3600s ---
+--- 2026-05-27T00:45:38Z collecting ---
+20260527T004538Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-27T00:45:39Z sleeping 3600s ---
+--- 2026-05-27T01:45:39Z collecting ---
+20260527T014539Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T01:45:41Z sleeping 3600s ---
+--- 2026-05-27T02:45:41Z collecting ---
+20260527T024541Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T02:45:42Z sleeping 3600s ---
+--- 2026-05-27T03:45:42Z collecting ---
+20260527T034542Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T03:45:44Z sleeping 3600s ---
+--- 2026-05-27T04:45:44Z collecting ---
+20260527T044544Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T04:45:46Z sleeping 3600s ---
+--- 2026-05-27T05:45:46Z collecting ---
+20260527T054546Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T05:45:47Z sleeping 3600s ---
+--- 2026-05-27T06:45:47Z collecting ---
+20260527T064547Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T06:45:49Z sleeping 3600s ---
+--- 2026-05-27T07:45:49Z collecting ---
+20260527T074549Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-27T07:45:50Z sleeping 3600s ---
+--- 2026-05-27T08:45:50Z collecting ---
+20260527T084551Z: status=ok, objects=31, active=30, ephemeris_rows=750
+--- 2026-05-27T08:45:52Z sleeping 3600s ---
+--- 2026-05-27T09:45:53Z collecting ---
+20260527T094553Z: status=ok, objects=28, active=27, ephemeris_rows=675
+--- 2026-05-27T09:45:55Z sleeping 3600s ---
+--- 2026-05-27T10:45:55Z collecting ---
+20260527T104555Z: status=ok, objects=28, active=27, ephemeris_rows=675
+--- 2026-05-27T10:45:56Z sleeping 3600s ---
+--- 2026-05-27T11:45:56Z collecting ---
+20260527T114556Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T11:45:58Z sleeping 3600s ---
+--- 2026-05-27T12:45:58Z collecting ---
+20260527T124558Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T12:45:59Z sleeping 3600s ---
+--- 2026-05-27T13:46:00Z collecting ---
+20260527T134619Z: status=ok, objects=31, active=30, ephemeris_rows=750
+--- 2026-05-27T13:46:21Z sleeping 3600s ---
+--- 2026-05-27T14:46:21Z collecting ---
+20260527T144621Z: status=ok, objects=30, active=29, ephemeris_rows=725
+--- 2026-05-27T14:46:23Z sleeping 3600s ---
+--- 2026-05-27T15:46:23Z collecting ---
+20260527T154623Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T15:46:24Z sleeping 3600s ---
+--- 2026-05-27T16:46:24Z collecting ---
+20260527T164624Z: status=ok, objects=29, active=28, ephemeris_rows=700
+--- 2026-05-27T16:46:25Z sleeping 3600s ---
+--- 2026-05-27T17:46:25Z collecting ---
+20260527T174638Z: status=ok, objects=28, active=27, ephemeris_rows=675
+--- 2026-05-27T17:46:41Z sleeping 3600s ---
+--- 2026-05-27T18:46:41Z collecting ---
+20260527T184652Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-27T18:46:54Z sleeping 3600s ---
+--- 2026-05-27T19:46:54Z collecting ---
+20260527T194712Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-27T19:47:14Z sleeping 3600s ---
+--- 2026-05-27T20:47:14Z collecting ---
+20260527T204727Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-27T20:47:29Z sleeping 3600s ---
+--- 2026-05-27T21:47:29Z collecting ---
+20260527T214741Z: status=ok, objects=27, active=26, ephemeris_rows=650
+--- 2026-05-27T21:47:43Z sleeping 3600s ---
+--- 2026-05-27T22:47:43Z collecting ---
+20260527T224751Z: status=ok, objects=28, active=27, ephemeris_rows=675
+--- 2026-05-27T22:47:53Z sleeping 3600s ---
+--- 2026-05-27T23:47:53Z collecting ---
+20260527T234807Z: status=ok, objects=26, active=25, ephemeris_rows=625
+--- 2026-05-27T23:48:09Z sleeping 3600s ---
+--- 2026-05-28T00:48:09Z collecting ---
+20260528T004809Z: status=ok, objects=26, active=25, ephemeris_rows=625
+--- 2026-05-28T00:48:10Z sleeping 3600s ---
+--- 2026-05-28T01:48:10Z collecting ---
+20260528T014811Z: status=ok, objects=26, active=25, ephemeris_rows=625
+--- 2026-05-28T01:48:12Z sleeping 3600s ---
+--- 2026-05-28T02:48:12Z collecting ---
+20260528T024812Z: status=ok, objects=25, active=24, ephemeris_rows=600
+--- 2026-05-28T02:48:14Z sleeping 3600s ---
+--- 2026-05-28T03:48:14Z collecting ---
+20260528T034814Z: status=ok, objects=25, active=24, ephemeris_rows=600
+--- 2026-05-28T03:48:15Z sleeping 3600s ---
+--- 2026-05-28T04:48:15Z collecting ---
+20260528T044816Z: status=ok, objects=24, active=23, ephemeris_rows=575
+--- 2026-05-28T04:48:17Z sleeping 3600s ---
+--- 2026-05-28T05:48:17Z collecting ---
+20260528T054817Z: status=ok, objects=24, active=23, ephemeris_rows=575
+--- 2026-05-28T05:48:18Z sleeping 3600s ---
+--- 2026-05-28T06:48:18Z collecting ---
+20260528T064818Z: status=ok, objects=24, active=23, ephemeris_rows=575
+--- 2026-05-28T06:48:19Z sleeping 3600s ---
+--- 2026-05-28T07:48:19Z collecting ---
+20260528T074819Z: status=ok, objects=24, active=23, ephemeris_rows=575
+--- 2026-05-28T07:48:21Z sleeping 3600s ---
+--- 2026-05-28T08:48:21Z collecting ---
+20260528T084821Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T08:48:23Z sleeping 3600s ---
+--- 2026-05-28T09:48:23Z collecting ---
+20260528T094823Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T09:48:24Z sleeping 3600s ---
+--- 2026-05-28T10:48:24Z collecting ---
+20260528T104824Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T10:48:26Z sleeping 3600s ---
+--- 2026-05-28T11:48:26Z collecting ---
+20260528T114826Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T11:48:27Z sleeping 3600s ---
+--- 2026-05-28T12:48:27Z collecting ---
+20260528T124827Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T12:48:29Z sleeping 3600s ---
+--- 2026-05-28T13:48:29Z collecting ---
+20260528T134829Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T13:48:30Z sleeping 3600s ---
+--- 2026-05-28T14:48:30Z collecting ---
+20260528T144830Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T14:48:31Z sleeping 3600s ---
+--- 2026-05-28T15:48:31Z collecting ---
+20260528T154831Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T15:48:32Z sleeping 3600s ---
+--- 2026-05-28T16:48:32Z collecting ---
+20260528T164833Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T16:48:34Z sleeping 3600s ---
+--- 2026-05-28T17:48:34Z collecting ---
+20260528T174834Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T17:48:35Z sleeping 3600s ---
+--- 2026-05-28T18:48:35Z collecting ---
+20260528T184835Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T18:48:36Z sleeping 3600s ---
+--- 2026-05-28T19:48:36Z collecting ---
+20260528T194836Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T19:48:37Z sleeping 3600s ---
+--- 2026-05-28T20:48:37Z collecting ---
+20260528T204838Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T20:48:39Z sleeping 3600s ---
+--- 2026-05-28T21:48:39Z collecting ---
+20260528T214840Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T21:48:41Z sleeping 3600s ---
+--- 2026-05-28T22:48:41Z collecting ---
+20260528T224841Z: status=ok, objects=23, active=22, ephemeris_rows=550
+--- 2026-05-28T22:48:43Z sleeping 3600s ---
+--- 2026-05-28T23:48:43Z collecting ---
+URLError: <urlopen error timed out>
+20260528T234844Z: status=error, objects=23, active=22, ephemeris_rows=0
+=== NEOCP loop started 2026-05-31T04:34:06Z interval=14400s ===
+--- 2026-05-31T04:34:06Z collecting ---
+20260531T043406Z: status=ok, objects=16, active=16, ephemeris_rows=400
+--- 2026-05-31T04:34:08Z sleeping 14400s ---
+--- 2026-05-31T08:34:08Z collecting ---
+20260531T083408Z: status=ok, objects=13, active=13, ephemeris_rows=325
+--- 2026-05-31T08:34:10Z sleeping 14400s ---
+--- 2026-05-31T12:34:10Z collecting ---
+20260531T123410Z: status=ok, objects=13, active=13, ephemeris_rows=325
+--- 2026-05-31T12:34:13Z sleeping 14400s ---
+--- 2026-05-31T16:34:13Z collecting ---
+20260531T163413Z: status=ok, objects=13, active=13, ephemeris_rows=325
+--- 2026-05-31T16:34:14Z sleeping 14400s ---
+--- 2026-05-31T20:34:14Z collecting ---
+20260531T203414Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-05-31T20:34:15Z sleeping 14400s ---
+--- 2026-06-01T00:34:15Z collecting ---
+20260601T003416Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-01T00:34:17Z sleeping 14400s ---
+--- 2026-06-01T04:34:17Z collecting ---
+20260601T043417Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-01T04:34:20Z sleeping 14400s ---
+--- 2026-06-01T08:34:20Z collecting ---
+20260601T083421Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-01T08:34:22Z sleeping 14400s ---
+--- 2026-06-01T12:34:22Z collecting ---
+20260601T123422Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-01T12:34:24Z sleeping 14400s ---
+--- 2026-06-01T16:34:24Z collecting ---
+20260601T163424Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-01T16:34:25Z sleeping 14400s ---
+--- 2026-06-01T20:34:25Z collecting ---
+20260601T203426Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-01T20:34:27Z sleeping 14400s ---
+--- 2026-06-02T00:34:27Z collecting ---
+20260602T003427Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-02T00:34:28Z sleeping 14400s ---
+--- 2026-06-02T04:34:28Z collecting ---
+20260602T043428Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-02T04:34:30Z sleeping 14400s ---
+--- 2026-06-02T08:34:30Z collecting ---
+20260602T083431Z: status=ok, objects=12, active=12, ephemeris_rows=300
+--- 2026-06-02T08:34:32Z sleeping 14400s ---
+--- 2026-06-02T12:34:32Z collecting ---
+20260602T123433Z: status=ok, objects=8, active=8, ephemeris_rows=200
+--- 2026-06-02T12:34:36Z sleeping 14400s ---
+20260708T053648Z: status=ok, objects=15, active=13, ephemeris_rows=325
+20260708T070001Z: status=ok, objects=14, active=12, ephemeris_rows=300
+20260708T110001Z: status=ok, objects=16, active=14, ephemeris_rows=350
+20260708T150002Z: status=ok, objects=21, active=19, ephemeris_rows=475
+20260708T190002Z: status=ok, objects=20, active=18, ephemeris_rows=450
+20260708T230001Z: status=ok, objects=23, active=21, ephemeris_rows=525
+20260709T030002Z: status=ok, objects=22, active=20, ephemeris_rows=500
+20260709T070002Z: status=ok, objects=22, active=20, ephemeris_rows=500
+20260709T110001Z: status=ok, objects=25, active=23, ephemeris_rows=575
+20260709T150001Z: status=ok, objects=26, active=24, ephemeris_rows=600
+20260709T190001Z: status=ok, objects=25, active=23, ephemeris_rows=575
+20260709T230001Z: status=ok, objects=25, active=23, ephemeris_rows=575
+20260710T030001Z: status=ok, objects=22, active=20, ephemeris_rows=500
+20260710T070001Z: status=ok, objects=21, active=19, ephemeris_rows=475
+20260710T110002Z: status=ok, objects=24, active=22, ephemeris_rows=550
+20260710T150001Z: status=ok, objects=26, active=24, ephemeris_rows=600
+20260710T190001Z: status=ok, objects=24, active=22, ephemeris_rows=550
+20260710T230001Z: status=ok, objects=25, active=23, ephemeris_rows=575
+20260711T030001Z: status=ok, objects=24, active=22, ephemeris_rows=550
+20260711T070001Z: status=ok, objects=26, active=24, ephemeris_rows=600
+20260711T110001Z: status=ok, objects=28, active=26, ephemeris_rows=650
+20260711T150001Z: status=ok, objects=30, active=28, ephemeris_rows=700
+20260711T190001Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260711T230001Z: status=ok, objects=37, active=35, ephemeris_rows=875
+20260712T030002Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260712T070001Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260712T110001Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260712T150001Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260712T190001Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260712T230002Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260713T030001Z: status=ok, objects=30, active=28, ephemeris_rows=700
+20260713T070001Z: status=ok, objects=30, active=28, ephemeris_rows=700
+20260713T110002Z: status=ok, objects=30, active=28, ephemeris_rows=700
+20260713T150001Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260713T190001Z: status=ok, objects=30, active=28, ephemeris_rows=700
+20260713T230001Z: status=ok, objects=30, active=28, ephemeris_rows=700
+20260714T030002Z: status=ok, objects=27, active=25, ephemeris_rows=625
+20260714T070001Z: status=ok, objects=27, active=25, ephemeris_rows=625
+20260714T110001Z: status=ok, objects=27, active=25, ephemeris_rows=625
+20260714T150001Z: status=ok, objects=25, active=23, ephemeris_rows=575
+20260714T190001Z: status=ok, objects=22, active=20, ephemeris_rows=500
+20260714T230001Z: status=ok, objects=26, active=23, ephemeris_rows=575
+20260715T030001Z: status=ok, objects=26, active=23, ephemeris_rows=575
+20260715T070002Z: status=ok, objects=26, active=23, ephemeris_rows=575
+20260715T110001Z: status=ok, objects=24, active=21, ephemeris_rows=525
+20260715T150001Z: status=ok, objects=32, active=29, ephemeris_rows=725
+20260715T190001Z: status=ok, objects=33, active=30, ephemeris_rows=750
+20260715T230001Z: status=ok, objects=28, active=26, ephemeris_rows=650
+20260716T030001Z: status=ok, objects=29, active=27, ephemeris_rows=675
+20260716T070002Z: status=ok, objects=24, active=22, ephemeris_rows=550
+20260716T110001Z: status=ok, objects=31, active=29, ephemeris_rows=725
+20260716T150002Z: status=ok, objects=34, active=32, ephemeris_rows=800
+20260716T190001Z: status=ok, objects=41, active=39, ephemeris_rows=975
+20260716T230002Z: status=ok, objects=33, active=31, ephemeris_rows=775
+20260717T030001Z: status=ok, objects=29, active=27, ephemeris_rows=675
+20260717T070002Z: status=ok, objects=31, active=29, ephemeris_rows=725
+20260717T110001Z: status=ok, objects=32, active=30, ephemeris_rows=750
+20260717T150001Z: status=ok, objects=31, active=29, ephemeris_rows=725
+20260717T190001Z: status=ok, objects=31, active=29, ephemeris_rows=725
+20260717T230001Z: status=ok, objects=32, active=29, ephemeris_rows=725
+20260718T030001Z: status=ok, objects=30, active=27, ephemeris_rows=675
+20260718T070001Z: status=ok, objects=30, active=27, ephemeris_rows=675
+20260718T110002Z: status=ok, objects=32, active=29, ephemeris_rows=725
+20260718T150001Z: status=ok, objects=33, active=30, ephemeris_rows=750
+20260718T190002Z: status=ok, objects=33, active=30, ephemeris_rows=750
+20260718T230001Z: status=ok, objects=33, active=30, ephemeris_rows=750
+20260719T030002Z: status=ok, objects=33, active=30, ephemeris_rows=750
+20260719T070001Z: status=ok, objects=37, active=34, ephemeris_rows=850
+20260719T110001Z: status=ok, objects=38, active=35, ephemeris_rows=875
+20260719T150002Z: status=ok, objects=53, active=50, ephemeris_rows=1250
+20260719T190002Z: status=ok, objects=56, active=52, ephemeris_rows=1300
+20260719T230001Z: status=ok, objects=55, active=51, ephemeris_rows=1275

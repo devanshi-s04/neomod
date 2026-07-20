@@ -1,0 +1,620 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1">
+<base href="/iau/">
+
+
+  <link rel="stylesheet" type="text/css" href="/stylesheets/mpc.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/table-sorter.css">
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+
+  <link media="all" rel="stylesheet" href="/css/all.css">
+
+  <link rel="icon" type="image/png" href="/iau/figs/MPClogo16.png">
+  <meta name="description" content="We are the official body that deals with
+      astrometric observations and orbits of minor planets (asteroids) and comets.">
+
+  <meta name="keywords" content="astrometry, observations, orbits,
+      minor planets, asteroids, comets, near earth objects, 
+      potentially hazardous asteroids">
+
+  <script type="text/javascript" src="/js/jquery-latest.js"></script>
+<!--  <script type="text/javascript" src="/js/jquery.main.js"></script> -->
+<!--  <script type="text/javascript" src="/js/jquery.metadata.js"></script> -->
+  <script type="text/javascript" src="/js/jquery.tablesorter.js"></script>
+  <script type="text/javascript" src="/js/webtrends.js"></script>
+  <script type="text/javascript" src="/js/track_pdfs.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Arvo:400,700,400italic,700italic|PT+Sans:400,700,400italic,700italic|PT+Sans+Narrow:400,700' rel='stylesheet' type='text/css'>
+
+
+<title>The NEO Confirmation Page</title>
+<META name="description" content="We are the official body that deals
+with astrometric observations and orbits of minor planets (asteroids) and
+comets.">
+<META name="keywords" content="astrometry, observations, observation, orbits,
+orbit, minor planets, minor planet, asteroids, asteroid, comets, comet">
+</head>
+
+<!-- Body preamble -->
+
+<body>
+  <!-- wrapper -->
+  <div id="wrapper">
+    <div class="w1">
+      <!-- header -->
+      <header id="header">
+        <div class="holder">
+          <!-- logo -->
+          <h1 class="logo"><a href="/">The International Astronomical Union Minor Planet Center</a></h1>
+          <div class="area">
+            <!-- top-nav -->
+            <nav class="top-nav">
+              <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+		<li><a href="/mpcops/contact/">Contact</a></li>
+                <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+              </ul>
+            </nav>
+            <!-- search-form -->
+            <div class="form-holder">
+              <!-- This commented code opens a new page for the search. -->
+              <!--<form class="search-form" method="get" action="https://www.google.com/search" target="_blank">-->
+              <form class="search-form" method="get" action="https://www.google.com/search">
+                <fieldset>
+                  <!--<label for="search">Search</label>-->
+                  <input type="hidden" name="sitesearch" value="minorplanetcenter.net">
+                  <input type="text" onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" id="search" name="q" value="Search MPC">
+                </fieldset>
+              </form>
+            </div>
+            <div class="social-bar">
+<!--              <a href="https://twitter.com/MinorPlanetCtr"><span class="social twitter">L</span></a> -->
+<!--              <a href="https://www.facebook.com/MinorPlanetCenter"><span class="social facebook">F</span></a> -->
+<!--              <a href="https://www.youtube.com/channel/UCtALMOQHuBxh5XMsYNiDhMg"><span class="social youtube">X</span></a> -->
+<!--              <a href="/iau/rss/mpc_feeds.html"><span class="social rss">R</span></a> -->
+            </div>
+          </div>
+        </div>
+        <nav class="nav-holder">
+          <!-- main navigation -->
+          <ul id="nav">
+            <li>
+              <a href="/iau/mpc.html"><span>OBSERVERS</span></a>
+              <ul>
+                <li><a href="/iau/MPEph/MPEph.html">Ephemeris Service</a></li>
+                <li><a href="/mpec/RecentMPECs.html">MPECs</a></li>
+                <li><a href="/iau/NEO/toconfirm_tabular.html">NEO Confirmation</a></li>
+                <li><a href="/iau/NEO/pccp_tabular.html">Possible Comet Confirmation</a></li>
+                <li><a href="/mpcops/submissions/cometary/">Report Cometary Activity</a></li>
+                <li><a href="/db_search">Orbits/Observations Database</a></li>				
+                <li><a href="/iau/Ephemerides/EphemOrbEls.html" class="nested">Orbital Elements</a>
+                  <ul>
+                    <li><a href="/iau/MPCORB.html">MPCORB</a></li>
+                    <li><a href="/iau/ECS/MPCAT/MPCAT.html">MPCAT</a></li>
+                    <li><a href="/iau/ECS/MPCUPDATE/MPCUPDATE.html">MPCUPDATE</a></li>
+                    <li><a href="/iau/Ephemerides/SoftwareEls.html">Orbital Elements for Software</a></li>
+                  </ul>                
+                </li>
+                <li><a href="/iau/services/MPCServices.html">Publications Overview</a></li>
+                <li><a href="/iau/ECS/MPCArchive/MPCArchive_TBL.html">Publications Archive</a></li>              
+                <li><a href="/iau/NEO/TheNEOPage.html" class="nested">NEO Services</a>
+                  <ul>
+                    <li><a href="/iau/NEO/toconfirm_tabular.html">Confirmation</a></li>
+                    <li><a href="/iau/NEO/PossNEO.html">Ratings</a></li>
+                    <li><a href="/cgi-bin/neaobs.cgi">Observation Planning Aid</a></li>
+                    <li><a href="/neocp_followup_report/">NEOCP Followup Report Form</a></li>
+                    <li><a href="/neocp_followup_reports/">NEOCP Followup Reports</a></li>
+                    <li><a href="/neocp_obs">NEOCP Recent Observations</a></li>
+                    <li><a href="/mpcops/neocp/neocp_plots/">NEOCP Plots</a></li>		    
+                    <li><a href="/iau/recovery/recovery.html">NEO Recovery</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="" class="nested">Observations</a>
+                  <ul>
+                    <li><a href="/wamo/">WAMO</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/mpcops/orbits/" class="nested">Orbits</a>
+                  <ul>
+                    <li><a href="https://data.minorplanetcenter.net/comparison/index.html">Orbit Comparison Tool</a></li>
+                    <li><a href="/mpcops/orbits/no-orbits-astrometry/">Request for archival astrometry</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="/iau/services/WebCSAccess.html" class="nested">Other Observer Services</a>
+                  <ul>
+                    <li><a href="/whatsup">Observing Target List</a></li>
+                    <li><a href="/iau/NatSats/NaturalSatellites.html">Natural Satellite Ephemerides</a></li>
+                    <li><a href="/iau/MPEph/NewObjEphems.html">New Object Ephemerides</a></li>
+                    <li><a href="/cgi-bin/checkmp.cgi">MPChecker</a></li>
+<!-- THIS PAGE IS NO LONGER SUPPORTED   <li><a href="/iau/artsats/artsats.html">Distant Artificial Satellites</a></li> -->
+                    <li><a href="/iau/lists/Customize.html">Observing List Customizer</a></li>
+                    <li><a href="/iau/delays/neocp_delay.html">Processing Times</a></li>		    
+                  </ul>
+                </li>
+		
+		<li><a href="/" class="nested">Identifications</a>
+		  <ul>
+		    <li><a href="/mpcops/documentation/identifications/">Documentation</a></li>		    
+		    <li><a href="/mpcops/documentation/identifications/submission-format/">Submission Format</a></li>
+                    <li><a href="/mpcops/submissions/identifications/">Submit</a></li>
+		  </ul>
+		</li>
+
+                <li><a href="/iau/ECS/MPCAT-OBS/MPCAT-OBS.html">MPCAT-OBS</a></li>
+                <li><a href="/iau/SkyCoverage.html">Sky Coverage</a></li>
+                <li><a href="/iau/MPC_Documentation.html" class="nested">Documentation</a>
+                  <ul>
+                    <li><a href="/iau/info/TechInfo.html">MPC Submission Info</a></li>
+                    <li><a href="/iau/info/Astrometry.html">Astrometry Guide</a></li>
+                    <li><a href="/mpcops/documentation/artificial-satellites/">Artificial Satellites</a></li>
+                    <li><a href="/submit_action_code">Submit Action Code</a></li>		    
+                    <li><a href="/mpcops/documentation/">Other</a></li>		    
+                    <!-- <li><a href="/iau/WhatsNew.html">What's New</a></li> -->
+                  </ul>                
+                </li>
+                <li><a href="/iau/lists/Lists.html" class="nested">Lists and Plots</a>
+                  <ul>
+                    <li><a href="/iau/lists/MPLists.html">Minor Planets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/t_atens.html">Atens</a></li>
+                        <li><a href="/iau/lists/t_apollos.html">Apollos</a></li>
+                        <li><a href="/iau/lists/t_amors.html">Amors</a></li>
+                        <li><a href="/iau/lists/t_centaurs.html">Centaurs and Scattered Disk Objects</a></li>
+                        <li><a href="/iau/lists/t_tnos.html">Transneptunian Objects</a></li>
+                        <li><a href="/iau/lists/t_others.html">Other Unusual Objects</a></li>
+                        <li><a href="/iau/lists/t_dangerous.html">Potentially Hazardous Asteroids</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/CometLists.html">Comets</a></li>
+                      <!--<ul>
+                        <li><a href="/iau/lists/LastCometObs.html">Date of Last Observation</a></li>
+                        <li><a href="/iau/lists/LastYear.html">Designations from the Past Year</a></li>
+                        <li><a href="http://www.icq.eps.harvard.edu/CometMags.html">Comet Magnitude Estimates</a></li>
+                        <li><a href="/iau/lists/ClosestComets.html">Closest Approaches</a></li>
+                        <li><a href="/iau/lists/PeriodicCodes.html">Periodic Comets</a></li>
+                      </ul>-->
+                    <li><a href="/iau/lists/ObsCodesF.html">Observatory Codes</a></li>		    
+                    <li><a href="/iau/Animations/Animations.html">Animations</a></li>
+                  </ul>                
+                </li>
+                <!--<li><%= link_to 'Summary', :controller => 'mpc', :action => 'summary' %></li>-->
+                <li><a href='/mpc/obs_stats_2014_2018'>2014-18 NEO Obs Statistics</a></li>
+                <li><a href='/mpc/summary'>Summary of Latest Data</a></li>
+                <li><a href='/deprecated-pages.html'>Deprecated Webpages</a></li>		
+              </ul>
+            </li>
+            <li><a href="/data"><span>DATA</span></a></li>
+	    
+            <li><a href="/"><span>NEW</span></a>
+	      <ul>
+		<li><a href="/mpcops/new/developments/">Developments</a></li>
+<!--		<li><a href="/mpcops/new/releases/">New Releases</a></li> -->
+		<li><a href="/mpcops/new/existing-upgrades/">Existing Upgrades</a></li>
+		<li><a href="/mpcops/new/newsletters/">Newsletters</a></li>
+	      </ul>
+	    </li>
+	
+
+            <li><a href="/iau/MPCStatus.html"><span style="color:GoldenRod">STATUS</a></li>
+
+	    <li><a href="/mpcops/documentation/"><span>DOCUMENTATION</span></a></li>
+	    
+            <li><a href="/"><span>EXTERNAL</span></a>
+	      <ul id="external">
+	        <li><a href="https://mpcmug.astro.umd.edu/" target="_blank">MPC User Group (MUG)</a></li>
+		<li><a href="http://iawn.net/" target="_blank">IAWN</a></li>
+		<li><a href="https://sbnmpc.astro.umd.edu/" target="_blank">SBN Annex</a></li>
+		<li><a href="https://www.wgsbn-iau.org/" target="_blank">WGSBN</a></li>
+                <li><a href='http://alcdef.org'>Light Curve Database</a></li>
+	      </ul>
+	    </li>
+
+          </ul>
+        </nav>
+      </header>
+
+   <script type="text/javascript">
+          document.addEventListener('DOMContentLoaded', function () {
+            const listItems = document.querySelectorAll('#nav li ');
+            function getDirectTextContent(element) {
+                let directTextContent = '';
+                element.childNodes.forEach(node => {
+                    if (node.textContent.trim().includes('OBSERVERS') || node.textContent.trim().includes('DATA') || node.textContent.trim().includes('NEW') || node.textContent.trim().includes('STATUS') || node.textContent.trim().includes('DOCUMENTATION') || node.textContent.trim().includes('EXTERNAL')){
+                        directTextContent += node.textContent.trim();
+                    }
+                });
+                return directTextContent;
+            }
+
+            listItems.forEach(function (li) {
+                const directText = getDirectTextContent(li);
+                const textLength = directText.length;  
+
+                // Log the length of each item to the console
+                //console.log(`Text: "${li.textContent.trim()}", Length: ${textLength}`);
+
+                // Apply class based on length
+                if (textLength <= 5) {
+                    li.classList.add('short-word');
+                } else if (textLength <= 10) {
+                    li.classList.add('medium-word');
+                } else {
+                    li.classList.add('long-word');
+                }
+            });
+        });
+    </script>
+
+      <!-- main -->
+      <div id="main">
+
+
+<!-- Navigation Menu block -->
+
+<li class="yuimenuitemlabel alert"> Processing <a href="/iau/info/MPCOpStatus.html">(Info)</a></li>
+
+
+
+
+<!-- Main content block -->
+
+<br>
+<p>
+
+<h2>The NEO Confirmation Page</h2>
+Please ensure you are familiar with the <a href="/iau/NEO/toconfirm_tabular.html#notes">notes at the bottom
+of this page</a>.<br>
+Also, additional notes on the NEOCP and
+information on how we remove objects on the NEOCP are also available <a href="/iau/NEO/NEOCPNotes.html">here</a>.
+<p class="rj">
+Page last updated on June 1.690 UTC.
+<p><!-- mkneocp_files.py 1-JUN-2026 16:34:02.71 -->
+<a href="https://cgi.minorplanetcenter.net/cgi-bin/feedback.cgi?U=/iau/NEO/toconfirm_tabular.html&amp;S=Problem">Problems?</a>
+<a href="https://cgi.minorplanetcenter.net/cgi-bin/feedback.cgi?U=/iau/NEO/toconfirm_tabular.html&amp;S=Commment">Comments?</a>
+<p><hr><p>
+<FORM METHOD=POST ACTION="https://cgi.minorplanetcenter.net/cgi-bin/confirmeph2.cgi">
+<input type=submit value=" Get ephemerides "> <input type=reset value=" Reset form "><p>
+<p>Select object(s) from the current list of objects needing confirmation
+(NEO desirability score, discovery date, rough current position and magnitude given,
+as well as number of observations, arc, nominal <i>H</i> and number of days
+since it was last observed).  Objects flagged with an "S" in the Note column are
+<a href="https://minorplanetcenter.net/mpcops/documentation/artificial-satellites/">possibly in geocentric orbit</a> 
+and might soon be removed. Objects flagged with an "B" in the Note column have a possible bad tracklet or failed orbit fit and the ephemeris might not be correct. "B" flag does not overwrite the "S" flag.
+<p><input type="radio" name="W" VALUE="a">All objects
+with <i>V</i> =
+<input name="mb" maxlength=4 size=4 value="-30"> to
+<input name="mf" maxlength=4 size=4 value="30">, with Decl. between
+<input name="dl" maxlength=5 size=5 value="-90">&#176; and
+<input name="du" maxlength=5 size=5 value="+90">&#176;, with an
+NEO desirability score of
+<input name="nl" maxlength=3 size=3 value="0">&#37; to
+<input name="nu" maxlength=3 size=3 value="100">&#37;
+<input type="hidden" name="sort" value="d">
+<p><input type="radio" name="W" VALUE="j" CHECKED>or just the objects selected below:
+<input type=button value="Deselect All"
+  onclick="var i; var ff = document.getElementsByTagName('input');
+           for (i = 0; i < ff.length; i++) {
+             if (ff[i].type == 'checkbox') {
+               ff[i].checked=false;}}">
+<input type=button value="Select All"
+  onclick="var i; var ff = document.getElementsByTagName('input');
+           for (i = 0; i < ff.length; i++) {
+             if (ff[i].type == 'checkbox') {
+               ff[i].checked=true;}}">
+<p>
+<table class="tablesorter">
+  <thead>
+    <tr>
+      <th>&nbsp;&nbsp;Temp Desig&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;Score&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;Discovery</th>
+      <th>&nbsp;&nbsp;R.A.&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;Decl.&nbsp;&nbsp;</th>
+      <th>&nbsp;&nbsp;V&nbsp;&nbsp;</th>
+      <th>Updated</th>
+      <th>&nbsp;Note&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;NObs&nbsp;&nbsp;&nbsp;</th>
+      <th>&nbsp;Arc&nbsp;&nbsp;</th>
+      <th>&nbsp;H&nbsp;&nbsp;</th>
+      <th>&nbsp;Not Seen/dys&nbsp;&nbsp;</th>
+    </tr>
+  </thead>
+
+  <tbody>
+<tr><td><span style="display:none">C1F9WZ5</span>&nbsp;<input type="checkbox" name="obj" VALUE="C1F9WZ5"> C1F9WZ5</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 06 01.3&nbsp;&nbsp;</td>
+<td><span style="display:none">255.9692</span>&nbsp;&nbsp;17 03.9&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">118.3717</span>&nbsp;&nbsp;+28 22&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.6</span>&nbsp;&nbsp;21.4&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.957946</span>&nbsp;Updated June 1.46 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  12&nbsp;</td>
+<td align="right">&nbsp;  0.12&nbsp;</td>
+<td align="right">&nbsp;24.9&nbsp;</td>
+<td align="right">&nbsp; 0.237&nbsp;</td><tr>
+<tr><td><span style="display:none">A11D0Xd</span>&nbsp;<input type="checkbox" name="obj" VALUE="A11D0Xd"> A11D0Xd</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 30.0&nbsp;&nbsp;</td>
+<td><span style="display:none">289.7476</span>&nbsp;&nbsp;19 19.0&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">048.5846</span>&nbsp;&nbsp;-41 24&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">31.1</span>&nbsp;&nbsp;18.9&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.924656</span>&nbsp;Updated June 1.42 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.01&nbsp;</td>
+<td align="right">&nbsp;24.0&nbsp;</td>
+<td align="right">&nbsp; 2.651&nbsp;</td><tr>
+<tr><td><span style="display:none">NAOCYLA</span>&nbsp;<input type="checkbox" name="obj" VALUE="NAOCYLA"> NAOCYLA</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 27.7&nbsp;&nbsp;</td>
+<td><span style="display:none">243.5214</span>&nbsp;&nbsp;16 14.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">069.4474</span>&nbsp;&nbsp;-20 33&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.1</span>&nbsp;&nbsp;20.9&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.926558</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.13&nbsp;</td>
+<td align="right">&nbsp;21.6&nbsp;</td>
+<td align="right">&nbsp; 4.824&nbsp;</td><tr>
+<tr><td><span style="display:none">C07PYDZ</span>&nbsp;<input type="checkbox" name="obj" VALUE="C07PYDZ"> C07PYDZ</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 27.2&nbsp;&nbsp;</td>
+<td><span style="display:none">214.7139</span>&nbsp;&nbsp;14 18.9&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">137.8248</span>&nbsp;&nbsp;+47 49&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.3</span>&nbsp;&nbsp;21.7&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.925131</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.02&nbsp;</td>
+<td align="right">&nbsp;19.6&nbsp;</td>
+<td align="right">&nbsp; 5.490&nbsp;</td><tr>
+<tr><td><span style="display:none">C1F4195</span>&nbsp;<input type="checkbox" name="obj" VALUE="C1F4195"> C1F4195</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 26.4&nbsp;&nbsp;</td>
+<td><span style="display:none">242.8675</span>&nbsp;&nbsp;16 11.5&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">103.3574</span>&nbsp;&nbsp;+13 21&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">26.4</span>&nbsp;&nbsp;23.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.927781</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   7&nbsp;</td>
+<td align="right">&nbsp;  0.07&nbsp;</td>
+<td align="right">&nbsp;27.6&nbsp;</td>
+<td align="right">&nbsp; 6.243&nbsp;</td><tr>
+<tr><td><span style="display:none">C1F3245</span>&nbsp;<input type="checkbox" name="obj" VALUE="C1F3245"> C1F3245</td>
+<td align="right"><span style="display:none">048</span> 48&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 25.4&nbsp;&nbsp;</td>
+<td><span style="display:none">253.1126</span>&nbsp;&nbsp;16 52.5&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">099.9265</span>&nbsp;&nbsp;+09 55&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">27.4</span>&nbsp;&nbsp;22.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.926109</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  11&nbsp;</td>
+<td align="right">&nbsp;  1.00&nbsp;</td>
+<td align="right">&nbsp;20.2&nbsp;</td>
+<td align="right">&nbsp; 6.246&nbsp;</td><tr>
+<tr><td><span style="display:none">C1F2HL5</span>&nbsp;<input type="checkbox" name="obj" VALUE="C1F2HL5"> C1F2HL5</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 25.4&nbsp;&nbsp;</td>
+<td><span style="display:none">256.0388</span>&nbsp;&nbsp;17 04.2&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">077.0289</span>&nbsp;&nbsp;-12 58&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">27.3</span>&nbsp;&nbsp;22.7&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.928306</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   8&nbsp;</td>
+<td align="right">&nbsp;  0.07&nbsp;</td>
+<td align="right">&nbsp;26.1&nbsp;</td>
+<td align="right">&nbsp; 7.268&nbsp;</td><tr>
+<tr><td><span style="display:none">NAOCLYL</span>&nbsp;<input type="checkbox" name="obj" VALUE="NAOCLYL"> NAOCLYL</td>
+<td align="right"><span style="display:none">085</span> 85&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 23.8&nbsp;&nbsp;</td>
+<td><span style="display:none">238.9332</span>&nbsp;&nbsp;15 55.7&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">076.4377</span>&nbsp;&nbsp;-13 33&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">27.9</span>&nbsp;&nbsp;22.1&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.927049</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   4&nbsp;</td>
+<td align="right">&nbsp;  0.10&nbsp;</td>
+<td align="right">&nbsp;21.6&nbsp;</td>
+<td align="right">&nbsp; 8.839&nbsp;</td><tr>
+<tr><td><span style="display:none">A11CQzo</span>&nbsp;<input type="checkbox" name="obj" VALUE="A11CQzo"> A11CQzo</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 24.4&nbsp;&nbsp;</td>
+<td><span style="display:none">340.4324</span>&nbsp;&nbsp;22 41.7&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">075.0078</span>&nbsp;&nbsp;-14 59&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">26.4</span>&nbsp;&nbsp;23.6&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.929416</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   5&nbsp;</td>
+<td align="right">&nbsp;  0.05&nbsp;</td>
+<td align="right">&nbsp;29.9&nbsp;</td>
+<td align="right">&nbsp; 8.261&nbsp;</td><tr>
+<tr><td><span style="display:none">oKr0080</span>&nbsp;<input type="checkbox" name="obj" VALUE="oKr0080"> oKr0080</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 23.9&nbsp;&nbsp;</td>
+<td><span style="display:none">352.5178</span>&nbsp;&nbsp;23 30.1&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">108.7222</span>&nbsp;&nbsp;+18 43&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">29.8</span>&nbsp;&nbsp;20.2&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.920695</span>&nbsp;Updated June 1.42 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.00&nbsp;</td>
+<td align="right">&nbsp;13.5&nbsp;</td>
+<td align="right">&nbsp; 8.805&nbsp;</td><tr>
+<tr><td><span style="display:none">6EN3D21</span>&nbsp;<input type="checkbox" name="obj" VALUE="6EN3D21"> 6EN3D21</td>
+<td align="right"><span style="display:none">100</span>100&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 24.2&nbsp;&nbsp;</td>
+<td><span style="display:none">227.9542</span>&nbsp;&nbsp;15 11.8&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">008.3687</span>&nbsp;&nbsp;-81 37&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">31.1</span>&nbsp;&nbsp;18.9&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.924158</span>&nbsp;Updated June 1.42 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;   3&nbsp;</td>
+<td align="right">&nbsp;  0.01&nbsp;</td>
+<td align="right">&nbsp;16.5&nbsp;</td>
+<td align="right">&nbsp; 8.460&nbsp;</td><tr>
+<tr><td><span style="display:none">P12nfaz</span>&nbsp;<input type="checkbox" name="obj" VALUE="P12nfaz"> P12nfaz</td>
+<td align="right"><span style="display:none">043</span> 43&nbsp;&nbsp;&nbsp;</td>
+<td>&nbsp;&nbsp;2026 05 20.3&nbsp;&nbsp;</td>
+<td><span style="display:none">197.7886</span>&nbsp;&nbsp;13 11.2&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">063.6746</span>&nbsp;&nbsp;-26 19&nbsp;&nbsp;</td>
+<td align="right"><span style="display:none">28.0</span>&nbsp;&nbsp;22.0&nbsp;&nbsp;</td>
+<td><span style="display:none">J2461192.928893</span>&nbsp;Updated June 1.43 UT&nbsp;</td>
+<td align="center">&nbsp;&nbsp;</td>
+<td align="right">&nbsp;  12&nbsp;</td>
+<td align="right">&nbsp;  2.87&nbsp;</td>
+<td align="right">&nbsp;18.3&nbsp;</td>
+<td align="right">&nbsp; 9.503&nbsp;</td><tr>
+
+  </tbody>
+</table>
+
+The information in the table (including any PCCP objects) is available in a <a href="/iau/NEO/neocp.txt">text
+file</a>.  The layout of this file matches the table layout exactly, except that the
+R.A. is converted to decimal hours and the Decl. to decimal degrees.
+<p><hr><p>Select your viewing point:
+<p><input type="radio" name="Parallax" VALUE="0">Geocentric
+<input type="radio" name="Parallax" VALUE="1" CHECKED><a href="/iau/lists/ObsCodes.html">Observatory code</a>
+<input name="obscode" maxlength=3 size=3 VALUE="500">
+<p><input type="radio" name="Parallax" VALUE="2">
+Longitude <input name="long" maxlength=8 size=8 value=""> &#176; E,
+latitude <input name="lat" maxlength=8 size=8 value=""> &#176;,
+altitude <input name="alt" maxlength=6 size=6 value=""> m.
+<p>Longitudes and latitudes should be entered in decimal degrees.
+<p><hr><p>Other options:
+<p>Ephemeris interval: <input type="radio" name="int" value="0" CHECKED> 1 hour
+<input type="radio" name="int" value="1"> 30 mins
+<input type="radio" name="int" value="2"> 10 mins
+<input type="radio" name="int" value="3"> 1 min
+<p>Start ephemerides at now + <input name="start" value="0" maxlength=5 size=5> hours
+<p>Display positions in: <input type="radio" name="raty" value="h"> truncated sexagesimal or
+<input type="radio" name="raty" value="a" CHECKED> full sexagesimal or
+<input type="radio" name="raty" value="d"> decimal units
+<p>Display motions as: <input type="radio" name="mot" value="s"> "/sec,
+<input type="radio" name="mot" value="m" CHECKED> "/min,
+<input type="radio" name="mot" value="h"> "/hr or
+<input type="radio" name="mot" value="d"> &#176;/day.
+<p><input type="radio" name="dmot" value="p" CHECKED> Total motion and direction
+<input type="radio" name="dmot" value="r"> Separate R.A. and Decl. coordinate motions
+<input type="radio" name="dmot" value="s"> Separate R.A. and Decl. sky motions
+<p><input type="radio" name="out" value="f" CHECKED> Full output  <input type="radio" name="out" value="b"> Brief output
+<p>Suppress output at
+<select name="sun">
+<option value="x"> &lt;never&gt;
+<option value="s" checked> sunset/rise
+<option value="c"> civil twilight
+<option value="n"> nautical twilight
+<option value="a"> astronomical twilight
+</select> or when object's altitude is below
+<input name="oalt" maxlength=3 size=3 value="20">&#176;.
+<p><input type=submit value=" Get ephemerides "> <input type=reset value=" Reset form "><p>
+</form>
+<p><hr><p>
+<a name="ActionCodes"></a>
+If you need to delete one of your discoveries as "does not exist" or "artificial", or flag it as "cometary", etc., please submit the corresponding "action code" through our <a href="/submit_action_code">Submit Action Code Form</a>
+</p>
+<a name="ObsComm"></a>
+<p><hr><p>
+<a name="notes"><a href="/iau/info/Astrometry.html">Notes on how to begin your own
+astrometric program</a> are available.
+<p>
+Please ensure that you have read the <a href="/iau/NEO/NEOCPNotes.html">additional
+notes on the NEOCP</a>.
+<p><b>Please do not report observations of non-NEOCP objects in the same
+message as observations of objects on this page!</b>
+<p><a href="/iau/NEO/PossNEO.html">Get NEO Ratings to see whether you
+should report a possible NEO.</a>
+<p>Please report unsuccessful attempts to detect objects listed here that
+are NOT listed as `updated' or that have not been updated in the past 24 hours
+using <a href="https://minorplanetcenter.net/NEOCPblog/">the NEOCP Blog</a>.
+<p><b>Please note that observations and orbits of objects accessible via
+this service are made available only for your personal use.  They
+are not to be promulgated via any medium.  The data are preliminary until
+they appear on an <i>MPEC</i> or <i>MPS</i>.</b>
+<p>It is possible that some of the objects listed here are comets,
+either recognised or currently unrecognised as such.  
+All reports of new cometary activity should be made using the following
+<a href="https://minorplanetcenter.net/mpcops/submissions/cometary/" target="_blank">web form</a>
+(Reports of activity for known comets made to the above web form will be
+ignored.) <br>
+New reports of cometary activity must be made using
+this web form in order to be considered for inclusion in any resulting MPEC
+announcing cometary status.  We do not
+flag suspected comets on this page because we do not wish to influence
+observers.
+<p>You can now access ephemerides for the variant
+orbits used in the uncertainty plots from the pages listing the offsets
+from the nominal solutions.
+<p>Please <a href="/iau/MPCStatus.html">read</a>
+(or <a href="/iau/NEO/NEOCPNotes.html">here</a>)
+about the coloration used in the uncertainty plots.
+<p>You are reminded that a cross-reference of
+designations that have appeared here previously is available
+<a href="/iau/NEO/ToConfirm_PrevDes.html">elsewhere</a>.
+<p>If none of these objects are within the capabilities of your system,
+check out the <a href="/iau/NEO/LastObsNEO.html">Dates of Last Observation of
+NEOs not seen recently</a> (<a href="/iau/NEO/LastObsNEORA.html">in R.A.
+order</a>), the <a href="/iau/NEO/BrightRecovery.html">list of bright
+recovery opportunities</a>, or the <a href="http://neo.ssa.esa.int/web/guest/priority-list">
+Spaceguard Central Node's Priority List</a> for alternate useful targets.
+<!-- Body postamble -->
+      </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <footer id="footer">
+    <div class="holder">
+      <nav class="nav">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About</a></li>
+	  <!-- Contact link changed to Jira and name changed to helpdesk.
+	       Should be consistent with top right of banner -->
+          <li><a href="https://mpc-service.atlassian.net/servicedesk/customer/portals">Helpdesk</a></li>
+<!-- PP REMOVED 28 Feb 2023 - does not work MPC does not have one          <li><a href="https://www.cfa.harvard.edu/content/privacy-statement">Privacy</a></li> -->
+        </ul>
+      </nav>
+      
+      <a href="https://www.cfa.harvard.edu">
+      <img src="/images/CfA_Logo_Vertical_CMYK.png" width="110" height="47"></a>
+      <p>
+      <p>
+      <p>
+      <div class="copy">The Minor Planet Center is hosted by the Center for Astrophysics | Harvard &amp; Smithsonian.<center>The Minor Planet Center is funded by NASA.</center></div> 
+  </footer>
+
+<script type="text/javascript">
+  $(window).on('load', (function() {
+    $("table").tablesorter();
+  })); 
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+var _tag=new WebTrends();
+_tag.dcsGetId();
+//]]>
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+_tag.dcsCustom=function(){
+// Add custom parameters here.
+//_tag.DCSext.param_name=param_value;
+}
+_tag.dcsCollect();
+//]]>
+</script>
+
+<noscript>
+<div><img alt="DCSIMG" id="DCSIMG" width="1" height="1" src="//logs1.smithsonian.museum/dcsa7yzrmbdzpxzrosrn4tyep_5i1d/njs.gif?dcsuri=/nojavascript&amp;WT.js=No&amp;WT.tv=9.4.0&amp;dcssip=www.minorplanetcenter.net"/></div>
+</noscript>
+</body>
+
+
+</html>

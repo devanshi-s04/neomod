@@ -80,6 +80,7 @@ from __future__ import annotations
 import gc
 import os
 from math import lgamma
+from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
@@ -90,7 +91,9 @@ from astropy.coordinates import (
     GCRS,
     GeocentricTrueEcliptic,
     SkyCoord,
+    get_body_barycentric_posvel,
     get_sun,
+    solar_system_ephemeris,
 )
 from astropy.time import Time
 from astroML.density_estimation import EmpiricalDistribution
@@ -125,6 +128,14 @@ else:
 AU_KM = 149_597_870.7
 MU_SUN = 1.32712440018e11   # km^3 / s^2
 ECLIPTIC_OBLIQUITY_DEG = 23.439291
+
+# Sorcha's own ASSIST planetary kernel (n-body propagation, fixing_integrator.md §2).
+# parents[2] resolves the sorcha repo root from neomod/src/<thisfile>.
+SORCHA_PLANETS_PATH = str(
+    Path(__file__).resolve().parents[2]
+    / "sorcha_cache_2025-07-06"
+    / "linux_p1550p2650.440"
+)
 
 # default density-map grid parameters (vlam, vbeta in deg/day)
 # (-1.5, 1.5) covers the hybrid-calibrated region; ±2.0 extension tested and reverted (hurt F1).
@@ -514,6 +525,138 @@ def select_df_by_mag_bin(df, mag_app, mag_min=None, mag_max=None):
 
 
 # =============================================================================
+# ASSIST n-body propagation (fixing_integrator.md §3)
+# =============================================================================
+def propagate_elements_nbody(
+    a_AU,
+    e,
+    inc_deg,
+    raan_deg,
+    argp_deg,
+    tp_mjd,
+    epoch_mjd,
+    obstime_str,
+    chunk=100,
+    show_progress=True,
+    gr_model="GR_SIMPLE",
+):
+    """Propagate osculating heliocentric ecliptic elements with ASSIST.
+
+    The input elements describe the state at ``epoch_mjd``; ``tp_mjd`` is
+    used only to recover mean anomaly at that epoch. The returned arrays
+    match ``neoscore.elements_to_helio_ecliptic_state``: heliocentric
+    ecliptic position in km and velocity in km/s, in input row order.
+
+    The n-body stack (assist/rebound/sorcha) is imported lazily so that
+    consumers that only load maps or score observations can import this
+    module without those packages installed.
+    """
+    from assist import Ephem
+    import assist
+    import rebound
+    from jpl_small_bodies_de441_n16 import de441_n16
+    from sorcha.ephemeris.orbit_conversion_utilities import universal_cartesian
+    from sorcha.ephemeris.simulation_geometry import (
+        ecliptic_to_equatorial,
+        equatorial_to_ecliptic,
+    )
+
+    arrays = [
+        np.atleast_1d(np.asarray(values, dtype=float))
+        for values in (a_AU, e, inc_deg, raan_deg, argp_deg, tp_mjd, epoch_mjd)
+    ]
+    n_rows = len(arrays[0])
+    names = ("a", "e", "i", "node", "argperi", "t_p", "t_0")
+    if any(len(values) != n_rows for values in arrays):
+        sizes = dict(zip(names, map(len, arrays)))
+        raise ValueError(f"Orbital-element array sizes do not match: {sizes}")
+    if n_rows == 0:
+        return np.empty((0, 3)), np.empty((0, 3))
+
+    a, ecc, inc, raan, argp, tp, epoch = arrays
+    finite = np.logical_and.reduce([np.isfinite(values) for values in arrays])
+    valid = finite & (a > 0.0) & (ecc >= 0.0) & (ecc < 1.0)
+    if not np.all(valid):
+        bad = np.flatnonzero(~valid)[:10].tolist()
+        raise ValueError(f"Invalid or non-finite osculating elements at rows {bad}")
+
+    if isinstance(obstime_str, Time):
+        target = obstime_str.tdb
+    elif np.isscalar(obstime_str) and not isinstance(obstime_str, str):
+        target = Time(float(obstime_str), format="mjd", scale="tdb")
+    else:
+        target = Time(obstime_str, scale="tdb").tdb
+    if not Path(SORCHA_PLANETS_PATH).is_file():
+        raise FileNotFoundError(
+            f"Sorcha ASSIST planetary kernel not found: {SORCHA_PLANETS_PATH}"
+        )
+    ephem = Ephem(planets_path=SORCHA_PLANETS_PATH, asteroids_path=de441_n16)
+    gm_sun = ephem.get_particle("Sun", 0.0).m
+    r_out = np.empty((n_rows, 3), dtype=float)
+    v_out = np.empty((n_rows, 3), dtype=float)
+    starts = range(0, n_rows, int(chunk))
+    if show_progress:
+        starts = tqdm(starts, total=(n_rows + chunk - 1) // chunk, desc="ASSIST")
+
+    for start in starts:
+        stop = min(start + int(chunk), n_rows)
+        # Match Sorcha's COM initialization exactly. For encounter-sensitive
+        # objects, even a tiny GM/conversion difference can grow over 20 years.
+        state = np.asarray([
+            universal_cartesian(
+                gm_sun, a[idx] * (1.0 - ecc[idx]), ecc[idx],
+                np.deg2rad(inc[idx]), np.deg2rad(raan[idx]),
+                np.deg2rad(argp[idx]), tp[idx] + 2400000.5,
+                epoch[idx] + 2400000.5,
+            )
+            for idx in range(start, stop)
+        ])
+        for local, idx in enumerate(range(start, stop)):
+            epoch_jd = epoch[idx] + 2400000.5
+            sun0 = ephem.get_particle("Sun", epoch_jd - ephem.jd_ref)
+            r_eq = np.asarray(ecliptic_to_equatorial(state[local, :3]))
+            v_eq = np.asarray(ecliptic_to_equatorial(state[local, 3:]))
+
+            sim = rebound.Simulation()
+            sim.t = epoch_jd - ephem.jd_ref
+            sim.dt = 10.0
+            sim.ri_ias15.adaptive_mode = 1
+            sim.add(
+                x=r_eq[0] + sun0.x, y=r_eq[1] + sun0.y, z=r_eq[2] + sun0.z,
+                vx=v_eq[0] + sun0.vx, vy=v_eq[1] + sun0.vy,
+                vz=v_eq[2] + sun0.vz,
+            )
+            extras = assist.Extras(sim, ephem)
+            # gr_model="GR_SIMPLE" reproduces Sorcha's own downgrade
+            # (sorcha/ephemeris/simulation_setup.py:182-183) -> Sorcha-parity.
+            # gr_model="GR_EIH" keeps ASSIST's default full relativistic model
+            # -> the more physically correct choice. See fixing_integrator.md §9.7.
+            if gr_model == "GR_SIMPLE":
+                forces = extras.forces
+                forces.remove("GR_EIH")
+                forces.append("GR_SIMPLE")
+                extras.forces = forces
+            elif gr_model != "GR_EIH":
+                raise ValueError(f"gr_model must be 'GR_SIMPLE' or 'GR_EIH', got {gr_model!r}")
+            sim.integrate(target.jd - ephem.jd_ref)
+
+            particle = sim.particles[0]
+            sun1 = ephem.get_particle("Sun", target.jd - ephem.jd_ref)
+            helio_r_eq = np.array([
+                particle.x - sun1.x, particle.y - sun1.y, particle.z - sun1.z
+            ])
+            helio_v_eq = np.array([
+                particle.vx - sun1.vx, particle.vy - sun1.vy, particle.vz - sun1.vz
+            ])
+            r_out[idx] = np.asarray(equatorial_to_ecliptic(helio_r_eq)) * AU_KM
+            v_out[idx] = (
+                np.asarray(equatorial_to_ecliptic(helio_v_eq)) * AU_KM / 86400.0
+            )
+
+    return r_out, v_out
+
+
+# =============================================================================
 # Sky-patch cut + orbital-phase visible subset
 # =============================================================================
 def build_visible_subset_dataframe(
@@ -545,13 +688,27 @@ def build_visible_subset_dataframe(
     argp = df["argperi"].to_numpy(dtype=float)
     tp_mjd = df["t_p"].to_numpy(dtype=float)
 
-    r_obj_ecl, v_obj_ecl = nsc.elements_to_helio_ecliptic_state(
-        a_AU=a_AU, e=e, inc_deg=inc,
-        raan_deg=raan, argp_deg=argp, tp_mjd=tp_mjd,
-        obstime_str=obstime_str,
-        method="newton", n_iter=10,
-        chunk=chunk, show_progress=show_progress,
-    )
+    # PROPAGATION (fixing_integrator.md §3). Real objects carry `t_0` (osculating epoch,
+    # e.g. S3M's MJD 54466) and need ASSIST n-body over the ~20 yr gap to obstime -- this is
+    # the entire integrator bug. Clones are generated AT obstime (their `t_p` already encodes
+    # mean anomaly at the epoch) and carry no `t_0`; for them the gap is zero and the two-body
+    # Kepler solve is exact, so spinning up ASSIST would be wasted work.
+    if "t_0" in df.columns:
+        r_obj_ecl, v_obj_ecl = propagate_elements_nbody(
+            a_AU=a_AU, e=e, inc_deg=inc,
+            raan_deg=raan, argp_deg=argp, tp_mjd=tp_mjd,
+            epoch_mjd=df["t_0"].to_numpy(dtype=float),
+            obstime_str=obstime_str,
+            chunk=min(chunk, 100), show_progress=show_progress,
+        )
+    else:
+        r_obj_ecl, v_obj_ecl = nsc.elements_to_helio_ecliptic_state(
+            a_AU=a_AU, e=e, inc_deg=inc,
+            raan_deg=raan, argp_deg=argp, tp_mjd=tp_mjd,
+            obstime_str=obstime_str,
+            method="newton", n_iter=10,
+            chunk=chunk, show_progress=show_progress,
+        )
     # single-object edge case: propagator returns (3,) instead of (1,3)
     r_obj_ecl = np.atleast_2d(r_obj_ecl)
     v_obj_ecl = np.atleast_2d(v_obj_ecl)
@@ -571,8 +728,43 @@ def build_visible_subset_dataframe(
     ])
 
     _, rE, vE, r_tele = scorer._get_earth_and_observer(obstime_str)
-    r_rel = r_obj_helio - (rE + r_tele)
-    v_rel = v_obj_helio - vE
+    # ORIGIN FIX (fixing_integrator.md §9.2). NEOMODScorer returns a BARYCENTRIC Earth state,
+    # but the propagated asteroid state is HELIOCENTRIC. Put the observer in the same origin by
+    # subtracting the Sun's barycentric offset; without this the geocentric vector is wrong by
+    # (Sun-barycenter)/Delta -- ~1-2 deg at 0.3 AU, invisible at 2 AU. Applies to both the
+    # n-body and the zero-gap clone paths.
+    with solar_system_ephemeris.set("de432s"):
+        r_sun_bary, v_sun_bary = get_body_barycentric_posvel("sun", t_obs)
+    r_sun_bary = r_sun_bary.xyz.to_value(u.km).T
+    v_sun_bary = v_sun_bary.xyz.to_value(u.km / u.s).T
+    r_observer_helio = rE - r_sun_bary + r_tele
+    v_observer_helio = vE - v_sun_bary
+    r_rel = r_obj_helio - r_observer_helio
+    v_rel = v_obj_helio - v_observer_helio
+
+    # ---- apparent V mag from THIS SAME state (fixing_integrator.md §9.8) ----
+    # Only for real objects (they carry H). Deriving the magnitude here -- rather than a second
+    # propagation in score_orbital_df -- makes position and magnitude consistent by construction
+    # and halves the n-body cost. Clones carry no H (their maps are per-mag-bin, so individual
+    # clone magnitudes are never needed), so this is skipped for them. Magnitude depends only on
+    # |r| and phase angle, both frame-invariant. HG phase function, G=0.15.
+    if "H" in df.columns:
+        _r_sun_au = np.linalg.norm(r_obj_helio, axis=1) / AU_KM
+        _delta_au = np.linalg.norm(r_rel, axis=1) / AU_KM
+        _u_sun = -r_obj_helio / np.linalg.norm(r_obj_helio, axis=1, keepdims=True)
+        _u_obs = -r_rel / np.linalg.norm(r_rel, axis=1, keepdims=True)
+        _alpha = np.arccos(np.clip(np.sum(_u_sun * _u_obs, axis=1), -1.0, 1.0))
+        _G = 0.15
+        _phi1 = np.exp(-3.33 * np.tan(0.5 * _alpha) ** 0.63)
+        _phi2 = np.exp(-1.87 * np.tan(0.5 * _alpha) ** 1.22)
+        _Phi = np.maximum((1 - _G) * _phi1 + _G * _phi2, 1e-30)
+        mag_app_all = (
+            df["H"].to_numpy(dtype=float)
+            + 5.0 * np.log10(_r_sun_au * _delta_au)
+            - 2.5 * np.log10(_Phi)
+        )
+    else:
+        mag_app_all = None
 
     x, y, z = r_rel[:, 0], r_rel[:, 1], r_rel[:, 2]
     vx, vy, vz = v_rel[:, 0], v_rel[:, 1], v_rel[:, 2]
@@ -661,6 +853,11 @@ def build_visible_subset_dataframe(
     out["beta_deg"] = np.rad2deg(beta)
     out["vlam"] = np.rad2deg(dlam) * 86400.0
     out["vbeta"] = np.rad2deg(dbeta) * 86400.0
+
+    # apparent V mag from the same n-body state + corrected origin (§9.8); real objects only.
+    # score_orbital_df consumes this instead of re-propagating a second time (§9.3.1).
+    if mag_app_all is not None:
+        out["mag_app"] = mag_app_all[good][m]
 
     out["M_obs_deg"] = mean_anomaly_deg_at_obstime(
         out["a"].to_numpy(), out["t_p"].to_numpy(), obstime_str,
@@ -2348,10 +2545,9 @@ class ProbMapSet:
         """Propagate orbital elements at obstime, sky-cut, score visible objects.
 
         Workflow:
-          1) compute_apparent_magnitude_for_population on full df
-          2) build_visible_subset_dataframe (sky cut at the map's center)
-          3) realign mag_app to the surviving rows
-          4) score_visible(vlam, vbeta, mag_app)
+          1) build_visible_subset_dataframe (n-body propagate, sky cut at the
+             map's center, and mag_app from the same state -- §9.8)
+          2) score_visible(vlam, vbeta, mag_app)
 
         Parameters
         ----------
@@ -2372,31 +2568,27 @@ class ProbMapSet:
         if max_sep_deg is None:
             max_sep_deg = self.max_sep_deg
 
-        # apparent mag for the whole input df
-        mag_app_full = compute_apparent_magnitude_for_population(
-            df=df, obstime_str=obstime_str, scorer=scorer,
-            chunk=chunk, show_progress=show_progress,
-        )
-
-        # to align apparent mag with the visible subset, re-run the full
-        # propagation inside build_visible_subset_dataframe and recover
-        # the surviving original-row indices via merge on a temp key.
-        df_aug = df.copy().reset_index(drop=True)
-        df_aug["__orig_idx"] = np.arange(len(df_aug), dtype=int)
-        df_aug["__mag_app_full"] = mag_app_full
-
+        # SINGLE propagation (fixing_integrator.md §9.8). build_visible_subset_dataframe now
+        # derives `mag_app` from the same n-body state it uses for the sky position, so the two
+        # are consistent by construction. The old code called compute_apparent_magnitude_for_
+        # population() first and propagated a SECOND time here -- doubling the n-body cost and,
+        # worse, computing the magnitude with the legacy TWO-BODY propagator and the uncorrected
+        # barycentric observer (§9.3.1). Requires df to carry `t_0` (for the n-body gap) and `H`.
         visible_df = build_visible_subset_dataframe(
-            df_aug, obstime_str=obstime_str, scorer=scorer,
+            df.copy().reset_index(drop=True),
+            obstime_str=obstime_str, scorer=scorer,
             max_sep_deg=max_sep_deg,
             chunk=chunk, show_progress=show_progress,
             center_mode="custom_ecliptic",
             center_lon_deg=self.center_lon_deg,
             center_lat_deg=self.center_lat_deg,
         )
-
-        mag_app_vis = visible_df["__mag_app_full"].to_numpy(dtype=float)
-        visible_df = visible_df.drop(columns=["__orig_idx", "__mag_app_full"])
-        visible_df["mag_app"] = mag_app_vis
+        if "mag_app" not in visible_df.columns:
+            raise RuntimeError(
+                "build_visible_subset_dataframe did not return mag_app; score_orbital_df "
+                "requires the input df to carry an 'H' column (single-propagation, §9.8)."
+            )
+        mag_app_vis = visible_df["mag_app"].to_numpy(dtype=float)
 
         probs, bin_labels = self.score_visible(
             vlam=visible_df["vlam"].to_numpy(dtype=float),
