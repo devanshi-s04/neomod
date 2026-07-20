@@ -659,6 +659,28 @@ def propagate_elements_nbody(
 # =============================================================================
 # Sky-patch cut + orbital-phase visible subset
 # =============================================================================
+def _center_skycoord(center_mode, center_lon_deg, center_lat_deg, t_obs):
+    """Sky-patch center as a GCRS SkyCoord. Shared by the propagate path and the
+    Stage 0 cache path so both apply an identical sky cut."""
+    if center_mode == "antisun":
+        sun_gcrs = get_sun(t_obs).transform_to(GCRS(obstime=t_obs))
+        return SkyCoord(
+            x=-sun_gcrs.cartesian.x, y=-sun_gcrs.cartesian.y, z=-sun_gcrs.cartesian.z,
+            representation_type="cartesian", frame=GCRS(obstime=t_obs),
+        )
+    elif center_mode == "custom_ecliptic":
+        center_ecl = SkyCoord(
+            lon=center_lon_deg*u.deg, lat=center_lat_deg*u.deg, distance=1.0*u.AU,
+            frame=GeocentricTrueEcliptic(obstime=t_obs),
+        )
+        return center_ecl.transform_to(GCRS(obstime=t_obs))
+    raise ValueError("center_mode must be 'antisun' or 'custom_ecliptic'")
+
+
+# Stage 0 cache columns that mark an input as ALREADY propagated to the epoch (§12.2).
+_CACHE_POSITION_COLS = ("ra_deg", "dec_deg", "vlam", "vbeta")
+
+
 def build_visible_subset_dataframe(
     df,
     obstime_str,
@@ -676,8 +698,31 @@ def build_visible_subset_dataframe(
     Uses a manual equatorial->ecliptic rotation to compute vlam, vbeta
     so it does not lose differentials to the astropy
     GeocentricTrueEcliptic frame transform.
+
+    CACHE PATH (fixing_integrator.md §12.2): if the input already carries the
+    Stage 0 epoch positions (ra_deg/dec_deg/vlam/vbeta), propagation + geometry
+    are already done -- skip straight to the center-dependent sky cut. This is
+    what makes the 667-map regen cheap (the n-body propagation was paid once in
+    Stage 0). Raw-element inputs (scoring, clones) lack these columns and take
+    the full propagate path below, so they are unaffected.
     """
     t_obs = Time(obstime_str, scale="tdb")
+
+    if all(col in df.columns for col in _CACHE_POSITION_COLS):
+        ra_deg_all = df["ra_deg"].to_numpy(dtype=float)
+        dec_deg_all = df["dec_deg"].to_numpy(dtype=float)
+        sc = SkyCoord(ra=ra_deg_all*u.deg, dec=dec_deg_all*u.deg, frame=GCRS(obstime=t_obs))
+        center_sc = _center_skycoord(center_mode, center_lon_deg, center_lat_deg, t_obs)
+        sky_sep_deg = sc.separation(center_sc).deg
+        m = sky_sep_deg <= max_sep_deg
+        out = df.iloc[np.flatnonzero(m)].copy().reset_index(drop=True)  # carries all cache cols
+        out["sky_sep_deg"] = sky_sep_deg[m]
+        if "L_obs_deg" not in out.columns:
+            out["L_obs_deg"] = mean_longitude_deg_at_obstime(
+                out["a"].to_numpy(), out["node"].to_numpy(),
+                out["argperi"].to_numpy(), out["t_p"].to_numpy(), obstime_str,
+            )
+        return out
 
     orig_idx = np.arange(len(df), dtype=int)
 
@@ -796,24 +841,7 @@ def build_visible_subset_dataframe(
 
     sc = SkyCoord(ra=ra_deg*u.deg, dec=dec_deg*u.deg, frame=GCRS(obstime=t_obs))
 
-    if center_mode == "antisun":
-        sun_gcrs = get_sun(t_obs).transform_to(GCRS(obstime=t_obs))
-        center_sc = SkyCoord(
-            x=-sun_gcrs.cartesian.x,
-            y=-sun_gcrs.cartesian.y,
-            z=-sun_gcrs.cartesian.z,
-            representation_type="cartesian",
-            frame=GCRS(obstime=t_obs),
-        )
-    elif center_mode == "custom_ecliptic":
-        center_ecl = SkyCoord(
-            lon=center_lon_deg*u.deg, lat=center_lat_deg*u.deg,
-            distance=1.0*u.AU,
-            frame=GeocentricTrueEcliptic(obstime=t_obs),
-        )
-        center_sc = center_ecl.transform_to(GCRS(obstime=t_obs))
-    else:
-        raise ValueError("center_mode must be 'antisun' or 'custom_ecliptic'")
+    center_sc = _center_skycoord(center_mode, center_lon_deg, center_lat_deg, t_obs)
 
     sky_sep_deg = sc.separation(center_sc).deg
     m = sky_sep_deg <= max_sep_deg

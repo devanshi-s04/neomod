@@ -163,6 +163,12 @@ def main():
                    help="MBA clone_factor. Default 5 matches the config behind the "
                         "documented F1=0.837 result (the code default is 1). Only MBA "
                         "differs between cf=1 and the old maps; NEO/TNO/Trojan match.")
+    p.add_argument("--cache", type=str, default=None,
+                   help="Stage 0 n-body epoch-state cache parquet (fixing_integrator.md §12). "
+                        "When given, source objects are taken from the cache (already n-body "
+                        "propagated + magnitudes) instead of re-propagating from S3M -- this is "
+                        "the n-body map regen. --ref-obstime MUST equal the cache epoch "
+                        "(2027-08-25T00:00:00 for epoch_state_2027-08-25T000000.parquet).")
     p.add_argument("--save-overlays", action="store_true",
                    help="Persist cloned-object overlays (vlam/vbeta/heliocentric) "
                         "for diagnostic plots. Inflates the .npz — use for test "
@@ -252,15 +258,44 @@ def main():
           f"TNO={pop_settings['TNO']['clone_factor']}, "
           f"Trojans={pop_settings['Trojans']['clone_factor']})", flush=True)
 
+    # n-body regen path (fixing_integrator.md §12.2): feed the Stage 0 cache as the source
+    # population. Source objects are already n-body propagated to the epoch (cache branch in
+    # build_visible_subset_dataframe skips propagation); magnitudes come from the cache; clones
+    # are still generated zero-gap two-body. One shared scorer suffices because it is used only
+    # for the (population-independent) observer geometry -- avoids loading the 13.9M-row MBA S3M
+    # file per task.
+    if args.cache:
+        import pandas as pd  # noqa: E402
+        print(f"[cache] loading n-body epoch cache: {args.cache}", flush=True)
+        cache = pd.read_parquet(args.cache)
+        _, shared_scorer = vdp.load_s3m_population("neo", verbose=False)  # observer-only
+        clone_sources = {}
+        for pop_label, cfg in pop_settings.items():
+            sub = cache[cache["population"] == pop_label].reset_index(drop=True)
+            clone_sources[pop_label] = {
+                "df": sub,
+                "scorer": shared_scorer,
+                "clone_factor": cfg["clone_factor"],
+                "use_conditional_cloner": cfg.get("use_conditional_cloner", True),
+                "scatter_size": cfg.get("scatter_size", 4),
+                "scatter_alpha": cfg.get("scatter_alpha", 0.1),
+                "_mag_app": sub["mag_app"].to_numpy(dtype=float),  # skip 2-body mag re-propagation
+            }
+            print(f"[cache] {pop_label:8s}: {len(sub):>10,} objects  clone_factor={cfg['clone_factor']}",
+                  flush=True)
+        gp_kwargs = dict(clone_sources=clone_sources)
+    else:
+        gp_kwargs = dict(population_settings=pop_settings)
+
     vdp.generate_probability_maps(
         obstime_str=args.ref_obstime,
         output_path=out,
-        population_settings=pop_settings,
         center_lon_deg=center_lon,
         center_lat_deg=center_lat,
         center_label=label,
         n_jobs=args.n_jobs,
         save_overlays=args.save_overlays,
+        **gp_kwargs,
     )
 
     augment_npz(out, delta_lon, lat, args.ref_obstime)

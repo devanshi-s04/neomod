@@ -105,8 +105,8 @@ def compute_mean_mag_V(df: pd.DataFrame) -> np.ndarray:
     return mean_mag_V
 
 
-def rescore(df: pd.DataFrame, mean_mag_V: np.ndarray) -> np.ndarray:
-    """VDP re-score with V mag: group by prob_map_file, load S3M map, score_visible.
+def rescore(df: pd.DataFrame, mean_mag_V: np.ndarray, mapdir: str = MAPDIR) -> np.ndarray:
+    """VDP re-score with V mag: group by prob_map_file, load map from `mapdir`, score_visible.
     (score_visible returns only the per-population probabilities -- no bin labels --
     so the V mag-bin label is derived separately via mag_bin_label().)"""
     import velocity_density_pipeline_gmm as vdp
@@ -114,11 +114,11 @@ def rescore(df: pd.DataFrame, mean_mag_V: np.ndarray) -> np.ndarray:
     vl = df["vlam"].to_numpy(float); vb = df["vbeta"].to_numpy(float)
     maps = df["prob_map_file"].astype(str).values
     uniq = pd.unique(maps)
-    print(f"  re-scoring {len(df):,} rows over {len(uniq)} maps", flush=True)
+    print(f"  re-scoring {len(df):,} rows over {len(uniq)} maps  (mapdir={mapdir})", flush=True)
     for k, name in enumerate(uniq, 1):
         if "grid" not in name and "antisun" not in name:
             continue
-        path = os.path.join(MAPDIR, name)
+        path = os.path.join(mapdir, name)
         if not os.path.exists(path):
             print(f"  MISSING map {path}", flush=True); continue
         m = maps == name
@@ -136,8 +136,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--comparison", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--maps-dir", default=MAPDIR,
+                    help="Probability-map directory. Default prob_maps_grid_s3m (two-body); "
+                         "pass prob_maps_grid_s3m_nbody for the n-body regen (fixing_integrator.md "
+                         "§12.4). Absolute, or relative to WORKDIR.")
     a = ap.parse_args()
     os.chdir(WORKDIR)
+    mapdir = a.maps_dir if os.path.isabs(a.maps_dir) else os.path.join(WORKDIR, a.maps_dir)
 
     t0 = time.time()
     df = pd.read_parquet(a.comparison)
@@ -149,7 +154,7 @@ def main():
           f"(expect ~ +0.6, i.e. V fainter)", flush=True)
 
     os.chdir(NEOMD)
-    P_V = rescore(df, mean_mag_V)
+    P_V = rescore(df, mean_mag_V, mapdir=mapdir)
     os.chdir(WORKDIR)
 
     df["mean_mag_V"] = mean_mag_V
