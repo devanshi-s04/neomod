@@ -1,0 +1,4 @@
+variant,n,n_delta,median_abs_delta,p95_abs_delta,p99_abs_delta,max_abs_delta,frac_gt_0.05,frac_gt_0.10,missing,duplicate,malformed,out_of_range
+B,794,794,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
+S,794,794,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0
+V,794,794,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0

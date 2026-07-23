@@ -1,0 +1,7 @@
+source,classifier,n,AUC,bestF1,thresh,completeness,contamination,n_excl_digest2_invalid,n_excl_vdp_nonfinite
+bench,digest2_det,666520,0.9527,0.7733,0.93,68.3,10.9,266,0
+bench,VDP_canon,666520,0.8665,0.7023,0.94,59.4,14.1,266,0
+sorcha_rawfix,digest2_det,648522,0.9434,0.8493,0.61,77.9,6.6,247,0
+sorcha_rawfix,VDP_canon,648522,0.8788,0.8017,0.013,74.1,12.7,247,0
+sorcha_vcorr,digest2_det,648642,0.948,0.85,0.51,78.3,7.0,127,0
+sorcha_vcorr,VDP_canon,648642,0.8814,0.802,0.015,73.6,11.9,127,0

@@ -1,0 +1,4 @@
+source,rows,ok,missing,duplicate,malformed,out_of_range,det_AUC,det_F1,det_compl%,det_contam%,stored_AUC,stored_F1,dAUC_vs_stored,changed_vs_stored,median_abs_chg,thresh_flips
+bench,666786,666520,135,103,28,0,0.9527,0.7733,68.3,10.9,0.9517,0.7729,0.001,49914,0.0,51
+sorcha_rawfix,648769,648522,105,80,62,0,0.9434,0.8493,77.9,6.6,0.943,0.8489,0.0003,72866,0.0,813
+sorcha_vcorr,648769,648642,37,28,62,0,0.948,0.85,78.3,7.0,0.943,0.8489,0.0049,329001,0.01,10960
