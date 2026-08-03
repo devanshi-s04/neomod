@@ -52,8 +52,13 @@ def activate(strict: bool = True) -> dict:
         raise RuntimeError(f"frozen IERS table hash mismatch: {got[:16]} != "
                            f"{str(t.get('preserved_table_sha256'))[:16]}")
     url = t.get("iers_auto_url") or iers.conf.iers_auto_url
-    import_file_to_cache(url, tp, replace=True)
-    iers.earth_orientation_table.set(iers.IERS_Auto.open())
+    import_file_to_cache(url, tp, replace=True)     # so any auto path also resolves to frozen bytes
+    # DO NOT use IERS_Auto.open() here. With auto_download=False it silently falls back to the
+    # table BUNDLED in astropy_iers_data (3,742,516 B, sha f18123bd...), which is a DIFFERENT and
+    # older file than the download-cache table GEN was built with (3,758,308 B, sha 4b828090...).
+    # That would change EOP values -- and therefore the projection -- between GEN and CAL/TEST
+    # without any error. Open the frozen IERS-A table explicitly instead.
+    iers.earth_orientation_table.set(iers.IERS_A.open(str(tp)))
     info["iers_table"] = str(tp); info["iers_sha256"] = got; info["iers_url"] = url
 
     # 3. pin the ephemeris. neoscore.py/NEO_H.py/neoom.py all do
@@ -82,9 +87,15 @@ def activate(strict: bool = True) -> dict:
     from astropy.time import Time as _T
     _ = _T("2027-08-25T00:00:00", scale="utc").ut1          # force IERS load
     _tab = iers.earth_orientation_table.get()
-    _dp = Path(str(dict(getattr(_tab, "meta", {})).get("data_path", "")))/"contents"
+    _meta = dict(getattr(_tab, "meta", {}))
+    _dp = Path(str(_meta.get("data_path", tp)))
+    if _dp.is_dir():
+        _dp = _dp/"contents"
+    if not _dp.exists():
+        _dp = tp
     info["active_iers_class"] = type(_tab).__name__
     info["active_iers_path"] = str(_dp)
+    info["active_iers_rows"] = int(len(_tab))
     info["active_iers_sha256"] = _sha(_dp) if _dp.exists() else None
     with solar_system_ephemeris.set(name):                   # the exact context neoscore.py uses
         _k = _ss._get_kernel(name)
