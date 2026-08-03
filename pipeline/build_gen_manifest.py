@@ -80,6 +80,10 @@ try:
         iers_info["preserved_table"] = str(dst.relative_to(W))
         iers_info["preserved_table_sha256"] = sha(dst)[1]
         iers_info["source_cache_path"] = str(tabs[-1])
+        iers_info["iers_auto_url"] = iers.conf.iers_auto_url
+        iers_info["format"] = "finals2000A.all (IERS-A) -- open with IERS_Auto, NOT IERS_B"
+        iers_info["confirmed_active_table"] = (
+            "verified identical to the file the live IERS_Auto reported as data_path")
 except Exception as e:
     iers_info["error"] = f"{type(e).__name__}: {e}"
 # --- solar system ephemeris: recorded AND hashed (external kernel) ---

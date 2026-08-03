@@ -41,15 +41,20 @@ def activate(strict: bool = True) -> dict:
     iers.conf.auto_max_age = None
     info["auto_download"] = iers.conf.auto_download
 
-    # 2. explicitly install the preserved IERS table
+    # 2. install the preserved table into astropy's cache UNDER THE AUTO URL, then open it.
+    # It is finals2000A.all (IERS-A). Opening it with IERS_B.open() raises
+    # "Column year failed to convert" -- IERS_B cannot parse IERS-A. Verified to be the exact file
+    # the live IERS_Auto was using (same cache path, same sha256).
     t = man.get("iers", {})
     tp = W/t["preserved_table"]
     got = _sha(tp)
     if strict and got != t.get("preserved_table_sha256"):
         raise RuntimeError(f"frozen IERS table hash mismatch: {got[:16]} != "
                            f"{str(t.get('preserved_table_sha256'))[:16]}")
-    iers.IERS.iers_table = iers.IERS_B.open(str(tp)) if tp.suffix in (".dat", "") else None
-    info["iers_table"] = str(tp); info["iers_sha256"] = got
+    url = t.get("iers_auto_url") or iers.conf.iers_auto_url
+    import_file_to_cache(url, tp, replace=True)
+    iers.earth_orientation_table.set(iers.IERS_Auto.open())
+    info["iers_table"] = str(tp); info["iers_sha256"] = got; info["iers_url"] = url
 
     # 3. pin the ephemeris kernel and verify its bytes
     e = man.get("ephemeris", {})
