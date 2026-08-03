@@ -87,19 +87,20 @@ eph = {"solar_system_ephemeris": "de432s",
        "set_at": ["src/neoscore.py:189", "src/NEO_H.py:184", "src/neoom.py:185"]}
 try:
     from astropy.coordinates import solar_system_ephemeris
-    from astropy.utils.data import download_file
-    from astropy.coordinates.solar_system import DEFAULT_JPLEPH  # noqa
+    import astropy.coordinates.solar_system as _ss
     with solar_system_ephemeris.set("de432s"):
-        url = solar_system_ephemeris._get_kernel("de432s").daf.file.name \
-            if hasattr(solar_system_ephemeris, "_get_kernel") else None
-    if url is None:
-        from astropy.coordinates.solar_system import _get_kernel
-        k = _get_kernel("de432s"); url = k.daf.file.name
-    kp = Path(url)
+        k = _ss._get_kernel("de432s")
+        kp = Path(k.daf.file.name)          # astropy download cache location
     if kp.exists():
-        eph["kernel_path"] = str(kp)
-        eph["kernel_sha256"] = sha(kp)[1]
-        eph["kernel_bytes"] = kp.stat().st_size
+        import shutil
+        frozen = W/"outputs/splits/frozen_ephemeris"; frozen.mkdir(parents=True, exist_ok=True)
+        dst = frozen/"de432s.bsp"
+        if not dst.exists():
+            shutil.copy2(kp, dst)
+        eph["kernel_cache_path"] = str(kp)
+        eph["preserved_kernel"] = str(dst.relative_to(W))
+        eph["kernel_sha256"] = sha(dst)[1]
+        eph["kernel_bytes"] = dst.stat().st_size
 except Exception as e:
     eph["error"] = f"{type(e).__name__}: {e}"
 manifest["ephemeris"] = eph

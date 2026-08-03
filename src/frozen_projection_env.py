@@ -1,0 +1,68 @@
+"""Frozen projection environment for CAL and TEST (E0 governance item 5).
+
+GEN was built with IERS auto-download ON, which is why its projection cannot be byte-reproduced
+today (~1 ULP float32 drift; job 38078793). CAL and TEST must NOT inherit that: import this module
+FIRST, before any astropy coordinate work, so the IERS table and ephemeris kernel are pinned.
+
+    import frozen_projection_env as fpe
+    fpe.activate()          # raises if the frozen files are missing or hash-mismatched
+"""
+from __future__ import annotations
+import hashlib, json
+from pathlib import Path
+
+W = Path("/mmfs1/gscratch/dirac/ds2004/sorcha")
+MANIFEST = W/"outputs/splits/GEN_MANIFEST.json"
+_ACTIVE = None
+
+
+def _sha(p: Path) -> str:
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for blk in iter(lambda: f.read(1 << 22), b""):
+            h.update(blk)
+    return h.hexdigest()
+
+
+def activate(strict: bool = True) -> dict:
+    """Disable IERS downloads, install the preserved table, pin the ephemeris kernel."""
+    global _ACTIVE
+    if _ACTIVE is not None:
+        return _ACTIVE
+    man = json.loads(MANIFEST.read_text())
+    info = {"manifest_sha256": _sha(MANIFEST)}
+
+    from astropy.utils import iers
+    from astropy.utils.data import import_file_to_cache
+    from astropy.coordinates import solar_system_ephemeris
+
+    # 1. no downloads, ever -- a silent refresh is exactly what desynchronised GEN
+    iers.conf.auto_download = False
+    iers.conf.auto_max_age = None
+    info["auto_download"] = iers.conf.auto_download
+
+    # 2. explicitly install the preserved IERS table
+    t = man.get("iers", {})
+    tp = W/t["preserved_table"]
+    got = _sha(tp)
+    if strict and got != t.get("preserved_table_sha256"):
+        raise RuntimeError(f"frozen IERS table hash mismatch: {got[:16]} != "
+                           f"{str(t.get('preserved_table_sha256'))[:16]}")
+    iers.IERS.iers_table = iers.IERS_B.open(str(tp)) if tp.suffix in (".dat", "") else None
+    info["iers_table"] = str(tp); info["iers_sha256"] = got
+
+    # 3. pin the ephemeris kernel and verify its bytes
+    e = man.get("ephemeris", {})
+    if "preserved_kernel" in e:
+        kp = W/e["preserved_kernel"]
+        kgot = _sha(kp)
+        if strict and kgot != e.get("kernel_sha256"):
+            raise RuntimeError(f"frozen ephemeris kernel hash mismatch: {kgot[:16]} != "
+                               f"{str(e.get('kernel_sha256'))[:16]}")
+        import_file_to_cache(e["kernel_cache_path"], kp, replace=True)
+        info["kernel"] = str(kp); info["kernel_sha256"] = kgot
+    solar_system_ephemeris.set(e.get("solar_system_ephemeris", "de432s"))
+    info["solar_system_ephemeris"] = e.get("solar_system_ephemeris", "de432s")
+
+    _ACTIVE = info
+    return info
