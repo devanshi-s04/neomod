@@ -111,6 +111,10 @@ Two evaluations, reported separately and never merged.
 
 ### E1 — Geometric benchmark (populations matched to the maps)
 
+> ⚠️ **The file below is the 2026-08-01 build, superseded by the GEN/CAL/TEST design in §0.** Its
+> non-NEOs were 100% shared with the maps that scored it. Retained as a pipeline smoke test; the
+> authoritative TEST rows are defined by `outputs/splits/TEST_DATA_SEAL.json`.
+
 | field | value |
 |---|---|
 | file | `outputs/benchmark_tracklets_neomod3/tracklets_benchmark_neomod3.parquet` |

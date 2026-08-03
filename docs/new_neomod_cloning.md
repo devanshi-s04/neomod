@@ -1844,6 +1844,10 @@ Since it changes no score, **batch it with the next rebuild rather than doing it
 
 ## §11.3 NEOMOD3 BENCHMARK — BUILT (2026-08-01)
 
+> ⚠️ **SUPERSEDED — see §12.1.** This benchmark's non-NEOs were drawn from the *same* Stage-0 cache
+> the maps were built from: **3,195,716 of 3,195,716 shared**. It is retained as a pipeline smoke
+> test only. The replacement is the GEN/CAL/TEST design (§12.2).
+
 `neomod/pipeline/gen_benchmark_tracklets_neomod3.py` + `slurm/benchmark_neomod3.sbatch`
 → `outputs/benchmark_tracklets_neomod3/tracklets_benchmark_neomod3.parquet` (3,220,714 rows, 437 MB).
 
@@ -2173,3 +2177,151 @@ it is not "which one wins", it is "none of them is sufficient alone at survey pr
 `ckpt-all`, from the v3 timings) makes the prior correct **by construction** and removes reweighting
 entirely. If a future run must subsample, keep NEOs whole, subsample non-NEOs at a recorded uniform
 rate, and pass `sample_weight` to every precision/F1 computation.
+
+---
+
+# §12. LEAKAGE FOUND, SPLITS BUILT, EVALUATION PUT UNDER GOVERNANCE (2026-08-03)
+
+Everything in §9 was measured on maps and test rows that **shared objects**. This section records
+what was found, what was rebuilt, and the governance now in place. The authority for all evaluation
+is `neomod/docs/EVALUATION_PROTOCOL.md` (**v1.2**) and
+`neomod/docs/E0_PILOT_PREREGISTRATION.md` (sha `2608c472c04f2d81`).
+
+## §12.1 ⚠️ The leakage: 100% of benchmark non-NEOs were in the maps that scored them
+
+The NEOMOD3 benchmark (§11.3) drew its NEOs from an *independent* draw (seed 20270825 vs the map
+cache's 42) — but its **MBA/TNO/Trojans came from the same Stage-0 epoch cache the maps were built
+from**. Measured: **3,195,716 of 3,195,716** benchmark non-NEOs also contributed to the density they
+were scored against.
+
+Maps are evaluated on a fixed 1001×1001 velocity grid, so an object often **dominates its own
+pixel** — the map "remembers" the test object. I had argued exactly this for NEO while calling the
+non-NEO case second-order; that was inconsistent and wrong.
+
+**E1a is therefore superseded as a scientific result.** It is retained *only* as an end-to-end
+pipeline smoke test — and a useful one: VDP (20 min, 0 NaN) and digest2 (806 tasks, 3,224 shards)
+both ran clean over 3.22M rows, de-risking the real run.
+
+## §12.2 GEN / CAL / TEST splits — built and frozen
+
+`neomod/pipeline/build_gencaltest_splits.py` → `outputs/splits/`.
+
+| split | role | NEO source | non-NEO |
+|---|---|---|---|
+| **GEN** | builds maps | NEOMOD3 seed **42** (existing 100M-draw cache) | 60% of Stage-0 objects |
+| **CAL** | all model decisions | NEOMOD3 seed **20270825** (30M) | 20% |
+| **TEST** | one final evaluation | NEOMOD3 seed **31415926**, **sealed, not drawn** | 20% |
+
+Non-NEOs are partitioned **by parent ObjID** using a stable md5(salt‖ObjID) hash — reproducible,
+order-independent, stable if rows are added. NEO needs no partition: NEOMOD3 is a *distribution*, so
+independent draws are independent realisations.
+
+| population | GEN | CAL | TEST | **exact weighted f_GEN** |
+|---|---:|---:|---:|---:|
+| MBA | 8,333,111 | 2,776,653 | 2,773,597 | **0.600223** |
+| TNO | 29,184 | 9,728 | 9,770 | **0.599482** |
+| Trojans | 107,544 | 36,131 | 36,207 | **0.597859** |
+
+14,111,925 objects, **zero duplicated, zero in more than one split** (asserted, not assumed).
+
+## §12.3 The normalisation trap — and why density and support must NOT share a factor
+
+`density_downweighted = density_clone / effective_factor`.
+
+Non-NEO density is built from **real object counts**, so a GEN split holding fraction *f* yields a
+density *f×* too low. Uncorrected, ρ_MBA falls while ρ_NEO (normalised by `w_abs`) does not, so
+`P(NEO) = ρ_NEO/Σρ` is **inflated everywhere** — a uniform bias **no ROC curve can reveal**.
+
+**Two factors, deliberately separate:**
+
+| factor | includes split fraction? | used for |
+|---|---|---|
+| `effective_factor` | **yes** | PHYSICAL density amplitude |
+| `support_factor` | **no** | STATISTICAL sample support |
+
+Support counts how many samples *actually exist*. Scaling it would report 6 real GEN neighbours as
+10, making sparse regions look better sampled than they are and corrupting both the support mask and
+the smoothing threshold.
+
+Investigation showed `make_support_count_map` **ignores** its `clone_factor` argument (returns raw
+`histogram2d` counts), so no inflation was occurring — but the code *passed* the factor as if it
+mattered and multiplied by it one line later (`support_for_smoothing`). Latent, not active. Now
+structurally separated so enabling smoothing for MBA later cannot silently corrupt support.
+
+The **exact per-(population, magnitude bin)** fraction is used, not the population-level value:
+sparse bins deviate by up to **0.20** (TNO 16–18 retained 0.80, not 0.60), and the per-bin value is
+*exact* for the objects that built that bin. Missing or invalid provenance is a **hard error** — no
+silent fallback to 1.0 or to the population-level number.
+
+**Verified numerically** (`test_split_normalisation.py`, `test_smoothing_support_semantics.py`):
+every fraction recomputed from the manifest matches to 1e-9; density scales by exactly 1/f
+(1.666047452364 vs 1/0.600223, atol 1e-12); support is **bit-identical**; all four invalid-provenance
+cases raise.
+
+## §12.4 ⚠️ digest2 has never been deterministic in this project
+
+`sorcha_phase2.py` hardcoded its digest2 config as `noheadings/norms/NEO` — **no `repeatable`
+keyword**. digest2 uses a Monte Carlo method and **seeds its PRNG randomly by default**
+(`OPERATION.md`); `repeatable` reseeds with a constant per tracklet (`d2cli.c:238`,
+`digest2.c:325`).
+
+So **every digest2 score in this project before 2026-08-03 was stochastic**, including §9.3's — which
+is consistent with what the night-61642 audit saw but was never traced to this line. Now fixed and
+required by protocol §1.1, which also records the trap that editing
+`digest2/d2_roc_comparison.config` does nothing (the runner writes its own temp config).
+
+## §12.5 ⚠️ The smoothing threshold was 8.75× more permissive than it read
+
+`DEFAULT_SMOOTH_SUPPORT_THRESHOLD = 10.0` with `scale_by_clone_factor = True` and
+`effective_factor_NEO = 8.746673` (a single constant, identical in every magnitude bin) meant the
+real requirement was `10.0/8.746673 = 1.143` clones — i.e. **≥ 2 clones, not ≥ 10**.
+
+Measured over 3 centers × 8 bins: the scaled rule smooths **10,286** pixels, the raw rule **110** — a
+**93.5×** difference, with the raw rule smoothing *zero* pixels in most (center, bin) combinations.
+
+The threshold's own docstring says it identifies pixels with "enough **sampled** support" — a
+statistical quantity — so raw counts is correct. Now `scale_by_clone_factor = False` and
+`DEFAULT_SMOOTH_SUPPORT_THRESHOLD = 2.0` **raw clones**: support counts are integers, so 2.0 and
+1.143 select identical pixels. **Behaviour is unchanged**; the magic number is gone and the knob is
+now honest. Its value is a CAL tuning parameter (candidates 2/3/5/10, §E0 prereg).
+
+## §12.6 Governance now in place
+
+| artefact | purpose |
+|---|---|
+| `EVALUATION_PROTOCOL.md` **v1.2** | TPR/FPR primary, contamination derived at stated priors, matched-completeness comparison, NaN abstentions, cell bootstrap, versioning block |
+| `outputs/splits/TEST_DATA_SEAL.json` | TEST **rows** frozen (seed, manifest role, cuts). Not drawn, not inspected |
+| `outputs/splits/MODEL_SEAL.PENDING.json` | placeholder; every model/threshold/calibration choice recorded here **after CAL**, before TEST |
+| `E0_PILOT_PREREGISTRATION.md` | 16 centers, smoothing candidates, acceptance criteria A–E — frozen **before** any pilot output |
+
+Standing rules: **no overall-winner statements**; thresholds chosen on CAL and applied to TEST
+unchanged; TEST scored **once**, all frozen variants in a single evaluation event; **no
+best-TEST-F1** (that would tune on TEST).
+
+## §12.7 Two operational traps, both hit today
+
+1. **Login-node JAX SIGABRT.** Importing the VDP module on a login node aborts with
+   `Thread tf_XLAPjRtCpuClient creation via pthread_create() failed` — JAX cannot build its CPU
+   thread pool under the per-user thread limit. **Environment limit, not a code fault.** All imports,
+   tests and builds run under `srun`/`sbatch`; only `py_compile`/`grep`/edits are login-node safe.
+   **Do not revert source when this appears.**
+2. **`/tmp` is node-local.** A CRC-scan job died with `No such file or directory` because its script
+   was written to `/tmp` on the login node. Job scripts live on GPFS. (This trap was already
+   documented earlier in the project and hit again anyway.)
+
+## §12.8 Current state
+
+| item | status |
+|---|---|
+| old 667-map grid (`prob_maps_grid_neomod3_full`) | intact — **CRC scan: 667 archives, 0 corrupt** — but superseded (built from all objects, not GEN) |
+| E1a benchmark + its VDP/digest2 scores | pipeline smoke test only |
+| §9.3–§9.9 numbers | provisional: wrong prior, stochastic digest2, leakage, self-selected thresholds |
+| splits | **frozen and unit-tested** |
+| TEST | **sealed, not drawn** |
+| E0 pilot (16 GEN maps) | running |
+| full 667-map GEN rebuild | **blocked** on the pilot passing A–E |
+
+**What survives all of it:** the map-building machinery (T1–T4, HEALPix, bit-identical rebuilds), the
+±5 velocity domain reaching |v|≈5 where production stopped at 2.00, the `(k−1)/k` estimator-bias
+diagnosis (§11.2, still unapplied), and the finding that |v|>2 contains **7,727 NEOs and zero
+non-NEOs** — so extending the grid raises TPR with no FPR cost available to pay.
