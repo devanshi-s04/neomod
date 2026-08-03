@@ -112,3 +112,112 @@ module compiles and imports fine on a compute node.
 **Therefore: every module import, unit test and map build runs under `srun`/`sbatch`.** Only
 `py_compile`, `grep` and file edits are safe on the login node. A SIGABRT with this stack trace means
 "you ran it in the wrong place", not "the source is broken" — do not start reverting code.
+
+---
+
+# AMENDMENT 1 — 2026-08-03
+
+**The original preregistration above is preserved verbatim** (sha256[:16] `2608c472c04f2d81`). This
+amendment corrects an arithmetic error, records a verified implementation defect, and freezes
+semantics that were underspecified. **Written before any E0 result was viewed:** the checks job
+(38078320) was cancelled while still PENDING and produced **no output**.
+
+The 16 threshold-2 GEN maps from job 38077241 are retained as **pilot artifacts only**, valid for
+reuse if their metadata and input hashes pass A1.3 and A1.7.
+
+## A1.1 ❌ Check A failure-mode arithmetic was WRONG — corrected
+
+The original §3.A said "R ≈ 1.00 would mean the split correction is missing". **That is incorrect.**
+
+Let *b* ≈ 1.11 be the kNN `k/(k−1)` estimator bias (§11.2, unapplied) and *f* = the exact
+`f_GEN(pop, bin)`. The kNN estimator over the GEN sample integrates to `b · N_GEN = b · f · N_full`,
+so:
+
+| state | ∫ρ dA | **R = ∫ρ / N_full** |
+|---|---|---:|
+| **corrected once** (intended) | `b · N_full` | **≈ b ≈ 1.11** |
+| **correction missing** | `b · f · N_full` | **≈ b·f ≈ 0.67** |
+| **corrected twice** | `b · N_full / f` | **≈ b/f ≈ 1.85** |
+
+The PASS window `1.05 ≤ R ≤ 1.20` is **unchanged and still correct** — it accepts only the
+corrected-once case and rejects both failure modes. Only the diagnostic annotation was wrong.
+
+**`N_full` is defined explicitly** as GEN + CAL + TEST objects of that population inside the *same*
+sky patch (≤ 30° of the center), the *same* magnitude bin, **and** the ±5 deg/day velocity domain.
+Objects outside the velocity grid contribute no density and must not appear in the denominator.
+
+## A1.2 ⚠️ VERIFIED DEFECT — `density_raw` is stored POST-smoothing
+
+`density_downweighted_map` is **rebound inside the smoothing loop**
+(`density_downweighted_map = smooth_density_map_by_support(density_downweighted_map, …)`), and the
+array stored at line 2083 as `density_maps_downweighted_raw[pop]` is that smoothed result. The name
+`_raw` is misleading.
+
+Consequences:
+- Check A would integrate a **smoothed** array for any smoothed population (NEO by default).
+  MBA/TNO/Trojans are not in `smooth_population_names`, so their stored arrays *are* unsmoothed —
+  which is why the original Check A (non-NEO only) was not actually invalidated, but it was correct
+  by accident.
+- Thresholds 2/3/5/10 **cannot** be derived from the stored archives, because smoothing is already
+  baked in.
+
+**Required:** store a genuinely pre-smoothing, physically normalised array
+`density_unsmoothed__POP__BIN` alongside the existing keys. Check A integrates **that** array.
+It is also the common starting point for every threshold candidate.
+
+## A1.3 Threshold candidates — separate deterministic products
+
+Thresholds **2, 3, 5, 10** (raw clones) are produced as **separate map archives** built from the
+*same* GEN rows, or derived independently from the stored `density_unsmoothed` + `support_count`
+arrays. Every archive **must record its own threshold in metadata**, and E0 **asserts** the recorded
+value matches the one requested. A candidate whose metadata does not match is discarded, not
+reinterpreted.
+
+## A1.4 Check D replaced — CAL-row coverage, not pixel coverage
+
+The original Check D counted *map pixels*, which is not a coverage measurement of the evaluation.
+It is replaced by a **CAL-row** test reporting, per classifier:
+
+- `n_scored`, `n_abstain`, abstention rate
+- broken down by **population**, **velocity band** (§6 strata), and **magnitude bin**
+
+Still **reported, not gated** — but on rows, not pixels.
+
+## A1.5 CAL threshold-selection semantics — frozen
+
+- **Metric: macro-averaged pAUC at FPR ≤ 0.01**, averaged over pilot centers with ≥ 30 NEOs and
+  ≥ 30 non-NEOs. Macro, not pooled: pooling would let the few dense ecliptic centers decide a
+  setting applied to all 667.
+- **All four candidates are evaluated on IDENTICAL CAL rows** — the common scorable subset across
+  all candidates.
+- **A candidate may not win by abstaining on hard rows.** Selection is on the common subset, and
+  total coverage is reported beside every candidate. Additionally, a candidate whose coverage is
+  more than **2 percentage points** below the best-coverage candidate is **disqualified**
+  regardless of pAUC.
+- Ties broken toward the **larger** threshold (more conservative smoothing).
+
+## A1.6 Seal sequence
+
+1. E0 passes → write **`MAP_BUILD_SEAL.json`** (GEN rows, split hashes, smoothing threshold, code
+   commit, per-archive metadata) → run the 667-map build.
+2. **`MODEL_SEAL.json` is written only after ALL remaining CAL-only choices are complete** —
+   interpolation mode (E1-Resolution), probability calibration, and operating thresholds.
+3. TEST is drawn and scored once, after MODEL_SEAL exists.
+
+## A1.7 NEO provenance assertion — required, not assumed
+
+The map build **must assert at runtime** and record in archive metadata that:
+
+- the NEO density sample comes **exclusively** from the independent NEOMOD3 **GEN** realisation —
+  record the cache path, `n_draws`, seed, and `cache_metadata.json` hash;
+- the **268,511 legacy S3M NEO rows** retained in the Stage-0 cache by `VDP_LOADER=s3m`
+  **never enter the NEO density tree**.
+
+Code reading confirms this holds (`df` is replaced by the NEOMOD3 cache before the sky cut, and
+there is deliberately no K|M fallback for NEO), but it is currently guaranteed only by a comment.
+E0 requires a runtime assertion and stored provenance.
+
+---
+
+**Status:** E0 is **NOT cleared**. Relaunch only after A1.2, A1.3 and A1.7 are implemented and this
+amendment is committed. TEST remains untouched.
