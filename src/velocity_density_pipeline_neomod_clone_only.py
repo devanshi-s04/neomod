@@ -1843,6 +1843,7 @@ def build_cloned_maps_for_center_magbin(
     support_count_maps = {}
     nearest_dist_maps = {}
     magcut_counts = {}
+    density_maps_unsmoothed = {}
     if isinstance(smooth_population_names, str):
         smooth_population_names = {smooth_population_names}
     else:
@@ -1869,9 +1870,25 @@ def build_cloned_maps_for_center_magbin(
             # the S3M count and could zero the NEO map even when NEOMOD3 has ample clones.
             # The cache carries ra_deg/dec_deg/vlam/vbeta, so the sky cut takes the §12.2 cache
             # branch: no propagation, just the cut.
+            _n_s3m_neo_rows = len(df)     # the S3M NEO rows that VDP_LOADER=s3m left in place
             df, neomod3_effective_factor = _load_neomod3_cache(
                 center_lon_deg=center_lon_deg, center_lat_deg=center_lat_deg,
                 obstime_str=obstime_str, max_sep_deg=max_sep_deg)
+            # A1.7 PROVENANCE ASSERTION: the NEO density sample must come EXCLUSIVELY from the
+            # independent NEOMOD3 GEN realisation. `df` has just been REPLACED by the NEOMOD3 cache,
+            # so the S3M NEO rows the Stage-0 loader supplied can no longer reach the density tree.
+            # Asserted rather than trusted to a comment.
+            if df is info.get("df"):
+                raise RuntimeError(
+                    "NEO provenance violation: the NEO frame is still the S3M source, not the "
+                    "NEOMOD3 cache -- S3M NEOs would enter the density tree")
+            _neo_provenance = {
+                "source": "NEOMOD3 cache",
+                "cache": NEOMOD3_CACHE_DIR or NEOMOD3_CACHE,
+                "n_neomod3_rows": int(len(df)),
+                "n_s3m_neo_rows_discarded": int(_n_s3m_neo_rows),
+                "effective_factor_NEO": float(neomod3_effective_factor),
+            }
             mag_app = df["mag_app"].to_numpy(dtype=float)
         elif "_mag_app" in info:
             # Use pre-computed apparent magnitudes if available (computed once in
@@ -1901,6 +1918,7 @@ def build_cloned_maps_for_center_magbin(
             clone_density_maps[pop_name] = empty_map
             clone_density_maps_downweighted[pop_name] = empty_map
             density_maps_downweighted_raw[pop_name] = empty_map.copy()
+            density_maps_unsmoothed[pop_name] = empty_map.copy()
             support_count_maps[pop_name] = empty_map.copy()
             nearest_dist_maps[pop_name] = inf_map
             continue
@@ -1937,6 +1955,7 @@ def build_cloned_maps_for_center_magbin(
                 clone_density_maps[pop_name] = empty_map
                 clone_density_maps_downweighted[pop_name] = empty_map
                 density_maps_downweighted_raw[pop_name] = empty_map.copy()
+                density_maps_unsmoothed[pop_name] = empty_map.copy()
                 support_count_maps[pop_name] = empty_map.copy()
                 nearest_dist_maps[pop_name] = inf_map
                 continue
@@ -2054,6 +2073,11 @@ def build_cloned_maps_for_center_magbin(
                     support_factor = f
                     effective_factor = f * _nonneo_split_fraction(pop_name, mag_min, mag_max)
                 density_downweighted_map = density_clone_map / effective_factor
+                # A1.2: the smoothing loop below REBINDS density_downweighted_map, so the array
+                # stored as `density_maps_downweighted_raw` is POST-smoothing despite its name.
+                # Capture the genuinely pre-smoothing, physically normalised density here. This is
+                # what Check A integrates and what every smoothing-threshold candidate derives from.
+                density_unsmoothed_map = density_downweighted_map.copy()
                 support_count_map = make_support_count_map(
                     vlam_clone, vbeta_clone, x_grid, y_grid, clone_factor=support_factor,
                 )
@@ -2081,6 +2105,7 @@ def build_cloned_maps_for_center_magbin(
         clone_density_maps[pop_name] = density_clone_map
         clone_density_maps_downweighted[pop_name] = density_downweighted_map
         density_maps_downweighted_raw[pop_name] = density_downweighted_map.copy()
+        density_maps_unsmoothed[pop_name] = density_unsmoothed_map.copy()
         support_count_maps[pop_name] = support_count_map.copy()
         nearest_dist_maps[pop_name] = nearest_dist.copy()
 
@@ -2102,6 +2127,7 @@ def build_cloned_maps_for_center_magbin(
         "mag_min": mag_min,
         "mag_max": mag_max,
         "magcut_counts": magcut_counts,
+        "density_maps_unsmoothed": density_maps_unsmoothed,
         "overlay": clone_overlay,
         "density_maps": clone_density_maps,
         "density_maps_downweighted": clone_density_maps_downweighted,
@@ -2415,6 +2441,13 @@ def save_maps_to_npz(
             nearest = bin_res["nearest_dist_maps"][pop]
             count = bin_res["magcut_counts"][pop]
             out[f"density_raw__{pop}__{label}"] = np.asarray(density, dtype=np.float32)
+            # A1.2: genuinely PRE-smoothing, physically normalised density. `density_raw` above is
+            # post-smoothing (the smoothing loop rebinds the variable), so Check A and every
+            # smoothing-threshold candidate must use THIS array instead. float64 -- Check A
+            # integrates it and must survive the round-trip exactly.
+            unsm = bin_res.get("density_maps_unsmoothed", {}).get(pop)
+            if unsm is not None:
+                out[f"density_unsmoothed__{pop}__{label}"] = np.asarray(unsm, dtype=np.float64)
             out[f"support_count__{pop}__{label}"] = np.asarray(support, dtype=np.float32)
             out[f"nearest_dist__{pop}__{label}"] = np.asarray(nearest, dtype=np.float32)
             out[f"magcut_count__{pop}__{label}"] = np.asarray(count, dtype=np.int64)
