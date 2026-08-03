@@ -58,7 +58,14 @@ def activate(strict: bool = True) -> dict:
     # older file than the download-cache table GEN was built with (3,758,308 B, sha 4b828090...).
     # That would change EOP values -- and therefore the projection -- between GEN and CAL/TEST
     # without any error. Open the frozen IERS-A table explicitly instead.
-    iers.earth_orientation_table.set(iers.IERS_A.open(str(tp)))
+    # IERS_Auto.READ (not .open) on the frozen file: keeps IERS_Auto's out-of-range semantics --
+    # with conf.auto_max_age = None it is exempt from the range check, which is what GEN had and
+    # what a 2027 epoch needs (the table's predictions stop earlier; IERS_A.open() raises
+    # IERSRangeError). .open() would silently load the BUNDLED table instead:
+    #   frozen  ut1_utc(2027-08-25) = -0.0559647 s
+    #   bundled ut1_utc(2027-08-25) = +0.0190462 s   -> 75 ms == ~1.1 arcsec of Earth rotation,
+    # roughly 10x the 0.1 arcsec GEN drift we accepted. Never use .open() here.
+    iers.earth_orientation_table.set(iers.IERS_Auto.read(str(tp)))
     info["iers_table"] = str(tp); info["iers_sha256"] = got; info["iers_url"] = url
 
     # 3. pin the ephemeris. neoscore.py/NEO_H.py/neoom.py all do
