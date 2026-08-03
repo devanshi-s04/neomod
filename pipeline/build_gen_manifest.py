@@ -18,6 +18,11 @@ def sha(p):
             h.update(blk)
     return (str(p), h.hexdigest(), os.path.getsize(p))
 
+# The cache was built 2026-07-31; every current commit postdates it. So the source files hashed
+# today are NOT proof of what produced the cache -- they are the CURRENT builder state. The only
+# behavioural evidence is the seed-42 reproduction (job 38078793), which showed the sampler still
+# emits bit-identical orbital elements. Kept in a separate group so the two are never conflated.
+ARTIFACT_GROUPS = ("datacube", "cache_meta", "monolithic", "shards", "by_pixel")
 groups = {
   "datacube":   [W/"neomod/NEOMOD3/input_neomod3.dat"],
   "cache_meta": [W/"outputs/neomod3_projection_cache/cache_metadata.json"],
@@ -42,6 +47,12 @@ for g, files in groups.items():
     }
     print(f"  {g:12s} {len(res):>5} files  {sum(r[2] for r in res)/2**30:8.2f} GiB  ({time.time()-t0:.0f}s)", flush=True)
 
+# --- REQUIRE a clean worktree: a dirty tree makes the recorded commit meaningless ---
+_dirty = subprocess.run(["git", "-C", str(W/"neomod"), "status", "--porcelain"],
+                        capture_output=True, text=True).stdout.strip()
+if _dirty:
+    print("REFUSING: worktree is dirty; commit before building the frozen manifest:\n" + _dirty)
+    sys.exit(2)
 manifest["git_commit"] = subprocess.run(
     ["git", "-C", str(W/"neomod"), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 manifest["git_dirty"] = bool(subprocess.run(
@@ -71,6 +82,39 @@ try:
         iers_info["source_cache_path"] = str(tabs[-1])
 except Exception as e:
     iers_info["error"] = f"{type(e).__name__}: {e}"
+# --- solar system ephemeris: recorded AND hashed (external kernel) ---
+eph = {"solar_system_ephemeris": "de432s",
+       "set_at": ["src/neoscore.py:189", "src/NEO_H.py:184", "src/neoom.py:185"]}
+try:
+    from astropy.coordinates import solar_system_ephemeris
+    from astropy.utils.data import download_file
+    from astropy.coordinates.solar_system import DEFAULT_JPLEPH  # noqa
+    with solar_system_ephemeris.set("de432s"):
+        url = solar_system_ephemeris._get_kernel("de432s").daf.file.name \
+            if hasattr(solar_system_ephemeris, "_get_kernel") else None
+    if url is None:
+        from astropy.coordinates.solar_system import _get_kernel
+        k = _get_kernel("de432s"); url = k.daf.file.name
+    kp = Path(url)
+    if kp.exists():
+        eph["kernel_path"] = str(kp)
+        eph["kernel_sha256"] = sha(kp)[1]
+        eph["kernel_bytes"] = kp.stat().st_size
+except Exception as e:
+    eph["error"] = f"{type(e).__name__}: {e}"
+manifest["ephemeris"] = eph
+manifest["artifact_vs_builder"] = {
+    "frozen_cache_artifact_groups": list(ARTIFACT_GROUPS),
+    "builder_provenance_groups": ["source"],
+    "caveat": "cache built 2026-07-31 16:09; all current commits postdate it. The `source` group "
+              "records the CURRENT builder state, not what produced the cache. Behavioural "
+              "equivalence of the sampler is established by job 38078793 (bit-identical elements), "
+              "not by these hashes.",
+}
+# artifact-only SHA: the bytes that ARE the frozen GEN cache
+_art = {k: v for g in ARTIFACT_GROUPS for k, v in manifest["groups"][g]["files"].items()}
+manifest["frozen_artifact_sha256"] = hashlib.sha256(
+    json.dumps(_art, sort_keys=True).encode()).hexdigest()
 manifest["environment"] = env
 manifest["iers"] = iers_info
 
