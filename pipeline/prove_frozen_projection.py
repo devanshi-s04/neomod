@@ -9,8 +9,14 @@ W = Path("/mmfs1/gscratch/dirac/ds2004/sorcha")
 sys.path.insert(0, str(W/"neomod"/"src")); os.chdir(W/"neomod")
 import frozen_projection_env as fpe
 info = fpe.activate()                      # MUST come before any coordinate work
-print("frozen env active:", json.dumps({k: (v[:40] if isinstance(v, str) else v)
-                                        for k, v in info.items()}, indent=2))
+print("=== FROZEN ENVIRONMENT (active, not merely requested) ===")
+for k in ("auto_download", "iers_url", "active_iers_class", "active_iers_path",
+          "active_iers_sha256", "iers_sha256", "solar_system_ephemeris", "kernel_url_key",
+          "active_kernel_path", "active_kernel_sha256", "kernel_sha256_frozen", "manifest_sha256"):
+    if k in info:
+        print(f"  {k:24s} {info[k]}")
+print(f"  ACTIVE IERS   == frozen: {info.get('active_iers_sha256') == info.get('iers_sha256')}")
+print(f"  ACTIVE kernel == frozen: {info.get('active_kernel_sha256') == info.get('kernel_sha256_frozen')}")
 import velocity_density_pipeline_gmm as vdp
 import neomod3_sampler as nm3s
 EPOCH = "2027-08-25T00:00:00"
