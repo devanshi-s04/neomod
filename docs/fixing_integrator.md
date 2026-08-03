@@ -1759,3 +1759,18 @@ non-null** (night set is the detected union, 100% mag<25), NEO median 1.000 / MB
 **|ΔP| median = 0.0002, 97.6% within 0.1** (NEO |ΔP| 0.0000, MBA 0.0002). With the integrator and maps
 now n-body on BOTH sides, benchmark and Sorcha score the same object identically — the same-object
 scoring-consistency test (previously two-body-benchmark vs LSST-then-V-Sorcha) now closes to ~0.
+
+### §13.10 — Full n-body benchmark WITH Sorcha detection cut (V<24.5), 2026-07-19
+
+Devanshi: rebuild the benchmark with Sorcha's limiting magnitude so the comparison is fair. Measured
+Sorcha's effective faint limit empirically from its DETECTED tracklets in Johnson V (matching the
+benchmark's band): median 22.82, p99 24.63, p99.9 24.96, max 26.00 — only 2.1% fainter than V=24.5.
+Decision: hard cut **V < 24.5** (captures 98% of Sorcha's detections; "where detection effectively
+ends"). Band-consistent (both sides Johnson V), no LSST->V conversion on the benchmark side.
+
+Builder gained `--mag-max` (applied to `mag_app` before sun-exclusion + caps). Counts after
+V<24.5 + sun-excl + v3 caps: **NEO 9,186 / MBA 650,000 / TNO 1,600 / Trojans 6,000** (~667k, similar
+size to the uncut set because the MBA cap still binds — but now **100% scorable** vs the uncut set's
+32%). Job 37365122 (`benchmark_full_nbody_mag245.sbatch`); outputs labelled `*_mag245` so the uncut
+`benchmark_comparison_s3m_nbody.parquet` is preserved for reference. Same pipeline (build -> score-vdp
+n-body maps -> digest2 -> combine) -> `benchmark_comparison_s3m_nbody_mag245.parquet`.

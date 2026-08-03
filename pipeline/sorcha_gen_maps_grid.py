@@ -174,6 +174,19 @@ def main():
                         "for diagnostic plots. Inflates the .npz — use for test "
                         "maps only, not the full production grid.")
     p.add_argument("--overwrite",     action="store_true")
+    p.add_argument("--velocity-grid-limit", type=float, default=None,
+                   help="Half-width of the (vlam, vbeta) density grid in deg/day. When given, "
+                        "grid_lim=(-limit, +limit) is passed to generate_probability_maps; when "
+                        "omitted, the module default (DEFAULT_GRID_LIM = +/-2.0) is used unchanged. "
+                        "Non-destructive: only widens the velocity domain of NEW maps.")
+    p.add_argument("--velocity-grid-step", type=float, default=None,
+                   help="Grid spacing in deg/day. When omitted, the module default "
+                        "(DEFAULT_GRID_STEP = 0.01) is used unchanged.")
+    p.add_argument("--vdp-module", type=str, default="velocity_density_pipeline_gmm",
+                   help="VDP module that builds the maps. Default is the production GMM pipeline. "
+                        "Use velocity_density_pipeline_neomod_clone_only for the NEOMOD3 clone-only "
+                        "variant (NEO from the NEOMOD3 cache with absolute normalisation; "
+                        "MBA/TNO/Trojans uncloned). See docs/new_neomod_cloning.md.")
     args = p.parse_args()
 
     # Build the grid
@@ -245,7 +258,13 @@ def main():
 
     # s3m_loader searches [".", "S3Mdata"] relative to CWD -- must chdir to neomod/
     os.chdir(NEOMOD)
-    import velocity_density_pipeline_gmm as vdp  # noqa: E402
+    # Which VDP module builds the maps. Default = the production GMM pipeline (unchanged).
+    # --vdp-module velocity_density_pipeline_neomod_clone_only selects the NEOMOD3 clone-only
+    # variant (docs/new_neomod_cloning.md): NEO clones from the NEOMOD3 projection cache with
+    # absolute normalisation, MBA/TNO/Trojans not cloned at all.
+    import importlib
+    vdp = importlib.import_module(args.vdp_module)  # noqa: E402
+    print(f"VDP module: {vdp.__name__}", flush=True)
 
     # Override MBA clone_factor (default 5) without mutating the global default,
     # so monthly/hybrid pipelines that import DEFAULT_POPULATION_SETTINGS are
@@ -287,6 +306,15 @@ def main():
     else:
         gp_kwargs = dict(population_settings=pop_settings)
 
+    # Optional wider/finer velocity domain (non-destructive; defaults => module DEFAULT_GRID_LIM/STEP)
+    gp_grid = {}
+    if args.velocity_grid_limit is not None:
+        gp_grid["grid_lim"] = (-args.velocity_grid_limit, args.velocity_grid_limit)
+    if args.velocity_grid_step is not None:
+        gp_grid["grid_step"] = args.velocity_grid_step
+    if gp_grid:
+        print(f"velocity grid override: {gp_grid}", flush=True)
+
     vdp.generate_probability_maps(
         obstime_str=args.ref_obstime,
         output_path=out,
@@ -295,6 +323,7 @@ def main():
         center_label=label,
         n_jobs=args.n_jobs,
         save_overlays=args.save_overlays,
+        **gp_grid,
         **gp_kwargs,
     )
 
