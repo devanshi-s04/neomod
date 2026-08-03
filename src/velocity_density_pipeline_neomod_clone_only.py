@@ -1239,6 +1239,55 @@ def elements_to_vlam_vbeta_d_h(
 
 
 # EVALUATION_PROTOCOL.md v1.1 §0.2 -- set by the map driver (--split-provenance). None => no split.
+GEN_PROVENANCE_PATH = os.environ.get(
+    "GEN_PROVENANCE", "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/splits/GEN_PROVENANCE.json")
+_GEN_PROV = None
+
+
+def _verify_neo_gen_provenance(resolved_cache_path):
+    """Assert the NEO density sample really is the approved frozen GEN artifact.
+
+    A1.7 (strengthened): checking `df is not info["df"]` only proves a different object was
+    returned -- it says nothing about where the contents came from. This verifies the resolved
+    cache path against the frozen GEN artifact and re-hashes cache_metadata.json against the
+    manifest, so pointing NEOMOD3_CACHE_DIR at some other cache is a hard failure rather than a
+    silent substitution.
+
+    Returns the provenance dict recorded into every archive.
+    """
+    global _GEN_PROV
+    import hashlib as _hl
+    import json as _json
+    if _GEN_PROV is None:
+        p = Path(GEN_PROVENANCE_PATH)
+        if not p.exists():
+            raise RuntimeError(
+                f"GEN provenance file not found at {p}. The NEO density sample cannot be verified "
+                f"as the approved GEN artifact; refusing to build.")
+        _GEN_PROV = _json.loads(p.read_text())
+    prov = _GEN_PROV
+    if prov.get("role") != "GEN" or prov.get("seed_provenance") != "PROVEN":
+        raise RuntimeError(f"GEN provenance is not PROVEN: role={prov.get('role')!r} "
+                           f"seed_provenance={prov.get('seed_provenance')!r}")
+    approved = {str(prov.get("by_pixel_dir", "")).rstrip("/"),
+                str(prov.get("cache_parquet", ""))}
+    if str(resolved_cache_path).rstrip("/") not in approved:
+        raise RuntimeError(
+            f"NEO provenance violation: resolved cache {resolved_cache_path!r} is not the frozen "
+            f"GEN artifact {sorted(approved)!r}")
+    meta_p = Path(prov["cache_parquet"]).parent/"cache_metadata.json"
+    got = _hl.sha256(meta_p.read_bytes()).hexdigest()
+    if got != prov.get("cache_metadata_sha256"):
+        raise RuntimeError(
+            f"NEO provenance violation: cache_metadata.json hash {got[:16]} != frozen "
+            f"{str(prov.get('cache_metadata_sha256'))[:16]} -- the GEN cache changed since freezing")
+    return {"source_role": "NEOMOD3_GEN", "resolved_cache": str(resolved_cache_path),
+            "seed": prov.get("seed"), "n_draws": prov.get("n_draws"),
+            "cache_metadata_sha256": got,
+            "manifest_sha256": (prov.get("manifest") or {}).get("sha256"),
+            "effective_factor_NEO": float(prov.get("effective_factor_NEO", 0)) or None}
+
+
 NONNEO_SPLIT_FRACTIONS = None
 _SPLIT_BIN_LABELS = {(14.0, 16.0): "14_16", (16.0, 18.0): "16_18", (18.0, 20.0): "18_20",
                      (20.0, 21.0): "mag20", (21.0, 22.0): "mag21", (22.0, 23.0): "mag22",
@@ -1844,6 +1893,7 @@ def build_cloned_maps_for_center_magbin(
     nearest_dist_maps = {}
     magcut_counts = {}
     density_maps_unsmoothed = {}
+    neo_provenance = None
     if isinstance(smooth_population_names, str):
         smooth_population_names = {smooth_population_names}
     else:
@@ -1882,13 +1932,13 @@ def build_cloned_maps_for_center_magbin(
                 raise RuntimeError(
                     "NEO provenance violation: the NEO frame is still the S3M source, not the "
                     "NEOMOD3 cache -- S3M NEOs would enter the density tree")
-            _neo_provenance = {
-                "source": "NEOMOD3 cache",
-                "cache": NEOMOD3_CACHE_DIR or NEOMOD3_CACHE,
+            _neo_provenance = _verify_neo_gen_provenance(NEOMOD3_CACHE_DIR or NEOMOD3_CACHE)
+            _neo_provenance.update({
                 "n_neomod3_rows": int(len(df)),
                 "n_s3m_neo_rows_discarded": int(_n_s3m_neo_rows),
-                "effective_factor_NEO": float(neomod3_effective_factor),
-            }
+                "resolved_effective_factor": float(neomod3_effective_factor),
+            })
+            neo_provenance = _neo_provenance
             mag_app = df["mag_app"].to_numpy(dtype=float)
         elif "_mag_app" in info:
             # Use pre-computed apparent magnitudes if available (computed once in
@@ -2128,6 +2178,7 @@ def build_cloned_maps_for_center_magbin(
         "mag_max": mag_max,
         "magcut_counts": magcut_counts,
         "density_maps_unsmoothed": density_maps_unsmoothed,
+        "neo_provenance": neo_provenance,
         "overlay": clone_overlay,
         "density_maps": clone_density_maps,
         "density_maps_downweighted": clone_density_maps_downweighted,
@@ -2364,6 +2415,7 @@ def save_maps_to_npz(
     population_names,
     save_overlays=False,
     smoothing=None,
+    neo_provenance=None,
 ):
     """Persist a generate_probability_maps() output dict to compressed .npz.
 
@@ -2400,6 +2452,12 @@ def save_maps_to_npz(
         "mag_bin_mins": np.asarray([mb["mag_min"] for mb in mag_bins], dtype=np.float64),
         "mag_bin_maxs": np.asarray([mb["mag_max"] for mb in mag_bins], dtype=np.float64),
     }
+    # (4) NEO provenance travels with every archive, so a map can always be traced to the GEN
+    # artifact it was built from. (A1.3) the requested smoothing threshold is recorded here and
+    # asserted by E0 against the value the candidate was built for.
+    if neo_provenance:
+        import json as _json
+        out["neo_provenance_json"] = np.asarray(_json.dumps(neo_provenance, sort_keys=True))
     if smoothing is not None:
         smoothing_passes = list(smoothing.get("passes", ()))
         out.update({
