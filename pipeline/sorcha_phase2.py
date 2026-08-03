@@ -351,7 +351,11 @@ def run_digest2_lines(
     if len(obs_lines) % 2:
         raise ValueError("Expected exactly two observation lines per tracklet")
 
-    cfg_text = "noheadings\nnorms\nNEO\n"
+    # EVALUATION_PROTOCOL.md v1.0 requires deterministic digest2. digest2 uses a Monte Carlo
+    # method and by DEFAULT seeds its PRNG randomly (OPERATION.md); "repeatable" reseeds with a
+    # constant per tracklet (digest2.c:325). Without it the same tracklet can score differently
+    # between runs -- which is what the night-61642 audit found in the production scores.
+    cfg_text = "noheadings\nnorms\nrepeatable\nNEO\n"
     n_tracklets = len(obs_lines) // 2
     all_lines: list[str] = []
 

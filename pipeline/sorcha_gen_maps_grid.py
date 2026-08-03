@@ -153,6 +153,13 @@ def main():
                    help="Output directory for grid maps.")
     p.add_argument("--output",        type=str, default=None,
                    help="Explicit output .npz path (overrides --prob-maps-dir naming).")
+    p.add_argument("--split-manifest", type=str, default=None,
+                   help="Parquet with ObjID/population/split; restricts non-NEO map inputs to one "
+                        "split (protocol v1.1 §0). Requires --split-provenance for the 1/f fix.")
+    p.add_argument("--split-role", type=str, default="GEN", choices=["GEN", "CAL", "TEST"])
+    p.add_argument("--split-provenance", type=str, default=None,
+                   help="split_provenance.json; supplies the exact retained fraction per "
+                        "(population, mag bin) so densities represent the FULL population.")
     p.add_argument("--map-grid-file", type=str, default=None,
                    help="Write the (index, delta_lon, lat, filename) manifest CSV here.")
     p.add_argument("--list-only",     action="store_true",
@@ -287,6 +294,16 @@ def main():
         import pandas as pd  # noqa: E402
         print(f"[cache] loading n-body epoch cache: {args.cache}", flush=True)
         cache = pd.read_parquet(args.cache)
+        if args.split_manifest:
+            # EVALUATION_PROTOCOL.md v1.1 §0: maps may be built from GEN objects ONLY. Without this
+            # every test object also contributes to the density it is scored against (the leakage
+            # that superseded E1a). The matching 1/f correction is applied via --split-provenance.
+            man = pd.read_parquet(args.split_manifest)
+            keep = set(man.ObjID[man.split == args.split_role])
+            n0 = len(cache)
+            cache = cache[cache.ObjID.isin(keep) | (cache.population == "NEO")].reset_index(drop=True)
+            print(f"[split] {args.split_role}: kept {len(cache):,} of {n0:,} cache rows "
+                  f"(NEO comes from the NEOMOD3 draw, not this manifest)", flush=True)
         _, shared_scorer = vdp.load_s3m_population("neo", verbose=False)  # observer-only
         clone_sources = {}
         for pop_label, cfg in pop_settings.items():
@@ -302,6 +319,10 @@ def main():
             }
             print(f"[cache] {pop_label:8s}: {len(sub):>10,} objects  clone_factor={cfg['clone_factor']}",
                   flush=True)
+        if args.split_provenance:
+            import json as _json
+            vdp.NONNEO_SPLIT_FRACTIONS = _json.load(open(args.split_provenance))
+            print(f"[split] normalisation fractions loaded from {args.split_provenance}", flush=True)
         gp_kwargs = dict(clone_sources=clone_sources)
     else:
         gp_kwargs = dict(population_settings=pop_settings)

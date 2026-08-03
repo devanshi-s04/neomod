@@ -219,8 +219,21 @@ DEFAULT_SMOOTH_POPULATION_NAMES = ("NEO",)
 DEFAULT_SMOOTH_PRESMOOTHING_PASSES = (
     {"support_threshold": 3.0, "sigma_pixels": 1.5, "truncate_sigma": 5.0},
 )
-DEFAULT_SMOOTH_SUPPORT_SCALE_BY_CLONE_FACTOR = True
-DEFAULT_SMOOTH_SUPPORT_THRESHOLD = 10.0
+# --- smoothing support semantics (protocol v1.1; resolved 2026-08-03) ---
+# The threshold selects pixels with enough SAMPLED support to be trusted as smoothing sources --
+# a STATISTICAL quantity, so it must be compared against RAW clone counts.
+#
+# The old default multiplied support by effective_factor (8.7467 for NEO), so a nominal "10.0"
+# actually meant >= 2 clones. Measured effect: 10,286 pixels smoothed vs 110 under raw counts
+# (93.5x). Scaling is now OFF and the threshold is expressed directly in clones.
+#
+# 1.143 = 10.0 / 8.746673 reproduces the previous maps EXACTLY, so this is a semantics fix, not a
+# behaviour change. The raw value is a CAL tuning parameter -- tune it on CAL, never on TEST.
+DEFAULT_SMOOTH_SUPPORT_SCALE_BY_CLONE_FACTOR = False
+DEFAULT_SMOOTH_SUPPORT_THRESHOLD = 2.0     # RAW clones. Support counts are integers from
+# histogram2d, so 2.0 and 1.143 select the SAME pixels (count>=2); 2.0 states the rule honestly
+# instead of carrying 10.0/8.746673 as a magic number. Behaviour is unchanged from the old
+# scaled default. Tune this on CAL, never on TEST.
 DEFAULT_SMOOTH_SIGMA_PIXELS = 4.0
 DEFAULT_SMOOTH_TRUNCATE_SIGMA = 5.0
 
@@ -1224,6 +1237,48 @@ def elements_to_vlam_vbeta_d_h(
     )
 
 
+
+# EVALUATION_PROTOCOL.md v1.1 §0.2 -- set by the map driver (--split-provenance). None => no split.
+NONNEO_SPLIT_FRACTIONS = None
+_SPLIT_BIN_LABELS = {(14.0, 16.0): "14_16", (16.0, 18.0): "16_18", (18.0, 20.0): "18_20",
+                     (20.0, 21.0): "mag20", (21.0, 22.0): "mag21", (22.0, 23.0): "mag22",
+                     (23.0, 24.0): "mag23", (24.0, 25.0): "mag24+"}
+
+
+def _nonneo_split_fraction(pop_name, mag_min, mag_max):
+    """Exact retained fraction of `pop_name` in this magnitude bin under the active split.
+
+    Maps built from a GEN split holding fraction f of the real objects carry a density f x too low.
+    Uncorrected, rho_MBA drops while rho_NEO (normalised by w_abs) does not, so
+    P(NEO) = rho_NEO / sum(rho) is inflated EVERYWHERE -- a uniform bias no ROC curve reveals.
+    Returns 1.0 when no split is active, so default behaviour is unchanged.
+
+    Uses the per-(population, mag bin) fraction rather than the population-level one: sparse bins
+    deviate by up to 0.20 from it (TNO 16-18 retained 0.80, not 0.60), and the per-bin value is
+    EXACT for the objects that actually built that bin, not an estimate.
+    """
+    prov = NONNEO_SPLIT_FRACTIONS
+    if prov is None or pop_name == "NEO":
+        return 1.0
+    # Split mode IS active. A missing or invalid fraction must be a HARD ERROR: silently falling
+    # back to 1.0 would leave the density f x too low and inflate P(NEO) everywhere, and falling
+    # back to the population-level value would misnormalise sparse bins by up to 33%.
+    lab = _SPLIT_BIN_LABELS.get((float(mag_min), float(mag_max))) if (
+        mag_min is not None and mag_max is not None) else None
+    if lab is None:
+        raise ValueError(
+            f"split mode active but mag bin ({mag_min}, {mag_max}) is not a known bin; "
+            f"cannot resolve the retained fraction for {pop_name}")
+    byb = prov.get("f_by_population_magbin", {})
+    if pop_name not in byb:
+        raise ValueError(f"split provenance has no f_by_population_magbin entry for {pop_name}")
+    f = byb[pop_name].get(lab)
+    if f is None or not np.isfinite(f) or not (0.0 < f <= 1.0):
+        raise ValueError(
+            f"split provenance fraction for {pop_name}/{lab} is missing or invalid ({f!r}); "
+            f"refusing to guess -- regenerate split_provenance.json")
+    return float(f)
+
 # =============================================================================
 # Bayesian kNN density estimation (Appendix B 2D)
 # =============================================================================
@@ -1981,21 +2036,31 @@ def build_cloned_maps_for_center_magbin(
                 # whether this is the RIGHT footing is the open decision.
                 # MBA/TNO/Trojans are uncloned, so n_visible_clones_gmm is None there and
                 # effective_factor falls through to f (= 1): density is left as-is.
+                # TWO DISTINCT FACTORS -- do not merge them (protocol v1.1 §0.2):
+                #   effective_factor : PHYSICAL density amplitude. Includes the GEN split fraction
+                #                      so rho represents the FULL population.
+                #   support_factor   : STATISTICAL sample support. Must NOT include the split
+                #                      fraction -- support counts how many samples actually exist.
+                #                      Scaling it would report 6 real GEN neighbours as 10, making
+                #                      sparse regions look better sampled than they are and
+                #                      corrupting both the support mask and smoothing thresholds.
                 if pop_name == "NEO" and neomod3_effective_factor is not None:
                     # OPTION (b): NEOMOD3-absolute. effective_factor = n_draws / total_weight, so
                     # rho_NEO integrates to the TRUE expected NEO count (docs §6.1c). Independent of
                     # sampling budget AND of S3M -- the whole point of the switch.
                     effective_factor = neomod3_effective_factor
+                    support_factor = neomod3_effective_factor      # no split applies to NEO
                 else:
-                    effective_factor = f
+                    support_factor = f
+                    effective_factor = f * _nonneo_split_fraction(pop_name, mag_min, mag_max)
                 density_downweighted_map = density_clone_map / effective_factor
                 support_count_map = make_support_count_map(
-                    vlam_clone, vbeta_clone, x_grid, y_grid, clone_factor=effective_factor,
+                    vlam_clone, vbeta_clone, x_grid, y_grid, clone_factor=support_factor,
                 )
 
                 if smooth_density_maps and pop_name in smooth_population_names:
                     if smooth_support_scale_by_clone_factor:
-                        support_for_smoothing = support_count_map * effective_factor
+                        support_for_smoothing = support_count_map * support_factor
                     else:
                         support_for_smoothing = support_count_map
                     for pass_cfg in smooth_passes:
