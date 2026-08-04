@@ -145,11 +145,13 @@ print(R[["target_cov","ROC","ROC_rand","pAUC","pAUC_rand","F1","F1_rand"]].to_st
 print("\n  score stability on RETAINED rows (0.01 vs 0.005, unmasked):")
 print(R[["target_cov","flips_001_vs_0005","max_absd_001_0005"]].to_string(index=False))
 print("\n=== error rate vs Z (calibration direction) ===")
-qb=pd.qcut(Zc,10,duplicates="drop")
-E=pd.DataFrame({"Z":Zc,"y":yv,"p":a}).groupby(qb,observed=True).apply(
-    lambda t: pd.Series({"n":len(t),"meanZ":t.Z.mean(),"NEOfrac":t.y.mean(),
-                         "meanP":t.p.mean(),"absErr":np.abs(t.p-t.y).mean()}),include_groups=False)
-print(E.to_string(float_format=lambda z:f"{z:,.4g}"))
+Zf=np.where(np.isfinite(Zc),Zc,np.nanmax(Zc[np.isfinite(Zc)])*10)
+E=pd.DataFrame({"Zbin":pd.qcut(Zf,10,duplicates="drop"),"Z":Zf,"y":yv,"p":a})
+G=E.groupby("Zbin",observed=True)
+print(pd.DataFrame({"n":G.size(),"meanZ":G.Z.mean(),"NEOfrac":G.y.mean(),
+                    "meanP":G.p.mean(),
+                    "absErr":G.apply(lambda t:np.abs(t.p-t.y).mean(),include_groups=False)}
+                   ).to_string(float_format=lambda z:f"{z:,.4g}"))
 print("\n=== abstention composition at 99% coverage ===")
 s99=np.percentile(Zc,99.0); k99=Zc<=s99
 A2=pd.DataFrame({"truth":cal.population.to_numpy()[m],"mag":cal.mean_mag.to_numpy()[m],
