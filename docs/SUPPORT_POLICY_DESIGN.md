@@ -62,24 +62,42 @@ do **not** abstain). It also spans many orders of magnitude between the MBA core
 tail, so any single global threshold would abstain on essentially all |v| > 2 objects — the exact
 population the ±5 grid was built to recover.
 
-**(b) kth-neighbour distance to the UNION of model support. ← RECOMMENDED.**
-`d_k(X)` = distance in (vlam, vbeta) from X to the k-th nearest sample **pooled across all
-populations**. Rationale:
+**(b) RAW kth-neighbour distance to the pooled union. REJECTED (amended 2026-08-03).**
+Sample spacing differs strongly by population, by map and by magnitude bin — MBA cores are orders
+of magnitude denser than the fast-NEO tail. A single distance threshold in deg/day would therefore
+reject **sparse but genuinely supported** fast-NEO regions while passing everything near the MBA
+core. That is the same population-dependent failure the occupancy mask had, in a different guise.
 
-- **grid-independent by construction** — a property of the sample set, not of any raster, which is
-  exactly the failure mode being removed;
-- **symmetric across populations by construction** — one union, no per-population decisions;
-- **physically interpretable** — deg/day, comparable to the velocity scales already in use;
-- it is the quantity the kNN estimator is *built on*, so it measures directly where the estimator
-  has data rather than inferring it;
-- it separates the two cases (a) conflates: sparse-but-sampled regions keep a small `d_k` and remain
-  scored, while true extrapolation grows `d_k` without bound.
+**(b') STANDARDISED global support score. ← RECOMMENDED.**
 
-**(c) Standardised combination of both.** Deferred. Adds a second free parameter and a
-standardisation choice for no demonstrated benefit. Revisit only if (b) shows a failure mode.
+```
+z_c(X) = d_k,c(X) / q_c(map, mag_bin)
+Z(X)   = min_c z_c(X)
+```
 
-**Reported alongside, but not gating:** `SUM_c rho_c(X)` and per-population `d_k`, so a future
-review can see whether (c) would have helped.
+- `d_k,c(X)` — the **direct** kth-neighbour distance from X to population *c*'s GEN samples.
+- `q_c(map, mag_bin)` — a reference spacing for population *c* **in that same map and magnitude
+  bin**, derived from that population's own GEN support (leave-one-out kth-neighbour distances).
+
+`z_c` is therefore dimensionless: "how far is X, in units of how far apart this population's own
+samples are, here". A sparse fast-NEO region has a large `q_NEO`, so a genuinely supported object
+there still gets a small `z_NEO`.
+
+One global decision, no per-population zeroing:
+
+```
+Z(X) <= s*  ->  return the FULL unmasked posterior using every population
+Z(X) >  s*  ->  ABSTAIN for the observation as a whole (NaN)
+```
+
+The `min` over populations means an observation is scored **if at least one modelled population
+genuinely supports it** — which is the correct condition, since the posterior is a ratio and needs
+only one credible source of density to be meaningful.
+
+**(c) Combining Z with total mixture density.** Deferred. Revisit only if (b') shows a failure mode.
+
+**Reported alongside, but not gating:** `SUM_c rho_c(X)`, per-population `z_c`, and the `argmin_c`
+(which population is supplying the support), so a future review can see whether (c) would help.
 
 ## §7. Choosing `s*` on CAL without laundering metrics through abstention
 
@@ -91,9 +109,18 @@ before any threshold is fitted**:
    metrics **at** those coverages. Never search `s*` to maximise a metric.
 2. **Report the whole metric-vs-coverage curve**, not a single point. A policy that only looks good
    at one coverage is not a policy.
-3. **Random-abstention control.** At each coverage, also abstain on a *random* subset of the same
-   size and report the same metrics. **If the support policy does not beat random abstention at
-   matched coverage, it is adding nothing** and must not be adopted.
+3. **Random-abstention control — retained, but NOT the sole adoption criterion** (amended
+   2026-08-03). At each coverage, also abstain on a random subset of the same size and report the
+   same metrics. Beating random on ROC/F1 is *informative*, not decisive: a correct support policy
+   might abstain on genuinely ambiguous rows without improving ranking at all. Adoption is judged
+   on the whole of:
+   - **calibration / error rate versus Z** — error should rise monotonically with Z;
+   - **score stability between 0.01 and 0.005** on retained rows (the check the occupancy mask
+     fails: 115 flips vs 2);
+   - **abstention composition** by truth population, magnitude bin, sky field, velocity band;
+   - **retention of genuine |v| > 2 NEOs** — the population the +-5 grid exists to recover;
+   - **whether known extrapolation cases receive large Z**, i.e. the statistic fires where it
+     should.
 4. **Abstention composition** reported at every coverage, by **truth population**, **magnitude
    bin**, **sky field**, and **velocity band**. Abstention concentrated on one truth class — in
    particular on NEOs, or on |v| > 2 — is a failure regardless of the aggregate metric.
@@ -111,11 +138,12 @@ before any threshold is fitted**:
 | `nearest_dist` | 1-NN distance to that population's samples |
 
 - **Union 1-NN distance** = `min` over populations of `nearest_dist` — directly available.
-- **kth-neighbour distance** is recoverable analytically from the stored density without a rebuild:
-  the 2-D kNN estimator satisfies `rho ~ k / (pi * d_k^2)`, so `d_k ~ sqrt(k / (pi * rho))` with
-  `k = DEFAULT_K_MAP = 10`. This must be **validated against a direct cKDTree query** on one
-  representative center+bin before being trusted, since the stored density is a Bayesian posterior
-  mean rather than the plug-in estimate.
+- **`d_k` MUST NOT be inferred from the stored density** (amended 2026-08-03). The tempting
+  inversion `d_k ~ sqrt(k / (pi * rho))` assumes the simple plug-in kNN estimator, but the stored
+  density is a **Bayesian posterior mean** over `d_0` (`estimate_density_full_posterior_2d`), which
+  is a different quantity. For the pilot, compute `d_k` **directly from the exact GEN cKDTrees**.
+  If the policy is adopted, future map archives must store an explicit **`kth_dist__POP__BIN`**
+  array so production scoring needs no tree at query time.
 - Both existing map sets (0.01 and 0.005) are available, so the new policy's **resolution
   independence can be verified immediately** — the decisive check the current mask fails.
 
