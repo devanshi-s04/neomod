@@ -304,6 +304,24 @@ already 0.024 from the boundary) — these are **not** both artifacts.
 **Cost:** 4.88 vs 19.46 GiB for 16 maps (3.99×); **203 vs 811 GiB** projected for 667;
 ~9 min vs 13–42 min per map. **0.01 uses 4× less storage and materially lower compute.**
 
+### Class-conditional technical coverage (recorded 2026-08-04)
+
+Overall coverage hides a strongly class-dependent picture, because **every** technical abstention is
+a NEO:
+
+| quantity | value |
+|---|---|
+| overall technical coverage | **15,422 / 15,433 = 99.9287%** |
+| **NEO technical coverage** | **181 / 192 = 94.27%** |
+| NEOs abstained (\|v\| > 5, outside the map domain) | **11 / 192** |
+| conditional best-threshold completeness (of covered NEOs) | **154 / 181 = 85.08%** |
+| **end-to-end recovery** (abstentions counted as unrecovered) | **154 / 192 = 80.21%** |
+
+The 14.9-point gap between conditional completeness (85.08%) and end-to-end recovery (80.21%) is
+entirely the 11 out-of-domain NEOs. Quoting 99.93% coverage or 85.08% completeness without this
+context overstates NEO recovery. **This does not reopen the resolution decision** — the 11 are
+excluded identically at both resolutions.
+
 ## DECISION: **step = 0.01**
 
 No measured accuracy benefit at 0.005; the one resolved metric favours 0.01; fast-NEO recovery is
