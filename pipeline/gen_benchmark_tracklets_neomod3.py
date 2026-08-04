@@ -144,6 +144,16 @@ def build(_args):
     cache = cache[(cache.mag_app >= MAG_MIN) & (cache.mag_app < MAG_MAX)]
     print(f"epoch cache in mag range: {len(cache):,}")
 
+    # --- role fraction, derived from the frozen split manifest counts ---
+    _cnt = json.loads((W/"outputs/splits/split_provenance.json").read_text())["counts"]
+    if SPLIT_ROLE in ("GEN", "CAL", "TEST"):
+        _num = sum(v[SPLIT_ROLE] for v in _cnt.values())
+        _den = sum(sum(v.values()) for v in _cnt.values())
+        role_fraction = _num/_den
+        print(f"role fraction ({SPLIT_ROLE}) derived from split manifest: "
+              f"{_num:,}/{_den:,} = {role_fraction:.6f}")
+    else:
+        role_fraction = 1.0
     pops, expected = {}, {}
     for pop in ["NEO", "MBA", "TNO", "Trojans"]:
         if pop == "NEO":
@@ -165,7 +175,11 @@ def build(_args):
         keep = np.abs(dlon) <= DLON_LIMIT + 0.5
         sub, lam, beta, dlon = sub[keep].reset_index(drop=True), lam[keep], beta[keep], dlon[keep]
         pops[pop] = (sub, lam, beta, dlon)
-        expected[pop] = len(sub)*w_new if pop == "NEO" else float(len(sub))
+        # NEO is an INDEPENDENT NEOMOD3 draw representing the FULL sky, while non-NEO is a
+        # partition holding only fraction f of the objects. Without scaling NEO by the same f the
+        # class ratio is wrong by 1/f (CAL v1: NEO 3.76% vs the physical 0.776%). The fraction is
+        # DERIVED from split_provenance.json, never hardcoded.
+        expected[pop] = len(sub)*w_new*role_fraction if pop == "NEO" else float(len(sub))
         print(f"  {pop:>8}: {len(sub):,} in-grid  -> expected TRUE objects {expected[pop]:,.0f}")
 
     tot = sum(expected.values())
@@ -230,7 +244,8 @@ def build(_args):
     dd["ratio"] = dd.implied_true/dd.true_objects
     print(dd.to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
     print("  ratio ~1 => each sky direction carries a realistic object count for this date.")
-    json.dump(dict(epoch=EPOCH, mag_min=MAG_MIN, mag_max=MAG_MAX, neo_seed=NEO_SEED,
+    json.dump(dict(epoch=EPOCH, split_role=SPLIT_ROLE, role_fraction=role_fraction,
+                   neo_shards_dir=str(SHARDS), mag_min=MAG_MIN, mag_max=MAG_MAX, neo_seed=NEO_SEED,
                    n_neo_orbits_drawn=n_drawn, w_abs_new=w_new, expected_true=expected,
                    scale=scale, n_rows=len(comb)), open(OUT/"benchmark_metadata.json", "w"), indent=2)
 
