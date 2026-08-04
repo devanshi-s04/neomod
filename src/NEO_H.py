@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from numpy import sin, cos
 import sys
@@ -181,7 +182,7 @@ def get_earth_and_observer(obstime_str): # 1.47 ms -> 1.27 ms
     r_obs =  obs_geo.cartesian.xyz.to_value(u.km).T
     
     # earth's barycentric vector rel to sun aka center of solsys to earth
-    with solar_system_ephemeris.set('de432s'): 
+    with solar_system_ephemeris.set(os.environ.get('SORCHA_EPHEMERIS', 'de432s')): 
         rE_bary, vE_bary = get_body_barycentric_posvel('earth', obstime)
 
     # convert to km and km/s arrays in cartesian coordinate system

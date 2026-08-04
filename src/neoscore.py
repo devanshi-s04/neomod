@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from numpy import sin, cos
 import pyarrow as pa
@@ -186,7 +187,7 @@ class NEOMODScorer:
         obs_geo = rubin_location.get_gcrs(obstime)
         r_tele = obs_geo.cartesian.xyz.to_value(units.km).T
         
-        with solar_system_ephemeris.set('de432s'):
+        with solar_system_ephemeris.set(os.environ.get('SORCHA_EPHEMERIS', 'de432s')):
             rE_bary, vE_bary = get_body_barycentric_posvel('earth', obstime)
         
         rE = rE_bary.xyz.to_value(units.km).T
