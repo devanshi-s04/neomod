@@ -9,14 +9,20 @@ W = Path("/mmfs1/gscratch/dirac/ds2004/sorcha")
 sys.path.insert(0, str(W/"neomod"/"src")); os.chdir(W/"neomod")
 import frozen_projection_env as fpe
 info = fpe.activate()                      # MUST come before any coordinate work
-print("=== FROZEN ENVIRONMENT (active, not merely requested) ===")
-for k in ("auto_download", "iers_url", "active_iers_class", "active_iers_path",
-          "active_iers_sha256", "iers_sha256", "solar_system_ephemeris", "kernel_url_key",
-          "active_kernel_path", "active_kernel_sha256", "kernel_sha256_frozen", "manifest_sha256"):
+print("=== FROZEN ENVIRONMENT (active, not requested) ===")
+for k in ("seal_sha256", "private_cache", "auto_download", "iers_path", "iers_sha256",
+          "active_iers_class", "active_iers_rows", "active_iers_sha256", "kernel_path",
+          "kernel_sha256", "active_kernel_path", "active_kernel_sha256",
+          "global_cache_unchanged"):
     if k in info:
-        print(f"  {k:24s} {info[k]}")
-print(f"  ACTIVE IERS   == frozen: {info.get('active_iers_sha256') == info.get('iers_sha256')}")
-print(f"  ACTIVE kernel == frozen: {info.get('active_kernel_sha256') == info.get('kernel_sha256_frozen')}")
+        print(f"  {k:22s} {info[k]}")
+REQ_IERS = "4b828090fc94114168014b61439fa5e6ec0bdfda518075a32baffea90110954d"
+assert info["active_iers_sha256"] == REQ_IERS, f"active IERS != required GEN-v1 table"
+assert info["active_kernel_sha256"] == info["kernel_sha256"], "active kernel != sealed kernel"
+assert info["global_cache_unchanged"], "global astropy cache was modified"
+print("  ACTIVE IERS == GEN-v1 required hash : True")
+print("  ACTIVE kernel == sealed kernel      : True")
+print("  global astropy cache unchanged      : True")
 import velocity_density_pipeline_gmm as vdp
 import neomod3_sampler as nm3s
 EPOCH = "2027-08-25T00:00:00"
