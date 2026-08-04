@@ -45,7 +45,11 @@ TARGET_TOTAL = None
 NEO_SEED = 20270825           # deliberately NOT the cache's seed 42
 SPLIT_ROLE = os.environ.get("BM_SPLIT_ROLE", "TEST_UNSEALED")
 OUT = Path(os.environ.get("BM_OUT_DIR", str(W/"outputs"/"benchmark_tracklets_neomod3")))
-SHARDS = OUT/"neo_shards"
+# EXPLICIT NEO source. Defaulting to OUT/"neo_shards" silently coupled the NEO realisation to the
+# output directory: pointing BM_OUT_DIR at the CAL directory made the builder look for shards that
+# were never there (it exited rather than mis-sourcing, but the coupling is the bug).
+SHARDS = Path(os.environ.get("BM_NEO_SHARDS", str(OUT/"neo_shards")))
+NEO_SEED_EXPECTED = int(os.environ.get("BM_NEO_SEED_EXPECTED", "0")) or None
 EPOCH_CACHE = W/"outputs/epoch_state_cache/epoch_state_2027-08-25T000000.parquet"
 META = json.load(open(W/"outputs/neomod3_projection_cache/cache_metadata.json"))
 TOTAL_NEO_ABS = META["total_weight_absolute_NEO_count"]      # 11,432,918 NEOs, H 15-28
@@ -121,11 +125,18 @@ def build(_args):
     print(f"epoch {EPOCH}  antisun_lon={antisun:.4f}  grid cells={len(grid_arr)}")
 
     files = sorted(glob.glob(str(SHARDS/"neo_shard_*.parquet")))
-    if not files: sys.exit("no NEO shards -- run the sbatch first")
+    if not files:
+        sys.exit(f"no NEO shards in {SHARDS} -- set BM_NEO_SHARDS explicitly")
     neo = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
     n_drawn = int(pd.read_parquet(files[0], columns=["n_orbits_drawn"]).n_orbits_drawn.iloc[0])*len(files)
     w_new = TOTAL_NEO_ABS/n_drawn
+    import hashlib as _hl
+    _shard_sha = _hl.sha256(b"".join(
+        _hl.sha256(Path(f).read_bytes()).digest() for f in files)).hexdigest()
     print(f"NEO: {len(neo):,} clones from {n_drawn:,} draws -> w_new = {w_new:.5f} objects/clone")
+    print(f"NEO source dir   : {SHARDS}")
+    print(f"NEO shards       : {len(files)}  combined sha256 = {_shard_sha}")
+    print(f"NEO split role   : {SPLIT_ROLE}")
 
     cache = pd.read_parquet(EPOCH_CACHE, columns=["ObjID", "population", "ra_deg", "dec_deg", "dra_deg_day",
                                                   "ddec_deg_day", "mag_app", "lam_deg", "beta_deg",

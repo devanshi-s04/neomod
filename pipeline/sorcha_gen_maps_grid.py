@@ -343,8 +343,6 @@ def main():
             import json as _json
             vdp.NONNEO_SPLIT_FRACTIONS = _json.load(open(args.split_provenance))
             print(f"[split] normalisation fractions loaded from {args.split_provenance}", flush=True)
-        if args.smooth_support_threshold is not None:
-            vdp.DEFAULT_SMOOTH_SUPPORT_THRESHOLD = float(args.smooth_support_threshold)
         gp_kwargs = dict(clone_sources=clone_sources)
     else:
         gp_kwargs = dict(population_settings=pop_settings)
@@ -358,6 +356,12 @@ def main():
     if gp_grid:
         print(f"velocity grid override: {gp_grid}", flush=True)
 
+    # EXPLICIT keyword. generate_probability_maps() binds
+    # `smooth_support_threshold=DEFAULT_SMOOTH_SUPPORT_THRESHOLD` as a DEFAULT ARGUMENT, evaluated
+    # once at function-definition time -- so mutating the module constant after import has NO
+    # effect and every candidate would silently build at the import-time default. Pass it through.
+    if args.smooth_support_threshold is not None:
+        gp_kwargs["smooth_support_threshold"] = float(args.smooth_support_threshold)
     vdp.generate_probability_maps(
         obstime_str=args.ref_obstime,
         output_path=out,
