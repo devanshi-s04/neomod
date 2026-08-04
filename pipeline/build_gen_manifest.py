@@ -64,62 +64,35 @@ from astropy.utils import iers
 from astropy.utils.data import _get_download_cache_loc
 env = {"python": sys.version.split()[0], "astropy": astropy.__version__, "erfa": erfa.__version__,
        "numpy": numpy.__version__, "scipy": scipy.__version__, "pandas": pandas.__version__}
-iers_info = {"policy": "REQUIRED for CAL/TEST: iers.conf.auto_download = False and the preserved "
-                       "table below is loaded explicitly. GEN was built with auto_download ON, "
-                       "which is why its projection cannot be byte-reproduced today."}
+iers_info = {"policy": "REQUIRED for CAL/TEST: load the preserved table with "
+                       "iers.IERS_Auto.read(path) (NOT .open(), which silently substitutes the "
+                       "table bundled in astropy_iers_data -- 75 ms different UT1-UTC at the map "
+                       "epoch, ~1.1 arcsec of Earth rotation)."}
 try:
-    cache_dir = Path(_get_download_cache_loc())
-    cands = sorted(cache_dir.rglob("*"), key=lambda p: p.stat().st_mtime if p.is_file() else 0)
-    tabs = [p for p in cands if p.is_file() and p.stat().st_size > 100_000]
-    if tabs:
-        frozen = W/"outputs/splits/frozen_iers"
-        frozen.mkdir(parents=True, exist_ok=True)
-        import shutil
-        dst = frozen/tabs[-1].name
-        shutil.copy2(tabs[-1], dst)
-        iers_info["preserved_table"] = str(dst.relative_to(W))
-        iers_info["preserved_table_sha256"] = sha(dst)[1]
-        iers_info["source_cache_path"] = str(tabs[-1])
-        iers_info["iers_auto_url"] = iers.conf.iers_auto_url
-        iers_info["format"] = "finals2000A.all (IERS-A) -- open with IERS_Auto, NOT IERS_B"
-        iers_info["confirmed_active_table"] = (
-            "verified identical to the file the live IERS_Auto reported as data_path")
+    from astropy.utils.data import download_file
+    import shutil
+    # Resolve the table BY URL. An earlier version picked 'the newest large file in the astropy
+    # download cache', which silently selected de432s.bsp once the kernel was cached and
+    # OVERWROTE the preserved IERS table with a binary SPK. Never guess; resolve by URL.
+    url = iers.conf.iers_auto_url
+    src_path = Path(download_file(url, cache=True, show_progress=False))
+    head = src_path.read_bytes()[:8]
+    if head.startswith(b"DAF/SPK"):
+        raise RuntimeError(f"resolved IERS path {src_path} is a binary SPK kernel, not an IERS table")
+    frozen = W/"outputs/splits/frozen_iers"; frozen.mkdir(parents=True, exist_ok=True)
+    dst = frozen/"finals2000A.all"
+    shutil.copy2(src_path, dst)
+    iers_info.update({
+        "preserved_table": str(dst.relative_to(W)),
+        "preserved_table_sha256": sha(dst)[1],
+        "preserved_table_bytes": dst.stat().st_size,
+        "source_cache_path": str(src_path),
+        "iers_auto_url": url,
+        "format": "finals2000A.all (IERS-A ASCII)",
+        "loader": "iers.IERS_Auto.read(path)",
+    })
 except Exception as e:
     iers_info["error"] = f"{type(e).__name__}: {e}"
-# --- solar system ephemeris: recorded AND hashed (external kernel) ---
-eph = {"solar_system_ephemeris": "de432s",
-       "set_at": ["src/neoscore.py:189", "src/NEO_H.py:184", "src/neoom.py:185"]}
-try:
-    from astropy.coordinates import solar_system_ephemeris
-    import astropy.coordinates.solar_system as _ss
-    with solar_system_ephemeris.set("de432s"):
-        k = _ss._get_kernel("de432s")
-        kp = Path(k.daf.file.name)          # astropy download cache location
-    if kp.exists():
-        import shutil
-        frozen = W/"outputs/splits/frozen_ephemeris"; frozen.mkdir(parents=True, exist_ok=True)
-        dst = frozen/"de432s.bsp"
-        if not dst.exists():
-            shutil.copy2(kp, dst)
-        eph["kernel_cache_path"] = str(kp)
-        eph["preserved_kernel"] = str(dst.relative_to(W))
-        eph["kernel_sha256"] = sha(dst)[1]
-        eph["kernel_bytes"] = dst.stat().st_size
-except Exception as e:
-    eph["error"] = f"{type(e).__name__}: {e}"
-manifest["ephemeris"] = eph
-manifest["artifact_vs_builder"] = {
-    "frozen_cache_artifact_groups": list(ARTIFACT_GROUPS),
-    "builder_provenance_groups": ["source"],
-    "caveat": "cache built 2026-07-31 16:09; all current commits postdate it. The `source` group "
-              "records the CURRENT builder state, not what produced the cache. Behavioural "
-              "equivalence of the sampler is established by job 38078793 (bit-identical elements), "
-              "not by these hashes.",
-}
-# artifact-only SHA: the bytes that ARE the frozen GEN cache
-_art = {k: v for g in ARTIFACT_GROUPS for k, v in manifest["groups"][g]["files"].items()}
-manifest["frozen_artifact_sha256"] = hashlib.sha256(
-    json.dumps(_art, sort_keys=True).encode()).hexdigest()
 manifest["environment"] = env
 manifest["iers"] = iers_info
 
