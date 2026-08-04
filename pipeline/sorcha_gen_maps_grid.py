@@ -298,7 +298,8 @@ def main():
         # Sealed-evaluation gate: the GEN artifact must have been verified, and the receipt must be
         # tied to the CURRENT manifest. Any edit to a cache byte changes the manifest and voids it.
         import hashlib as _h, json as _j
-        _W = Path("/mmfs1/gscratch/dirac/ds2004/sorcha")
+        from pathlib import Path as _P
+        _W = _P("/mmfs1/gscratch/dirac/ds2004/sorcha")
         _m = _W/"outputs/splits/GEN_MANIFEST.json"; _r = _W/"outputs/splits/GEN_VERIFICATION_RECEIPT.json"
         _rj = _j.loads(_r.read_text())
         _live = _h.sha256(_m.read_bytes()).hexdigest()

@@ -2382,6 +2382,11 @@ def generate_probability_maps(
         mag_bins=mag_bins,
         population_names=population_names,
         save_overlays=save_overlays,
+        # A1.7: forward the NEO GEN provenance so it lands in the archive. Adding the parameter to
+        # save_maps_to_npz and the field to the per-bin result was not enough -- the middle of the
+        # chain has to pass it, exactly like smooth_support_threshold.
+        neo_provenance=next((r.get("neo_provenance") for r in allpop_magbin_results.values()
+                             if r.get("neo_provenance")), None),
         smoothing={
             "enabled": bool(smooth_density_maps),
             "population_names": tuple(smooth_population_names or []),
