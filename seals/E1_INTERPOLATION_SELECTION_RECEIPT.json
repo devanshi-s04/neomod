@@ -1,0 +1,258 @@
+{
+  "receipt": "E1_INTERPOLATION_SELECTION",
+  "version": "1.0",
+  "created_utc": "2026-08-04T19:04:55Z",
+  "manifest": {
+    "path": "neomod/docs/E1_INTERPOLATION_ABLATION_MANIFEST.md",
+    "sha256": "8dbdf474d2d3dbd73fa1e5faa3aaedefd1096fa4fdc6d547049099891085c60c",
+    "frozen_before_any_variant_scored": true
+  },
+  "code_commit": "d65538c9dae87a50c91a12931032b1d4f2a38527",
+  "maps": {
+    "dir": "prob_maps_grid_neomod3_GEN_final",
+    "map_build_seal_sha256": "c30cc29d24ead70da1111782092b37557f21d6b90f581609bf2490907a474960",
+    "final_build_receipt_sha256": "d263be509780ae90edf0ba1fc7813457f21166f0cb3678179e7444894b92ca81"
+  },
+  "cal": {
+    "seal_sha256": "847bb72265479154c690da76fc3c9bb9b46fb3ff384cee3a7d1380871c5985e8",
+    "rows_total": 644344,
+    "neo_total": 5000
+  },
+  "identical_rows_assertion": {
+    "technical_valid_per_variant": {
+      "A": 644057,
+      "B": 644057,
+      "C": 644057,
+      "D": 644057
+    },
+    "intersection": 644057,
+    "identical": true,
+    "coverage_overall_pct": 99.9555,
+    "coverage_NEO_pct": 94.26,
+    "coverage_nonNEO_pct": 100.0,
+    "neo_covered": "4713/5000"
+  },
+  "metrics": [
+    {
+      "variant": "A",
+      "ROC_AUC": 0.9639382840624032,
+      "stdpAUC_fpr01": 0.905248336273476,
+      "F1": 0.8120875303924974,
+      "Brier": 0.0024766477488776,
+      "logloss": 0.0126004387391231,
+      "thr": 0.1778689609598099,
+      "completeness": 74.41120305537873,
+      "contamination": 10.62691131498471,
+      "fastNEO_median": 0.8400067042679129,
+      "fastNEO_ge05": 88.21989528795811,
+      "fastNEO_zero": 0.0
+    },
+    {
+      "variant": "B",
+      "ROC_AUC": 0.963914512215887,
+      "stdpAUC_fpr01": 0.905215618229646,
+      "F1": 0.8120875303924974,
+      "Brier": 0.002477558339236,
+      "logloss": 0.0126205957448716,
+      "thr": 0.1773779779291848,
+      "completeness": 74.41120305537873,
+      "contamination": 10.62691131498471,
+      "fastNEO_median": 0.8400194017277298,
+      "fastNEO_ge05": 88.21989528795811,
+      "fastNEO_zero": 0.0
+    },
+    {
+      "variant": "C",
+      "ROC_AUC": 0.9642349486092968,
+      "stdpAUC_fpr01": 0.9063142332666176,
+      "F1": 0.8139102116771343,
+      "Brier": 0.0024357635260491,
+      "logloss": 0.0124775993121361,
+      "thr": 0.1916413435648912,
+      "completeness": 74.2414597920645,
+      "contamination": 9.935649935649938,
+      "fastNEO_median": 0.8452351716074347,
+      "fastNEO_ge05": 89.13612565445025,
+      "fastNEO_zero": 0.0
+    },
+    {
+      "variant": "D",
+      "ROC_AUC": 0.96415085142942,
+      "stdpAUC_fpr01": 0.905367199758662,
+      "F1": 0.8125579240037072,
+      "Brier": 0.002444462864653,
+      "logloss": 0.0125571463100174,
+      "thr": 0.178642390636522,
+      "completeness": 74.41120305537873,
+      "contamination": 10.512885940290897,
+      "fastNEO_median": 0.8458594667984067,
+      "fastNEO_ge05": 89.3979057591623,
+      "fastNEO_zero": 0.0
+    }
+  ],
+  "matched_completeness_contamination_pct": [
+    {
+      "variant": "A",
+      "@60%": 1.6689847009735748,
+      "@70%": 6.2251279135872695,
+      "@80%": 28.313367560372694,
+      "@85%": 63.89689978370584,
+      "@90%": 86.97254468398748
+    },
+    {
+      "variant": "B",
+      "@60%": 1.6689847009735748,
+      "@70%": 6.2251279135872695,
+      "@80%": 28.2041515901733,
+      "@85%": 64.0201185557751,
+      "@90%": 87.24900805578935
+    },
+    {
+      "variant": "C",
+      "@60%": 1.3603069410533686,
+      "@70%": 5.36431440045898,
+      "@80%": 26.439024390243905,
+      "@85%": 63.57519549008911,
+      "@90%": 86.2531596344546
+    },
+    {
+      "variant": "D",
+      "@60%": 1.3258897418004234,
+      "@70%": 5.337159253945478,
+      "@80%": 26.909654905001933,
+      "@85%": 64.26404995539696,
+      "@90%": 87.0997171790895
+    }
+  ],
+  "paired_bootstrap": {
+    "B": 300,
+    "stratified_by": "truth",
+    "C_minus_A": {
+      "ROC": [
+        0.0002898,
+        -0.0004012,
+        0.001055,
+        false
+      ],
+      "stdpAUC": [
+        0.001065,
+        0.0005687,
+        0.001577,
+        true
+      ],
+      "F1": [
+        0.002305,
+        0.0003068,
+        0.004364,
+        true
+      ],
+      "Brier": [
+        -4.109e-05,
+        -4.853e-05,
+        -3.361e-05,
+        true
+      ]
+    },
+    "D_minus_C": {
+      "ROC": [
+        -8.338e-05,
+        -0.0005378,
+        0.00035,
+        false
+      ],
+      "stdpAUC": [
+        -0.0009384,
+        -0.001504,
+        -0.0004673,
+        true
+      ],
+      "F1": [
+        -0.001561,
+        -0.003543,
+        7.52e-05,
+        false
+      ],
+      "Brier": [
+        8.784e-06,
+        3.748e-06,
+        1.509e-05,
+        true
+      ]
+    },
+    "D_minus_A": {
+      "ROC": [
+        0.0002269,
+        -0.0005952,
+        0.0009098,
+        false
+      ],
+      "stdpAUC": [
+        0.0001338,
+        -0.0006593,
+        0.0008278,
+        false
+      ],
+      "F1": [
+        0.000591,
+        -0.001778,
+        0.003017,
+        false
+      ],
+      "Brier": [
+        -3.207e-05,
+        -4.248e-05,
+        -2.339e-05,
+        true
+      ]
+    },
+    "legend": "[point, ci_lo, ci_hi, excludes_zero]"
+  },
+  "hull_census_variant_D": {
+    "MBA": {
+      "n": 615355,
+      "outside": 2311,
+      "pct": 0.376,
+      "out_lat": 287,
+      "out_dlon": 2024
+    },
+    "NEO": {
+      "n": 4713,
+      "outside": 432,
+      "pct": 9.166,
+      "out_lat": 418,
+      "out_dlon": 14
+    },
+    "TNO": {
+      "n": 7530,
+      "outside": 27,
+      "pct": 0.359,
+      "out_lat": 0,
+      "out_dlon": 27
+    },
+    "Trojans": {
+      "n": 16459,
+      "outside": 173,
+      "pct": 1.051,
+      "out_lat": 3,
+      "out_dlon": 170
+    },
+    "corner_accounting": {
+      "four_corners_full_bilinear": 641114,
+      "two_corners_renormalised": 2943,
+      "one_corner_boundary_fallback": 0,
+      "zero_corners_fell_back_to_C": 0
+    },
+    "interpretation": "Rows outside the hull are CLIPPED to the nearest boundary map, not genuinely interpolated. NEOs are outside at 9.166% vs 0.376% for MBA (24x), overwhelmingly by latitude (418/432). This imbalance is ASSOCIATED with D's weaker performance on the population of interest, but it is NOT established as the sole cause: D also loses to C on pAUC and Brier across all rows, and no experiment isolating the hull contribution was run."
+  },
+  "SELECTED": "C",
+  "selection_rationale": "C beats A on standardized partial AUC, F1 and Brier with paired 95% CIs excluding zero. D is significantly WORSE than C on pAUC and Brier, and its advantage over A is unresolved on every ranking metric. Adding sky interpolation on top of magnitude interpolation costs performance.",
+  "FROZEN_VARIANT_C": {
+    "velocity": "density-first bilinear interpolation within the map",
+    "magnitude": "density-first linear interpolation between adjacent magnitude bins",
+    "sky": "NEAREST map cell (no sky interpolation)",
+    "posterior": "symmetric UNMASKED densities, P = rho_NEO / sum_c rho_c formed AFTER interpolation",
+    "abstention": "technical failures only (out of bounds, non-finite, zero total density) -> NaN"
+  },
+  "reliability_note": "The raw posterior is UNDER-CONFIDENT in the mid-range (predicts 0.176, observes 0.378 in the 0.1-0.3 bin). The cause remains to be tested during calibration; no attribution is made here.",
+  "test_status": "SEALED"
+}

@@ -1,0 +1,25 @@
+{
+  "class_counts": {
+    "MBA": 615355,
+    "NEO": 5000,
+    "TNO": 7530,
+    "Trojans": 16459
+  },
+  "gen_cal_overlap": 0,
+  "legacy_s3m_neo_rows": 0,
+  "neo_seed": 20270825,
+  "neo_shards_dir": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/benchmark_tracklets_neomod3/neo_shards",
+  "neo_shards_sha256": "e7a71a6aba288a59c1652a7dd0597032468bb22944c2c5b887ff2b473a792d7f",
+  "neo_share_pct": 0.7759830152837615,
+  "parquet": "outputs/cal_tracklets_neomod3_v2/tracklets_benchmark_neomod3.parquet",
+  "parquet_sha256": "fb6c946ba29731b987aa435873386af32d54496506a6254931031beddf6a84f5",
+  "result": "PASS",
+  "role": "CAL",
+  "role_fraction": 0.20000899948093545,
+  "role_fraction_source": "outputs/splits/split_provenance.json",
+  "rows": 644344,
+  "seal": "CAL_DATASET_SEAL",
+  "split_manifest_sha256": "7c119b435de077bb78666a0d2d54b18efa74f64820214639ab926ab21f413766",
+  "split_provenance_sha256": "0fec47029143690a3363fff6cb4cbdf4ea25d22def4c9e0143f0ebff91f6d6f8",
+  "supersedes": "outputs/cal_tracklets_neomod3.INVALID_UNSCALED_NEO (NEO entered unscaled)"
+}

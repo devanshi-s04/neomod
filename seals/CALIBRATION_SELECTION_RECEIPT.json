@@ -1,0 +1,201 @@
+{
+  "receipt": "CALIBRATION_SELECTION",
+  "selected": "P (Platt)",
+  "created_utc": "2026-08-04T19:53:44Z",
+  "rationale": "Platt and isotonic are effectively tied on Brier (2.15015e-03 vs 2.14967e-03); Platt is marginally better on log loss; parameters are stable across folds; it retains continuous score resolution (isotonic collapses 644,013 distinct scores to 408); simpler and more portable under prior adjustment.",
+  "transform": {
+    "form": "P_cal = sigmoid(a * logit(P_raw) + b)",
+    "a": 1.2045646535544645,
+    "b": 1.396956627856607,
+    "a_parametrisation": "a = exp(alpha), constrained > 0",
+    "fitted_on": "all technical-valid CAL rows",
+    "n_rows": 644057,
+    "n_neo": 4713,
+    "clipping": {
+      "input": "P_raw clipped to [1e-12, 1-1e-12] before logit",
+      "output": "none applied; sigmoid is already in (0,1)"
+    }
+  },
+  "priors": {
+    "pi_CAL": 0.007317675298925405,
+    "pi_ref_overlap_weighted_density_integral": 0.005330026911048253,
+    "pi_ref_caveat": "pi_ref = 0.533% is an OVERLAP-WEIGHTED DENSITY-INTEGRAL ESTIMATE: the 667 maps are 30-deg patches at 10-deg spacing, so sky is multiply counted. The 27% difference from pi_CAL must NOT be read as a definitive physical prior mismatch without a non-overlapping, area-weighted recomputation.",
+    "ratio_pi_ref_over_pi_CAL": 0.7283770724058997
+  },
+  "prior_transfer": {
+    "logLR_cal": "logit(P_cal) - logit(pi_CAL)",
+    "P_target": "sigmoid(logLR_cal + logit(pi_target))",
+    "assumption": "LABEL SHIFT: p(X|y) unchanged between CAL and target; only p(y) differs. Invalid under covariate shift, a different detection/linking pipeline, or a non-NEOMOD3 target."
+  },
+  "ranking_invariance": {
+    "ROC_raw": 0.9642349486092967,
+    "ROC_final": 0.9642349486092967,
+    "abs_diff": 0.0,
+    "rank_order_identical": true,
+    "note": "OOF ROC/pAUC/F1 movement arises because each fold applies a DIFFERENT fitted transform; the single global transform is strictly monotonic and preserves raw ranking exactly."
+  },
+  "oof_comparison": [
+    {
+      "cand": "R",
+      "Brier": 0.0024357635260491358,
+      "logloss": 0.012477599312136179,
+      "ECE": 0.0016243269374783434,
+      "ECE_lo": 0.0015467330452455497,
+      "ECE_hi": 0.0017048402975892824,
+      "ROC": 0.9642349486092967,
+      "pAUC": 0.9063142332666175,
+      "F1": 0.8139102116771343,
+      "n_unique": 644013
+    },
+    {
+      "cand": "P",
+      "Brier": 0.00215014561420319,
+      "logloss": 0.011559715403551432,
+      "ECE": 0.0002651634120518331,
+      "ECE_lo": 0.00023591592635600247,
+      "ECE_hi": 0.0004016078858474905,
+      "ROC": 0.9642100069211086,
+      "pAUC": 0.9063075531742386,
+      "F1": 0.8138026864289023,
+      "n_unique": 644013
+    },
+    {
+      "cand": "T",
+      "Brier": 0.00243640895421886,
+      "logloss": 0.012460090082901776,
+      "ECE": 0.0014295156910344312,
+      "ECE_lo": 0.001355078656475579,
+      "ECE_hi": 0.0015081535292045972,
+      "ROC": 0.964202270700054,
+      "pAUC": 0.9063163845845646,
+      "F1": 0.813942643972954,
+      "n_unique": 644017
+    },
+    {
+      "cand": "I",
+      "Brier": 0.0021496690725139166,
+      "logloss": 0.01157370313366076,
+      "ECE": 0.00010207078234730611,
+      "ECE_lo": 0.00011000179148760056,
+      "ECE_hi": 0.00026079481751480527,
+      "ROC": 0.9635410819947334,
+      "pAUC": 0.9056097268792687,
+      "F1": 0.8127323420074348,
+      "n_unique": 408
+    }
+  ],
+  "fold_params": [
+    {
+      "fold": 0,
+      "n_train": 527902,
+      "n_test": 116155,
+      "neo_test": 943,
+      "a": 1.2046976438138686,
+      "b": 1.3728826410174602,
+      "T": 1.0248216374505086,
+      "iso_knots": 128
+    },
+    {
+      "fold": 1,
+      "n_train": 512900,
+      "n_test": 131157,
+      "neo_test": 943,
+      "a": 1.2105765639835613,
+      "b": 1.420186206787636,
+      "T": 1.0266131757145487,
+      "iso_knots": 136
+    },
+    {
+      "fold": 2,
+      "n_train": 521736,
+      "n_test": 122321,
+      "neo_test": 943,
+      "a": 1.207279328823146,
+      "b": 1.4399635981565202,
+      "T": 1.0324564251054886,
+      "iso_knots": 134
+    },
+    {
+      "fold": 3,
+      "n_train": 503746,
+      "n_test": 140311,
+      "neo_test": 942,
+      "a": 1.2033082232244627,
+      "b": 1.3972193909955686,
+      "T": 1.030658755131173,
+      "iso_knots": 148
+    },
+    {
+      "fold": 4,
+      "n_train": 509944,
+      "n_test": 134113,
+      "neo_test": 942,
+      "a": 1.1974140751702156,
+      "b": 1.357240534109165,
+      "T": 1.030527501384631,
+      "iso_knots": 128
+    }
+  ],
+  "ece_rule": "15 equal-width bins on [0,1]; per-bin WILSON 95% intervals; 500-replicate truth-stratified bootstrap CI on ECE",
+  "operating_points": [
+    {
+      "source": "OOF Platt (honest estimate)",
+      "rule": "best-F1 (DIAGNOSTIC ONLY)",
+      "threshold": 0.3998476392484485,
+      "completeness": 74.55972841077869,
+      "contamination": 10.425694621463165,
+      "F1": 0.8138026864289023
+    },
+    {
+      "source": "OOF Platt (honest estimate)",
+      "rule": "contamination <= 5%",
+      "threshold": 0.6293106015875919,
+      "completeness": 69.4462126034373,
+      "contamination": 4.992743105950648,
+      "F1": 0.8024025496445207
+    },
+    {
+      "source": "OOF Platt (honest estimate)",
+      "rule": "contamination <= 10%",
+      "threshold": 0.41724548550152396,
+      "completeness": 74.11415234457883,
+      "contamination": 9.997423344498845,
+      "F1": 0.8128927158482663
+    },
+    {
+      "source": "final global Platt (in-sample)",
+      "rule": "best-F1 (DIAGNOSTIC ONLY)",
+      "threshold": 0.4165700139135305,
+      "completeness": 74.2414597920645,
+      "contamination": 9.935649935649938,
+      "F1": 0.8139102116771343
+    },
+    {
+      "source": "final global Platt (in-sample)",
+      "rule": "contamination <= 5%",
+      "threshold": 0.628852139284543,
+      "completeness": 69.50986632718013,
+      "contamination": 4.988399071925754,
+      "F1": 0.8028427888739125
+    },
+    {
+      "source": "final global Platt (in-sample)",
+      "rule": "contamination <= 10%",
+      "threshold": 0.41593520955231245,
+      "completeness": 74.26267769997878,
+      "contamination": 9.979423868312754,
+      "F1": 0.8138588536216719
+    }
+  ],
+  "inputs": {
+    "cal_seal_sha256": "847bb72265479154c690da76fc3c9bb9b46fb3ff384cee3a7d1380871c5985e8",
+    "variant_C_receipt_sha256": "3461ffe73dcf48156ff3c8171422a9930b96039d28807be46bae599da322d746",
+    "calibration_manifest_sha256": "f8bdf0f399587593c025d33a157246bb7b1796d72aa1bd7d3ede2fbbea321bc5",
+    "map_build_seal_sha256": "c30cc29d24ead70da1111782092b37557f21d6b90f581609bf2490907a474960",
+    "oof_scores_sha256": "700134c79f809bcc98acc582488aec6a866afc5770d838f1113b25f5fdd73818"
+  },
+  "code_commit": "fa24873977839915230802230335247e5358251b",
+  "test_status": "SEALED -- not opened",
+  "calibration_effect": "Platt SUBSTANTIALLY IMPROVES calibration: Brier 2.43576e-03 -> 2.15015e-03, log loss 1.24776e-02 -> 1.15597e-02, ECE 1.62433e-03 -> 2.65163e-04. Reliability moves much closer to the diagonal across the range; it is NOT claimed to follow the diagonal in every bin.",
+  "e0_fixed_contamination_note": "E0 reported completeness 0 at both 5% and 10% contamination. That E0 result was NOT REPRESENTATIVE of the full-grid CAL evaluation, where the same operating points are reached at ~69-74% completeness. The difference is NOT attributed solely to sample size: the pilot also differed in sky coverage (16 of 667 cells), in the map set scored, and in the interpolation and masking configuration."
+}

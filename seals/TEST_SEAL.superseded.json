@@ -1,0 +1,39 @@
+{
+  "role": "TEST",
+  "status": "SEALED -- configuration frozen 2026-08-03; NOT drawn, NOT inspected",
+  "neo": {
+    "source": "NEOMOD3 independent draw",
+    "seed": 31415926,
+    "n_orbits_total": 30000000,
+    "nshards": 30,
+    "epoch": "2027-08-25T00:00:00",
+    "distinct_from": {
+      "GEN_seed": 42,
+      "CAL_seed": 20270825
+    }
+  },
+  "nonneo": {
+    "source": "Stage-0 epoch cache",
+    "split_role": "TEST",
+    "manifest": "outputs/splits/nonneo_split_manifest.parquet",
+    "salt": "neomod3-gencaltest-v1.1"
+  },
+  "cuts": {
+    "mag_min": 14.0,
+    "mag_max_primary_M1": 24.5,
+    "mag_max_sensitivity_M2": 25.0,
+    "sun_exclusion_deg": 40.0,
+    "dlon_limit_deg": 140.0
+  },
+  "scoring": {
+    "support_mask_min": 1,
+    "nearest_dist_mask": "OFF",
+    "digest2": "v0.19 repeatable",
+    "invalid": "NaN abstention, never 0"
+  },
+  "rules": [
+    "thresholds and all model decisions come from CAL and are applied to TEST unchanged",
+    "TEST is scored ONCE; no re-tuning after inspection",
+    "no best-TEST-F1 -- that would tune on TEST"
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "FROZEN_POLICY": {
+    "abstention": "TECHNICAL FAILURES ONLY: outside map bounds; no sky/magnitude map; invalid observation; non-finite or zero total density. NaN, never 0 or 1.",
+    "posterior": "symmetric UNMASKED population densities -- no per-population occupancy masking; _support_mask_skip retired; support_mask_min NOT applied at scoring time",
+    "rejected": [
+      "support_count>=1 occupancy masking (resolution-dependent, asymmetric)",
+      "standardized-Z automatic abstention gate (abstains on 54.7% of NEOs, 100% of |v|>2)"
+    ],
+    "smooth_support_scale_by_clone_factor": false,
+    "smooth_support_threshold_raw_clones": 10,
+    "support_metadata_only": [
+      "Z = min_c (d_k,c / q_c)",
+      "nearest/kth-neighbour distance",
+      "total mixture density"
+    ],
+    "velocity_grid_limit_deg_per_day": 5.0,
+    "velocity_grid_step": 0.01
+  },
+  "cal_evidence": {
+    "cal_seal_sha256": "847bb72265479154c690da76fc3c9bb9b46fb3ff384cee3a7d1380871c5985e8",
+    "closure_sha256": "b83ec61338d7f11c0bca748f8117b41cb1514f323d2ae916a826b0971085cad8",
+    "design_note_sha256": "77cd0502e4b7b560904327723741cdaf803bd0204ba388a85571d11e5ebb685c",
+    "e0_decision_sha256": "2171adddd0844d8356780617513392021814f513c540537731f20815f0ebcc01"
+  },
+  "code": {
+    "commit": "64cec2581d731ff68799f86755387309e8b497f8",
+    "dirty": false,
+    "driver_sha256": "d888b36a40f11279599c6537dfc15966f6d2836049c11510f4a152c15c4215ff",
+    "module_sha256": "a6de18c2197cbcb9f93014712aaad232272578150e2222f28eae723b339f923a",
+    "vdp_module": "velocity_density_pipeline_neomod_clone_only"
+  },
+  "coverage_recorded": {
+    "NEO": "181/192 = 94.27%",
+    "NEO_abstained_v_gt_5": "11/192",
+    "conditional_completeness": "154/181 = 85.08%",
+    "end_to_end_recovery": "154/192 = 80.21%",
+    "overall": "15,422/15,433 = 99.9287%"
+  },
+  "created_utc": "2026-08-04T07:32:41Z",
+  "environment": {
+    "ephemeris": "outputs/splits/frozen_env/ephemeris/de432s.bsp",
+    "ephemeris_sha256": "363f32e14f5255359ac32c4d38080cf28ab55564a5e16696a75f63394b666e9b",
+    "iers": "outputs/splits/frozen_env/iers/finals2000A.all.GEN-v1",
+    "iers_sha256": "4b828090fc94114168014b61439fa5e6ec0bdfda518075a32baffea90110954d",
+    "packages": {
+      "astropy": "7.2.0",
+      "erfa": "2.0.1.5",
+      "numpy": "2.4.4",
+      "python": "3.11.15"
+    },
+    "seal_sha256": "2792995f7d9ccb2fc3a12db5229c8f9a4d11c5a9b518ce9520d141b950bf95db"
+  },
+  "gen_provenance": {
+    "cache_metadata_sha256": "ca5dc902d90e74eccbb0d8518c8037bac95cf6083530e97695593c17679ca492",
+    "frozen_artifact_sha256": "b1d09a09cc2163dedd0342b0d197580a7665ca84cc8d7e3ed0bba5a2a542e514",
+    "manifest_sha256": "07c17d5dee6f1ef5016a6495d7b14c01bde7314ea8e5631aa59e0ec8ba9e3494",
+    "n_draws": 100000000,
+    "receipt_sha256": "e2809d8ad4772a450ccc742ac69ae5967adb418c2a23f717adf0e31e1320f784",
+    "seed": 42,
+    "seed_provenance": "PROVEN"
+  },
+  "grid": {
+    "dlon_limit_deg": 140.0,
+    "lat_base_deg": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      12,
+      18,
+      25,
+      35,
+      50
+    ],
+    "lon_step_deg": 10.0,
+    "n_latitudes": 23,
+    "n_maps": 667,
+    "ref_obstime": "2027-08-25T00:00:00",
+    "sun_exclusion_deg": 40.0
+  },
+  "magnitude_bins": [
+    [
+      "14_16",
+      14,
+      16
+    ],
+    [
+      "16_18",
+      16,
+      18
+    ],
+    [
+      "18_20",
+      18,
+      20
+    ],
+    [
+      "mag20",
+      20,
+      21
+    ],
+    [
+      "mag21",
+      21,
+      22
+    ],
+    [
+      "mag22",
+      22,
+      23
+    ],
+    [
+      "mag23",
+      23,
+      24
+    ],
+    [
+      "mag24+",
+      24,
+      25
+    ]
+  ],
+  "output_dir": "prob_maps_grid_neomod3_GEN_final",
+  "populations": {
+    "MBA/TNO/Trojans": "Stage-0 n-body epoch cache, GEN split -- not cloned, clone_factor=1",
+    "NEO": "NEOMOD3 GEN realisation (seed 42) -- not cloned"
+  },
+  "seal": "MAP_BUILD_SEAL",
+  "split": {
+    "f_gen_by_population": {
+      "MBA": 0.6002228855102162,
+      "TNO": 0.5994823548744916,
+      "Trojans": 0.5978585961908363
+    },
+    "manifest": "outputs/splits/nonneo_split_manifest.parquet",
+    "manifest_sha256": "7c119b435de077bb78666a0d2d54b18efa74f64820214639ab926ab21f413766",
+    "normalisation": "effective_factor = clone_factor x f_GEN(pop, mag bin); support NOT scaled",
+    "provenance_sha256": "0fec47029143690a3363fff6cb4cbdf4ea25d22def4c9e0143f0ebff91f6d6f8",
+    "role": "GEN"
+  },
+  "test_status": "SEALED -- not drawn, not inspected",
+  "version": "1.0"
+}

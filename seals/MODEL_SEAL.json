@@ -1,0 +1,85 @@
+{
+  "seal": "MODEL_SEAL",
+  "version": "1.0",
+  "created_utc": "2026-08-04T20:06:09Z",
+  "map_build": {
+    "seal": "outputs/splits/MAP_BUILD_SEAL.json",
+    "sha256": "c30cc29d24ead70da1111782092b37557f21d6b90f581609bf2490907a474960",
+    "final_build_receipt_sha256": "d263be509780ae90edf0ba1fc7813457f21166f0cb3678179e7444894b92ca81",
+    "grid_acceptance_sha256": "d06df74fc87e52f1ade870250d58c11f36d1f2e2d882872ed803ee99d2970447",
+    "maps_dir": "prob_maps_grid_neomod3_GEN_final",
+    "n_maps": 667,
+    "gen_manifest_sha256": "07c17d5dee6f1ef5016a6495d7b14c01bde7314ea8e5631aa59e0ec8ba9e3494",
+    "gen_receipt_sha256": "e2809d8ad4772a450ccc742ac69ae5967adb418c2a23f717adf0e31e1320f784",
+    "frozen_env_seal_sha256": "2792995f7d9ccb2fc3a12db5229c8f9a4d11c5a9b518ce9520d141b950bf95db"
+  },
+  "interpolation": {
+    "variant": "C",
+    "receipt_sha256": "3461ffe73dcf48156ff3c8171422a9930b96039d28807be46bae599da322d746",
+    "velocity": "density-first bilinear within the map",
+    "magnitude": "density-first linear between adjacent magnitude bins",
+    "sky": "NEAREST map cell (no sky interpolation)",
+    "posterior": "symmetric UNMASKED densities; P = rho_NEO / sum_c rho_c formed AFTER interpolation"
+  },
+  "calibration": {
+    "transform": "Platt",
+    "form": "P_cal = sigmoid(a * logit(P_raw) + b)",
+    "a": 1.20456465,
+    "b": 1.39695663,
+    "a_constraint": "a = exp(alpha) > 0 (strictly monotonic)",
+    "fitted_on": "all 644,057 technical-valid CAL rows",
+    "receipt_sha256": "476f04fcdbc00066f03b52e0af7ac52d9e9dc7f78606a54c166ce2512bf42295",
+    "manifest_sha256": "f8bdf0f399587593c025d33a157246bb7b1796d72aa1bd7d3ede2fbbea321bc5",
+    "clipping": {
+      "input": "P_raw clipped to [1e-12, 1-1e-12] before logit",
+      "output": "none (sigmoid in (0,1))"
+    }
+  },
+  "abstention": {
+    "rule": "TECHNICAL FAILURES ONLY -> NaN, never 0 or 1",
+    "conditions": [
+      "outside map velocity bounds (|v| > 5 deg/day)",
+      "magnitude outside 14-25",
+      "no sky/magnitude map available",
+      "non-finite score or total density",
+      "zero total density"
+    ],
+    "no_support_gate": "per-pixel occupancy masking and standardized-Z gating are both REJECTED"
+  },
+  "operating_thresholds_from_CAL": {
+    "basis": "out-of-fold Platt predictions on CAL; pi_CAL = 0.7318%",
+    "best_F1_DIAGNOSTIC_ONLY": 0.3998476392484485,
+    "contamination_le_5pct": 0.6293106015875919,
+    "contamination_le_10pct": 0.4172454855015239,
+    "CAL_completeness": {
+      "best_F1": 74.5597,
+      "le_5pct": 69.4462,
+      "le_10pct": 74.1142
+    },
+    "PRIOR_CAVEAT": "These thresholds TARGET 5% and 10% contamination UNDER pi_CAL = 0.7318%. TEST contamination is NOT guaranteed to equal those values: TEST has its own class fraction and its own score distribution. Any difference is a RESULT, not an error."
+  },
+  "NO_RETUNING": "TEST thresholds WILL NOT BE RETUNED. The three thresholds above are applied to TEST UNCHANGED. No parameter, transform, threshold, interpolation choice, mask, or map may be modified after TEST is viewed. TEST is scored ONCE.",
+  "datasets": {
+    "CAL_seal_sha256": "847bb72265479154c690da76fc3c9bb9b46fb3ff384cee3a7d1380871c5985e8",
+    "TEST_seal_sha256": "5fa820a5b1e380f7d0770d1ff25c8cd52a3be56b87a3e2b52de18cdcbfe965f6",
+    "TEST_status_at_seal_time": "SEALED -- verified not drawn and not inspected"
+  },
+  "code": {
+    "commit": "2ebc5b7cf9676107293cd3ad29e7b1f98c7903cb",
+    "vdp_module_sha256": "a6de18c2197cbcb9f93014712aaad232272578150e2222f28eae723b339f923a",
+    "interpolation_impl_sha256": "5084139b372962b201b67ba79fba559f47ff6586ff470db52808baf6d59af532",
+    "calibration_fit_sha256": "d561bcaf804947d6b4e6ed2b8fefc0c09fcda5fc374e0491e7fd161d99a56391",
+    "calibration_select_sha256": "314f3fc217ab7062ff2e94c011ec2e72a59e119177475dc41a06a23c36a6bf9a"
+  },
+  "prior_transfer": {
+    "logLR_cal": "logit(P_cal) - logit(pi_CAL)",
+    "P_target": "sigmoid(logLR_cal + logit(pi_target))",
+    "assumption": "LABEL SHIFT: p(X|y) unchanged between CAL and target; only p(y) differs. Invalid under covariate shift, a different detection/linking pipeline, or a non-NEOMOD3 target."
+  },
+  "priors": {
+    "pi_CAL": 0.007317675298925405,
+    "pi_ref_overlap_weighted_density_integral": 0.005330026911048253,
+    "pi_ref_caveat": "pi_ref = 0.533% is an OVERLAP-WEIGHTED DENSITY-INTEGRAL ESTIMATE: the 667 maps are 30-deg patches at 10-deg spacing, so sky is multiply counted. The 27% difference from pi_CAL must NOT be read as a definitive physical prior mismatch without a non-overlapping, area-weighted recomputation.",
+    "ratio_pi_ref_over_pi_CAL": 0.7283770724058997
+  }
+}

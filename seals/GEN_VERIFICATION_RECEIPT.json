@@ -1,0 +1,15 @@
+{
+  "by_pixel_partitions_verified": 768,
+  "files_verified": 871,
+  "frozen_artifact_sha256": "b1d09a09cc2163dedd0342b0d197580a7665ca84cc8d7e3ed0bba5a2a542e514",
+  "git_commit": "809f63289372df76484349cd41ebab8efcdd87b9",
+  "git_dirty": false,
+  "manifest_path": "outputs/splits/GEN_MANIFEST.json",
+  "manifest_sha256": "07c17d5dee6f1ef5016a6495d7b14c01bde7314ea8e5631aa59e0ec8ba9e3494",
+  "mismatches": 0,
+  "note": "Map jobs must require this receipt and assert receipt.manifest_sha256 == sha256(live GEN_MANIFEST.json). Any artifact edit changes the manifest and invalidates the receipt.",
+  "receipt": "GEN_ARTIFACT_VERIFICATION",
+  "recomputed_artifact_sha256": "b1d09a09cc2163dedd0342b0d197580a7665ca84cc8d7e3ed0bba5a2a542e514",
+  "result": "PASS",
+  "verified_utc": "2026-08-04T00:38:02Z"
+}

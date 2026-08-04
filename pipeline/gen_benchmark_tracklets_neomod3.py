@@ -42,7 +42,7 @@ LAT_BASE = [0, 1, 2, 3, 4, 5, 8, 12, 18, 25, 35, 50]
 # so each sky direction holds the number really there. Set an int only if size forces it -- the
 # factor is then applied uniformly to ALL populations (never per-population; that is the v1 bug).
 TARGET_TOTAL = None
-NEO_SEED = 20270825           # deliberately NOT the cache's seed 42
+NEO_SEED = int(os.environ.get("BM_NEO_SEED", "20270825"))  # deliberately NOT the cache seed 42
 SPLIT_ROLE = os.environ.get("BM_SPLIT_ROLE", "TEST_UNSEALED")
 OUT = Path(os.environ.get("BM_OUT_DIR", str(W/"outputs"/"benchmark_tracklets_neomod3")))
 # EXPLICIT NEO source. Defaulting to OUT/"neo_shards" silently coupled the NEO realisation to the

@@ -1,0 +1,45 @@
+{
+  "artifacts": {
+    "ephemeris": {
+      "bytes": 10895360,
+      "expected_bytes": 10895360,
+      "expected_sha256": "363f32e14f5255359ac32c4d38080cf28ab55564a5e16696a75f63394b666e9b",
+      "format": "DAF/SPK binary kernel",
+      "loader": "solar_system_ephemeris.set(<path>)",
+      "mode": "0o444",
+      "name": "ephemeris",
+      "ok": true,
+      "path": "outputs/splits/frozen_env/ephemeris/de432s.bsp",
+      "sha256": "363f32e14f5255359ac32c4d38080cf28ab55564a5e16696a75f63394b666e9b"
+    },
+    "iers": {
+      "bytes": 3758308,
+      "expected_bytes": 3758308,
+      "expected_sha256": "4b828090fc94114168014b61439fa5e6ec0bdfda518075a32baffea90110954d",
+      "format": "IERS-A ASCII (finals2000A.all)",
+      "loader": "astropy.utils.iers.IERS_Auto.read(path)",
+      "mode": "0o444",
+      "name": "iers",
+      "ok": true,
+      "path": "outputs/splits/frozen_env/iers/finals2000A.all.GEN-v1",
+      "sha256": "4b828090fc94114168014b61439fa5e6ec0bdfda518075a32baffea90110954d"
+    }
+  },
+  "created_utc": "2026-08-04T00:30:10Z",
+  "packages": {
+    "astropy": "7.2.0",
+    "erfa": "2.0.1.5",
+    "numpy": "2.4.4",
+    "python": "3.11.15"
+  },
+  "provenance": {
+    "ephemeris": "de432s.bsp preserved from the astropy download cache.",
+    "iers": "GEN-v1 table. The original cache copy was destroyed by a manifest-tool bug on 2026-08-03 and RECOVERED byte-exactly the same day from both the IERS datacenter and the USNO mirror (both byte-identical to each other and to the original sha 4b828090...). GEN-v1 remains authoritative."
+  },
+  "rules": [
+    "build_gen_manifest.py is READ-ONLY and must never write these",
+    "IERS loads via IERS_Auto.read(path) -- .open() substitutes the bundled table (75 ms UT1-UTC, ~1.1 arcsec)",
+    "ephemeris is passed BY PATH to solar_system_ephemeris.set(...)"
+  ],
+  "seal": "FROZEN_ENV_SEAL"
+}

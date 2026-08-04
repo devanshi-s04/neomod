@@ -1,0 +1,46 @@
+{
+  "acceptance": {
+    "corrupt": 0,
+    "corrupt_files": [],
+    "n_archives": 667,
+    "policy_ok": true,
+    "readable": 667,
+    "seal_sha256": "c30cc29d24ead70da1111782092b37557f21d6b90f581609bf2490907a474960"
+  },
+  "bytes": {
+    "max_file": 422816580,
+    "mean_file": 355127802,
+    "min_file": 204606850,
+    "total": 236870244275,
+    "total_gib": 220.6026057479903
+  },
+  "code_commit": "64cec2581d731ff68799f86755387309e8b497f8",
+  "created_utc": "2026-08-04T08:20:15Z",
+  "inventory": {
+    "expected": 667,
+    "match": true,
+    "missing": [],
+    "produced": 667,
+    "unexpected": []
+  },
+  "output_dir": "prob_maps_grid_neomod3_GEN_final",
+  "receipt": "FINAL_BUILD_RECEIPT",
+  "scripts": {
+    "driver": "neomod/pipeline/sorcha_gen_maps_grid.py",
+    "driver_sha256": "d888b36a40f11279599c6537dfc15966f6d2836049c11510f4a152c15c4215ff",
+    "launcher": "neomod/pipeline/slurm/gen_final_667.sbatch",
+    "launcher_sha256": "f8219c512e160ac173cceead01d47421e417f5d5a11b92e72383ff38fa98d9f5",
+    "vdp_module": "neomod/src/velocity_density_pipeline_neomod_clone_only.py",
+    "vdp_module_sha256": "a6de18c2197cbcb9f93014712aaad232272578150e2222f28eae723b339f923a",
+    "verifier": "neomod/pipeline/verify_final_grid.py",
+    "verifier_sha256": "dc7aeff61c4646585c1b5c0d4c8b8f9e52f0153e089dca28b8a9ec30c76f8a75"
+  },
+  "seals": {
+    "FINAL_GRID_ACCEPTANCE.json": "d06df74fc87e52f1ade870250d58c11f36d1f2e2d882872ed803ee99d2970447",
+    "MAP_BUILD_SEAL.json": "c30cc29d24ead70da1111782092b37557f21d6b90f581609bf2490907a474960"
+  },
+  "slurm_job": 38097064,
+  "test_status": "SEALED -- not drawn, not inspected; released only after MODEL_SEAL.json",
+  "verify_job": 38098644,
+  "version": "1.0"
+}

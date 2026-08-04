@@ -1,0 +1,8 @@
+{
+  "n_archives": 667,
+  "readable": 667,
+  "corrupt": 0,
+  "corrupt_files": [],
+  "policy_ok": true,
+  "seal_sha256": "c30cc29d24ead70da1111782092b37557f21d6b90f581609bf2490907a474960"
+}
