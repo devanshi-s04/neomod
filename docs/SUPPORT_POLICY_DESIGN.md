@@ -205,3 +205,67 @@ decision did**.
 These residuals are the genuine, second-order resolution effect that remains once the occupancy
 mask is removed. They are small but non-zero, and are the reason this note does **not** conclude
 that resolution is irrelevant.
+
+---
+
+# §9. PILOT RESULT AND FINAL DECISION (2026-08-03)
+
+## §9.1 Three corrections to the first reading of the pilot
+
+**(1) Error is NOT monotonic in Z.** Across the ten Z deciles the mean absolute error is
+0.00246, 0.00282, 0.00300, 0.00230, 0.00230, 0.00199, 0.00246, 0.00386, 0.00635, **0.02740** — it
+**fluctuates across the lower deciles** and then **rises strongly in the upper tail**. The correct
+statement: *high Z is associated with greater error and sparser support, especially in the final
+decile.* The earlier "monotonically increasing" claim is withdrawn.
+
+**(2) High Z is NOT evidence of model extrapolation.** CAL NEOs are **independent NEOMOD3 draws**
+and are therefore **in-model by construction**. Z measures **sparse finite-sample representation**,
+not out-of-model-ness, and it **cannot distinguish a rare-but-valid observation from a genuinely
+out-of-model one**. The earlier framing of Z as detecting "where the model is extrapolating" is
+withdrawn.
+
+**(3) The magnitude interpretation was wrong.** At 99% coverage the faintest bin (24–25) has a
+**within-bin abstention rate of 1.266%** but supplies **86 of 155 = 55.5% of ALL abstentions**.
+Both numbers must be reported: the rate is low, the *share* is a majority. Velocity remains the
+strongest concentration (100% of |v|>2 abstained), but **depth may also contribute** and the earlier
+dismissal of a depth effect is withdrawn.
+
+## §9.2 Pilot outcome
+
+| truth | median Z | abstained @99% coverage |
+|---|---:|---:|
+| MBA | 0.262 | 0.27% |
+| TNO | 0.379 | 1.36% |
+| Trojans | 0.809 | 17.6% |
+| **NEO** | **1.029** | **54.7%** |
+
+| velocity band | abstained @99% |
+|---|---:|
+| ≤0.25 | 0.16% |
+| 0.25–0.5 | 1.18% |
+| 0.5–1.0 | 16.6% |
+| 1.0–2.0 | 85.7% |
+| **>2.0** | **100.0%** |
+
+Fast-NEO retention: **58.1%** at 99.9% coverage, **0%** at 99.5% and below. The random-abstention
+control was *better* than the policy on ROC/pAUC/F1 at 99.9%.
+
+**Why the standardisation did not rescue it:** per-population normalisation fixes units, but fast
+NEOs sit where every population's samples are sparse — including NEO's own relative to typical NEO
+spacing — so `min_c z_c` is large there. For this data **low local support is the normal condition
+for NEOs, not an error state**, so any gate calibrated to abstain on weak support preferentially
+discards them.
+
+## §9.3 FINAL DECISION
+
+1. **REJECT** `support_count` occupancy masking (resolution-dependent, asymmetric, and costly at the
+   production resolution: pAUC 0.8867 → 0.9535 with it off).
+2. **REJECT** standardized-Z as an automatic abstention gate.
+3. **DO NOT** search for another CAL-derived support gate.
+4. **Build posterior probabilities from ALL unmasked population densities symmetrically** — same
+   estimator, same k, same normalisation, same interpolation, no population exempt, none zeroed.
+   `_support_mask_skip` is retired.
+5. **Abstain only on explicit TECHNICAL domain failures**: outside map bounds; no sky/magnitude map
+   available; invalid observation; non-finite or zero total density. Abstention is NaN, never 0 or 1.
+6. **Report Z, nearest/kth-neighbour distance and total density as uncertainty/support METADATA
+   only** — surfaced with every score, never gating it.
