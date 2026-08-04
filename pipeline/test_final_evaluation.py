@@ -55,14 +55,14 @@ P_cal=np.full(len(te),np.nan); P_cal[m]=expit(A_*logit(np.clip(P_raw[m],EPS,1-EP
 print(f"\nscored in {(time.time()-t0)/60:.1f} min")
 print("\n"+"="*100); print("1. TECHNICAL COVERAGE")
 print(f"  overall {100*m.mean():.4f}%  ({int(m.sum()):,}/{len(te):,})")
-cov=pd.DataFrame({"truth":te.population,"cov":m,"vmax":vmax,"mag":te.mean_mag})
-print("\n  by truth:"); print(cov.groupby("truth").cov.agg(n="size",covered="sum",
+cov=pd.DataFrame({"truth":te.population,"covered":m,"vmax":vmax,"mag":te.mean_mag})
+print("\n  by truth:"); print(cov.groupby("truth")["covered"].agg(n="size",covered="sum",
       pct=lambda t:100*t.mean()).to_string(float_format=lambda z:f"{z:,.4f}"))
 print("\n  by velocity band:")
-print(cov.groupby(pd.cut(cov.vmax,[0,0.25,0.5,1,2,5,1e3]),observed=True).cov.agg(
+print(cov.groupby(pd.cut(cov.vmax,[0,0.25,0.5,1,2,5,1e3]),observed=True)["covered"].agg(
       n="size",covered="sum",pct=lambda t:100*t.mean()).to_string(float_format=lambda z:f"{z:,.4f}"))
 print("\n  by magnitude:")
-print(cov.groupby(pd.cut(cov.mag,[14,20,22,23,24,25]),observed=True).cov.agg(
+print(cov.groupby(pd.cut(cov.mag,[14,20,22,23,24,25]),observed=True)["covered"].agg(
       n="size",covered="sum",pct=lambda t:100*t.mean()).to_string(float_format=lambda z:f"{z:,.4f}"))
 yv=y[m]; praw=P_raw[m]; pcal=P_cal[m]; vv=vmax[m]
 pi_test=float(yv.mean())
