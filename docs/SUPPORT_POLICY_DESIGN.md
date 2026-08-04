@@ -269,3 +269,43 @@ discards them.
    available; invalid observation; non-finite or zero total density. Abstention is NaN, never 0 or 1.
 6. **Report Z, nearest/kth-neighbour distance and total density as uncertainty/support METADATA
    only** — surfaced with every score, never gating it.
+
+---
+
+# §10. RESOLUTION SELECTION — step = 0.01 (2026-08-04)
+
+Selected on the corrected closure report, with the unmasked symmetric posterior of §9.3.
+
+**Evaluation mask.** Technical-valid intersection of both candidates = **15,422 rows / 181 NEOs**,
+**identical row-for-row** to the previously frozen common mask. Finite-score assertions passed; no
+`nan_to_num` is used anywhere. The **11 excluded rows are all NEOs with |v| = 5.09–26.63 deg/day**,
+i.e. outside the ±5 map domain with zero total density at both resolutions — a genuine technical
+domain failure of the kind §9.3 abstains on. *(Scope note: the ±5 grid does not cover these 11.)*
+
+| metric | 0.01 | 0.005 | diff (0.005−0.01) | 95% CI | excludes 0 |
+|---|---:|---:|---:|---|---|
+| ROC AUC | 0.99288 | 0.994104 | +1.22e-03 | [−7.8e-04, 4.1e-03] | no |
+| standardized partial ROC AUC (FPR≤0.01) | 0.953493 | 0.952290 | −1.20e-03 | [−2.5e-03, 7.3e-05] | no |
+| F1 | 0.882521 | 0.880000 | −2.52e-03 | [−7.7e-03, 4.3e-03] | no |
+| Brier | 0.00265512 | 0.00267834 | +2.32e-05 | [2.9e-06, 5.1e-05] | **yes** |
+
+Paired, truth-stratified bootstrap (B = 1000). **The only statistically resolved difference is
+Brier, and it favours 0.01.** **No equivalence margin was preregistered, so no formal equivalence is
+claimed: no practically meaningful improvement was observed.**
+
+**Disagreements:** 2 at the fixed 0.01 threshold, 1 at each arm's own CAL-optimal threshold, 1 at
+0.5. Of the two fixed-threshold rows, **one is threshold-adjacent** (NEO sitting exactly on the
+threshold, |Δ| 0.0038) and **one is a real local resolution sensitivity** (MBA, |Δ| **0.054**,
+already 0.024 from the boundary) — these are **not** both artifacts.
+
+**Fast NEOs (|v|>2, n=31):** identical at both resolutions — median P 0.887622 vs 0.887638,
+96.8% above threshold, 0% scored zero.
+
+**Cost:** 4.88 vs 19.46 GiB for 16 maps (3.99×); **203 vs 811 GiB** projected for 667;
+~9 min vs 13–42 min per map. **0.01 uses 4× less storage and materially lower compute.**
+
+## DECISION: **step = 0.01**
+
+No measured accuracy benefit at 0.005; the one resolved metric favours 0.01; fast-NEO recovery is
+unchanged; and 0.005 costs 4× the storage and materially more compute. Selection is on **CAL only**;
+TEST remains sealed.
