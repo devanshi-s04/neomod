@@ -1,4 +1,4 @@
-# EVALUATION PROTOCOL v1.2 — FROZEN 2026-08-03
+# EVALUATION PROTOCOL v1.3 — FROZEN 2026-08-04
 
 **Status: FROZEN before reading any further results.** Amendments require a version bump (v1.1, …)
 with a dated changelog entry. No metric, cut, or dataset in this document may be changed to
@@ -393,11 +393,41 @@ compute nodes and the job dies with `No such file or directory`. Job scripts liv
 
 ---
 
+## §11. E1 INTERPOLATION — SELECTED: variant C (2026-08-04)
+
+Ablation A–D on the sealed 667-map grid, full CAL v2, identical technical-valid rows
+(644,057; NEO 4,713/5,000 = 94.26%). Manifest frozen before scoring
+(`E1_INTERPOLATION_ABLATION_MANIFEST.md`); receipt
+`outputs/splits/E1_INTERPOLATION_SELECTION_RECEIPT.json`.
+
+**FROZEN implementation (variant C):**
+- density-first **bilinear velocity** interpolation within the map
+- density-first **linear interpolation between adjacent magnitude bins**
+- **nearest sky-map cell** — no sky interpolation
+- **symmetric unmasked posterior**, `P = ρ_NEO / Σ_c ρ_c` formed **after** interpolation
+- **technical-only abstention** (out of bounds, non-finite, zero total density) → NaN
+
+C beats A on standardized partial AUC (+1.07e-03), F1 (+2.31e-03) and Brier (−4.11e-05), all with
+paired 95% CIs excluding zero. D is significantly worse than C on pAUC (−9.38e-04) and Brier
+(+8.78e-06); its advantage over A is unresolved on every ranking metric.
+
+**Hull census (D):** NEOs fall outside the sky-interpolation hull at **9.166%** vs **0.376%** for
+MBA — 24×, and 418 of 432 by latitude — so D *clips to a boundary map* rather than interpolating
+exactly where NEOs concentrate. This imbalance is **associated with** D's weaker performance on the
+population of interest but is **not established as its sole cause**: D also loses to C across all
+rows, and no experiment isolating the hull contribution was run.
+
+**Raw posterior is under-confident in the mid-range** (predicts 0.176, observes 0.378 at 0.1–0.3).
+Cause to be tested during calibration; no attribution made.
+
+---
+
 ## Changelog
 
 | version | date | change |
 |---|---|---|
 | v1.0 | 2026-08-01 | initial freeze |
+| v1.3 | 2026-08-04 | §11 added: E1 interpolation variant **C** selected and frozen; hull census recorded with an explicit non-causal caveat. |
 | v1.2 | 2026-08-03 | Support threshold expressed as integer 2.0 raw clones (exactly equivalent; counts are integers). TEST seal split into `TEST_DATA_SEAL.json` (frozen now) and `MODEL_SEAL.json` (written after CAL). E0 pilot preregistered in `E0_PILOT_PREREGISTRATION.md`. §10 added: login-node JAX SIGABRT and node-local `/tmp`. |
 | v1.1 | 2026-08-03 | **§0 added: GEN/CAL/TEST split design, normalisation trap, E0 fidelity, E1-Resolution/E1-Information/E2/E3.** S3M NEOs excluded from the primary evaluation; legacy VDP demoted to historical reference. E1a (built 2026-08-01) is superseded: its non-NEOs were 100% shared with the maps. |
 | v1.0.1 | 2026-08-03 | added §1.1 (digest2 determinism procedure + the `.config` trap). **No specification change** — §1 already required `repeatable`; this documents how to achieve and verify it. |
