@@ -80,6 +80,12 @@ def run(cen):
     wd=np.where(d1>d0,(obj_dl-d0)/np.where(d1>d0,d1-d0,1),0.0)
     wl=np.where(l1>l0,(obj_la-l0)/np.where(l1>l0,l1-l0,1),0.0)
     wd=np.clip(wd,0,1); wl=np.clip(wl,0,1)
+    # hull membership: an object outside the sky-centre hull is CLIPPED to the boundary map,
+    # not genuinely interpolated. Track it so D is not credited with interpolation it did not do.
+    out_lat=(obj_la<LA.min())|(obj_la>LA.max())
+    out_dlon=(obj_dl<DA.min())|(obj_dl>DA.max())
+    outside_hull=out_lat|out_dlon
+    n_corners=np.zeros(len(g),int)
     acc={p:np.zeros(len(g)) for p in POPS}; wsum=np.zeros(len(g))
     for dsel,wdd in [(d0,1-wd),(d1,wd)]:
         for lsel,wll in [(l0,1-wl),(l1,wl)]:
@@ -89,20 +95,25 @@ def run(cen):
                 if not sel.any() or not (D/nm).exists(): continue
                 dd_=dens_maginterp(nm,mags[sel],xs[sel],ys[sel])
                 for p in POPS: acc[p][sel]+=wgt[sel]*dd_[p]
-                wsum[sel]+=wgt[sel]
+                wsum[sel]+=wgt[sel]; n_corners[sel]+=1
     ok=wsum>0
     for p in POPS: acc[p]=np.where(ok,acc[p]/np.where(ok,wsum,1),0.0)
     tD=sum(acc[p] for p in POPS)
     res["D"]=np.where(ok&(tD>0),acc["NEO"]/np.where(tD>0,tD,1),res["C"])
     totD=np.where(ok&(tD>0),tD,tC)
-    return idx,res,dict(A=totA,B=tB,C=tC,D=totD)
+    return idx,res,dict(A=totA,B=tB,C=tC,D=totD),dict(outside_hull=outside_hull,
+        out_lat=out_lat,out_dlon=out_dlon,n_corners=n_corners,wsum=wsum)
 
 t0=time.time()
 cells=sorted(cal.prob_map_file.unique())
 parts=Parallel(n_jobs=12,verbose=5)(delayed(run)(c) for c in cells)
 S={k:np.full(len(cal),np.nan) for k in "ABCD"}; T={k:np.full(len(cal),np.nan) for k in "ABCD"}
-for idx,res,tot in parts:
+H={k:np.zeros(len(cal),bool) for k in ["outside_hull","out_lat","out_dlon"]}
+NC=np.zeros(len(cal),int)
+for idx,res,tot,h in parts:
     for k in "ABCD": S[k][idx]=res[k]; T[k][idx]=tot[k]
+    for k in H: H[k][idx]=h[k]
+    NC[idx]=h["n_corners"]
 rt=time.time()-t0
 inb=(cal.vlam.abs()<=5)&(cal.vbeta.abs()<=5)&(cal.mean_mag>=14)&(cal.mean_mag<25)
 valid={k:inb.to_numpy()&np.isfinite(S[k])&np.isfinite(T[k])&(T[k]>0) for k in "ABCD"}
@@ -142,6 +153,45 @@ for k in ["A","D"]:
     s=S[k][m]; b=pd.cut(s,[0,.1,.3,.5,.7,.9,1.001],include_lowest=True)
     t=pd.DataFrame({"p":s,"y":yv}).groupby(b,observed=True).agg(n=("y","size"),pred=("p","mean"),obs=("y","mean"))
     print(f"\n  {k}:"); print(t.to_string(float_format=lambda z:f"{z:,.4f}"))
+print("\n=== SKY INTERPOLATION HULL (variant D) ===")
+hull=pd.DataFrame({"truth":cal.population.to_numpy()[m],"outside":H["outside_hull"][m],
+                   "out_lat":H["out_lat"][m],"out_dlon":H["out_dlon"][m],"n_corners":NC[m]})
+print("  rows OUTSIDE the hull (clipped to a boundary map, NOT interpolated):")
+print(hull.groupby("truth").agg(n=("outside","size"),outside=("outside","sum"),
+      pct=("outside",lambda t:100*t.mean()),out_lat=("out_lat","sum"),
+      out_dlon=("out_dlon","sum")).to_string(float_format=lambda z:f"{z:,.3f}"))
+print("\n  corner accounting (how many of the 4 sky corners contributed):")
+cc=hull.n_corners.value_counts().sort_index()
+tot_=len(hull)
+for k_,vv_ in cc.items():
+    lab={4:"four valid corners (full bilinear)",3:"3 corners (renormalised)",
+         2:"2 corners (renormalised)",1:"1 corner (complete boundary fallback)",
+         0:"0 corners (fell back to C)"}.get(k_,f"{k_} corners")
+    print(f"    {lab:44s} {vv_:>9,}  ({100*vv_/tot_:5.2f}%)")
+print("\n=== PAIRED DIFFERENCES (truth-stratified bootstrap, B=300) ===")
+rng=np.random.default_rng(0); ii1=np.where(yv==1)[0]; ii0=np.where(yv==0)[0]
+def paired(k1,k2):
+    s1=S[k1][m]; s2=S[k2][m]; d={"ROC":[],"pAUC":[],"F1":[],"Brier":[]}
+    for _ in range(300):
+        b_=np.concatenate([rng.choice(ii1,len(ii1),True),rng.choice(ii0,len(ii0),True)])
+        yy=yv[b_]
+        if yy.sum()<5: continue
+        d["ROC"].append(roc_auc_score(yy,s2[b_])-roc_auc_score(yy,s1[b_]))
+        d["pAUC"].append(roc_auc_score(yy,s2[b_],max_fpr=0.01)-roc_auc_score(yy,s1[b_],max_fpr=0.01))
+        def f1o(t):
+            p_,r_,_=precision_recall_curve(yy,t)
+            f=np.divide(2*p_*r_,p_+r_,out=np.zeros_like(p_),where=(p_+r_)>0); return f[:-1].max()
+        d["F1"].append(f1o(s2[b_])-f1o(s1[b_]))
+        d["Brier"].append(brier_score_loss(yy,np.clip(s2[b_],0,1))-brier_score_loss(yy,np.clip(s1[b_],0,1)))
+    return {k_:(float(np.mean(vv_)),float(np.percentile(vv_,2.5)),float(np.percentile(vv_,97.5))) for k_,vv_ in d.items()}
+for pair in [("A","C"),("C","D"),("A","D")]:
+    pr=paired(*pair)
+    print(f"  {pair[1]} minus {pair[0]}:")
+    for k_,(mu,lo,hi) in pr.items():
+        print(f"    {k_:6s} {mu:+.3e}  95% CI [{lo:+.3e}, {hi:+.3e}]  "
+              f"{'excludes 0' if lo>0 or hi<0 else 'includes 0'}")
+np.savez_compressed(OUT/"E1_PER_ROW_SCORES.npz",**{k:S[k] for k in "ABCD"},mask=m,y=y,vmax=vmax,
+                    outside_hull=H["outside_hull"],n_corners=NC)
 R.to_csv(OUT/"E1_ABLATION.csv",index=False)
 json.dump(dict(rows=R.to_dict("records"),matched_completeness=mc,runtime_min=rt/60,
     n_eval=int(m.sum()),n_neo=int(yv.sum()),
