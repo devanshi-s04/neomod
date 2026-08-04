@@ -153,6 +153,8 @@ def main():
                    help="Output directory for grid maps.")
     p.add_argument("--output",        type=str, default=None,
                    help="Explicit output .npz path (overrides --prob-maps-dir naming).")
+    p.add_argument("--smooth-support-threshold", type=float, default=None,
+                   help="Raw-clone smoothing support threshold (E0 candidate knob).")
     p.add_argument("--require-receipt", action="store_true",
                    help="Require a PASSing GEN verification receipt tied to the live manifest.")
     p.add_argument("--split-manifest", type=str, default=None,
@@ -341,6 +343,8 @@ def main():
             import json as _json
             vdp.NONNEO_SPLIT_FRACTIONS = _json.load(open(args.split_provenance))
             print(f"[split] normalisation fractions loaded from {args.split_provenance}", flush=True)
+        if args.smooth_support_threshold is not None:
+            vdp.DEFAULT_SMOOTH_SUPPORT_THRESHOLD = float(args.smooth_support_threshold)
         gp_kwargs = dict(clone_sources=clone_sources)
     else:
         gp_kwargs = dict(population_settings=pop_settings)
