@@ -18,6 +18,7 @@ CTR=np.array([(lo+hi)/2 for _,lo,hi in BINS]); LABS=[b for b,_,_ in BINS]
 LAT=sorted({float(x) for x in [0,1,2,3,4,5,8,12,18,25,35,50]}|{-float(x) for x in [0,1,2,3,4,5,8,12,18,25,35,50]})
 DLON=[float(d) for d in range(-140,150,10)]
 cal=pd.read_parquet(W/"outputs/cal_tracklets_neomod3_v2/tracklets_benchmark_neomod3.parquet")
+assert {"dlon_from_antisun_deg","beta_deg"} <= set(cal.columns)
 y=(cal.population=="NEO").astype(int).to_numpy()
 vmax=np.maximum(cal.vlam.abs(),cal.vbeta.abs()).to_numpy()
 print(f"CAL rows {len(cal):,}  NEO {int(y.sum()):,}  cells {cal.prob_map_file.nunique()}")
@@ -53,7 +54,10 @@ def dens_maginterp(n,mags,xs,ys):
 def run(cen):
     g=cal[cal.prob_map_file==cen]; xs=g.vlam.to_numpy(float); ys=g.vbeta.to_numpy(float)
     mags=g.mean_mag.to_numpy(float); idx=g.index.to_numpy()
-    dl=float(cen.split("dlon")[1][:4]); la=float(cen.split("lat")[1][:3])
+    # D must interpolate from each object's TRUE sky position, not the assigned cell centre.
+    # Using the cell coords put every object exactly on a grid node, so the bilinear weights
+    # collapsed to 1.0 on its own cell and D degenerated to C (identical to every digit).
+    obj_dl=g.dlon_from_antisun_deg.to_numpy(float); obj_la=g.beta_deg.to_numpy(float)
     res={}
     pm=v.ProbMapSet.from_npz(str(D/cen),support_mask_min=None,mask_radius_deg_per_day=np.inf)
     r=pm.score_visible(xs,ys,mags); res["A"]=np.asarray(r["NEO"],float)
@@ -70,24 +74,27 @@ def run(cen):
     dC=dens_maginterp(cen,mags,xs,ys); tC=sum(dC[p] for p in POPS)
     res["C"]=np.where(tC>0,dC["NEO"]/np.where(tC>0,tC,1),0.0)
     # D: + sky-cell interpolation (bilinear over the 4 surrounding cells)
-    i_d=int(np.clip(np.searchsorted(DLON,dl),1,len(DLON)-1)); i_l=int(np.clip(np.searchsorted(LAT,la),1,len(LAT)-1))
-    d0,d1=DLON[i_d-1],DLON[min(i_d,len(DLON)-1)]; l0,l1=LAT[i_l-1],LAT[min(i_l,len(LAT)-1)]
-    wd=0.0 if d1==d0 else (dl-d0)/(d1-d0); wl=0.0 if l1==l0 else (la-l0)/(l1-l0)
-    acc={p:np.zeros(len(g)) for p in POPS}; wsum=0.0
-    for (dd,wdd) in [(d0,1-wd),(d1,wd)]:
-        for (ll,wll) in [(l0,1-wl),(l1,wl)]:
+    DA=np.array(DLON); LA=np.array(LAT)
+    id_=np.clip(np.searchsorted(DA,obj_dl),1,len(DA)-1); il_=np.clip(np.searchsorted(LA,obj_la),1,len(LA)-1)
+    d0,d1=DA[id_-1],DA[id_]; l0,l1=LA[il_-1],LA[il_]
+    wd=np.where(d1>d0,(obj_dl-d0)/np.where(d1>d0,d1-d0,1),0.0)
+    wl=np.where(l1>l0,(obj_la-l0)/np.where(l1>l0,l1-l0,1),0.0)
+    wd=np.clip(wd,0,1); wl=np.clip(wl,0,1)
+    acc={p:np.zeros(len(g)) for p in POPS}; wsum=np.zeros(len(g))
+    for dsel,wdd in [(d0,1-wd),(d1,wd)]:
+        for lsel,wll in [(l0,1-wl),(l1,wl)]:
             wgt=wdd*wll
-            if wgt<=0: continue
-            nm=mapname(dd,ll)
-            if not (D/nm).exists(): continue
-            dd_=dens_maginterp(nm,mags,xs,ys)
-            for p in POPS: acc[p]+=wgt*dd_[p]
-            wsum+=wgt
-    if wsum>0:
-        tD=sum(acc[p] for p in POPS); res["D"]=np.where(tD>0,acc["NEO"]/np.where(tD>0,tD,1),0.0)
-        totD=tD
-    else:
-        res["D"]=res["C"]; totD=tC
+            for nm in np.unique([mapname(a_,b_) for a_,b_ in zip(dsel,lsel)]):
+                sel=(np.array([mapname(a_,b_) for a_,b_ in zip(dsel,lsel)])==nm)&(wgt>0)
+                if not sel.any() or not (D/nm).exists(): continue
+                dd_=dens_maginterp(nm,mags[sel],xs[sel],ys[sel])
+                for p in POPS: acc[p][sel]+=wgt[sel]*dd_[p]
+                wsum[sel]+=wgt[sel]
+    ok=wsum>0
+    for p in POPS: acc[p]=np.where(ok,acc[p]/np.where(ok,wsum,1),0.0)
+    tD=sum(acc[p] for p in POPS)
+    res["D"]=np.where(ok&(tD>0),acc["NEO"]/np.where(tD>0,tD,1),res["C"])
+    totD=np.where(ok&(tD>0),tD,tC)
     return idx,res,dict(A=totA,B=tB,C=tC,D=totD)
 
 t0=time.time()
