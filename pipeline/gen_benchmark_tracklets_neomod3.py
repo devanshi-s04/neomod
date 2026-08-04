@@ -43,7 +43,8 @@ LAT_BASE = [0, 1, 2, 3, 4, 5, 8, 12, 18, 25, 35, 50]
 # factor is then applied uniformly to ALL populations (never per-population; that is the v1 bug).
 TARGET_TOTAL = None
 NEO_SEED = 20270825           # deliberately NOT the cache's seed 42
-OUT = W/"outputs"/"benchmark_tracklets_neomod3"
+SPLIT_ROLE = os.environ.get("BM_SPLIT_ROLE", "TEST_UNSEALED")
+OUT = Path(os.environ.get("BM_OUT_DIR", str(W/"outputs"/"benchmark_tracklets_neomod3")))
 SHARDS = OUT/"neo_shards"
 EPOCH_CACHE = W/"outputs/epoch_state_cache/epoch_state_2027-08-25T000000.parquet"
 META = json.load(open(W/"outputs/neomod3_projection_cache/cache_metadata.json"))
@@ -126,7 +127,7 @@ def build(_args):
     w_new = TOTAL_NEO_ABS/n_drawn
     print(f"NEO: {len(neo):,} clones from {n_drawn:,} draws -> w_new = {w_new:.5f} objects/clone")
 
-    cache = pd.read_parquet(EPOCH_CACHE, columns=["population", "ra_deg", "dec_deg", "dra_deg_day",
+    cache = pd.read_parquet(EPOCH_CACHE, columns=["ObjID", "population", "ra_deg", "dec_deg", "dra_deg_day",
                                                   "ddec_deg_day", "mag_app", "lam_deg", "beta_deg",
                                                   "vlam", "vbeta", "H"])
     cache = cache[(cache.mag_app >= MAG_MIN) & (cache.mag_app < MAG_MAX)]
@@ -141,6 +142,13 @@ def build(_args):
             lam, beta = e.lon.deg, e.lat.deg
         else:
             sub = cache[cache.population == pop].reset_index(drop=True)
+            if SPLIT_ROLE in ("GEN", "CAL", "TEST"):
+                import pandas as _pd
+                _man = _pd.read_parquet(W/"outputs/splits/nonneo_split_manifest.parquet")
+                _keep = set(_man.ObjID[_man.split == SPLIT_ROLE])
+                _n0 = len(sub)
+                sub = sub[sub.ObjID.isin(_keep)].reset_index(drop=True)
+                print(f"    [{SPLIT_ROLE}] {pop}: {len(sub):,} of {_n0:,} objects", flush=True)
             lam, beta = sub.lam_deg.to_numpy(float), sub.beta_deg.to_numpy(float)
         dlon = ((lam - antisun + 180.0) % 360.0) - 180.0
         keep = np.abs(dlon) <= DLON_LIMIT + 0.5

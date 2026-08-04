@@ -153,6 +153,8 @@ def main():
                    help="Output directory for grid maps.")
     p.add_argument("--output",        type=str, default=None,
                    help="Explicit output .npz path (overrides --prob-maps-dir naming).")
+    p.add_argument("--require-receipt", action="store_true",
+                   help="Require a PASSing GEN verification receipt tied to the live manifest.")
     p.add_argument("--split-manifest", type=str, default=None,
                    help="Parquet with ObjID/population/split; restricts non-NEO map inputs to one "
                         "split (protocol v1.1 §0). Requires --split-provenance for the 1/f fix.")
@@ -290,6 +292,22 @@ def main():
     # are still generated zero-gap two-body. One shared scorer suffices because it is used only
     # for the (population-independent) observer geometry -- avoids loading the 13.9M-row MBA S3M
     # file per task.
+    if getattr(args, "require_receipt", False):
+        # Sealed-evaluation gate: the GEN artifact must have been verified, and the receipt must be
+        # tied to the CURRENT manifest. Any edit to a cache byte changes the manifest and voids it.
+        import hashlib as _h, json as _j
+        _W = Path("/mmfs1/gscratch/dirac/ds2004/sorcha")
+        _m = _W/"outputs/splits/GEN_MANIFEST.json"; _r = _W/"outputs/splits/GEN_VERIFICATION_RECEIPT.json"
+        _rj = _j.loads(_r.read_text())
+        _live = _h.sha256(_m.read_bytes()).hexdigest()
+        if _rj.get("result") != "PASS":
+            raise RuntimeError(f"GEN verification receipt is {_rj.get('result')}, refusing to build")
+        if _rj.get("manifest_sha256") != _live:
+            raise RuntimeError(f"receipt manifest {_rj.get('manifest_sha256','')[:16]} != live "
+                               f"{_live[:16]} -- rerun verify_gen_artifact.py")
+        print(f"[receipt] GEN artifact verified: {_rj['files_verified']} files, "
+              f"{_rj['by_pixel_partitions_verified']} partitions, manifest {_live[:16]}", flush=True)
+
     if args.cache:
         import pandas as pd  # noqa: E402
         print(f"[cache] loading n-body epoch cache: {args.cache}", flush=True)
