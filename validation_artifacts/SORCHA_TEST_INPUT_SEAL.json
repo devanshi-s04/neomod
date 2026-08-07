@@ -1,0 +1,201 @@
+{
+  "seal": "SORCHA_TEST_INPUT_SEAL",
+  "version": "1.0",
+  "created_utc": "2026-08-06T00:13:32Z",
+  "status": "PHASE 1 ONLY -- inputs frozen. No Sorcha survey run has been executed.",
+  "lineage": {
+    "non_neo": "S3M TEST parent-identity partition (nonneo_split_manifest.parquet)",
+    "neo": "independent NEOMOD3 parent draw, seed 31415926, PRE visibility/mag selection",
+    "overlap_TEST_GEN": 0,
+    "overlap_TEST_CAL": 0,
+    "test_scored_parquet_used": false,
+    "s3m_neos_included": false
+  },
+  "sources": {
+    "nonneo_split_manifest": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/splits/nonneo_split_manifest.parquet",
+      "sha256": "7c119b435de077bb78666a0d2d54b18efa74f64820214639ab926ab21f413766"
+    },
+    "s3m_sorcha_orbits": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/inputs/s3m_sorcha_orbits.csv",
+      "sha256": "117854608080315cb810dc59ff06f43616e2f57b4b3df6691d6ba0ed6f40c73b"
+    },
+    "s3m_sorcha_phys": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/inputs/s3m_sorcha_phys.csv",
+      "sha256": "23b777691a8e47c799159295f0cc6cf07a40ffb2bf2cbdfb8da8e5b358f5504e"
+    },
+    "cds_colors": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/CDS_colors.parquet",
+      "sha256": "ba09207e82b27f0e694cc5b72f2f076690199daf5f19b9cecdb8f69859f1f04f"
+    },
+    "neomod3_cache_metadata": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/neomod3_projection_cache/cache_metadata.json",
+      "sha256": "ca5dc902d90e74eccbb0d8518c8037bac95cf6083530e97695593c17679ca492"
+    },
+    "benchmark_metadata": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test_tracklets_neomod3/benchmark_metadata.json",
+      "sha256": "2125428290d0e55d8861b55ff0c6407e08d5e231c068e64ac5b8d556218a84ec"
+    }
+  },
+  "seeds": {
+    "neo_realization": 31415926,
+    "neo_subsample": 8675309,
+    "neo_colors": 20270825,
+    "s3m_colors_original": 42
+  },
+  "neo_parents": {
+    "epoch": "2027-08-25T00:00:00",
+    "epoch_mjd_tdb": 61642.0,
+    "n_shards": 30,
+    "n_attempted": 30000000,
+    "n_valid": 29115093,
+    "validity_fraction": 0.9705031,
+    "validity_note": "sample_neomod3_orbits rejects draws failing the NEO definition (q<1.3, e<1, 0.05<a<4.2, 0<=i<=90) after in-bin perturbation",
+    "n_selected": 2284306,
+    "subsample_rule": "np.random.default_rng(8675309).choice(n_valid, n_target, replace=False), indices sorted ascending"
+  },
+  "scaling": {
+    "common_factor_role_fraction": 0.19980080676449175,
+    "applied_to": [
+      "NEO",
+      "MBA",
+      "TNO",
+      "Trojans"
+    ],
+    "per_population_caps": "NONE -- forbidden (the v1 benchmark bug)",
+    "total_neo_absolute": 11432917.944222081,
+    "weight_per_simulated_object": {
+      "NEO": 1.000000100217662,
+      "MBA": 1.0,
+      "TNO": 1.0,
+      "Trojans": 1.0
+    }
+  },
+  "counts": {
+    "MBA": 2773597,
+    "Trojans": 36207,
+    "TNO": 9770,
+    "NEO": 2284306,
+    "TOTAL": 5103880
+  },
+  "H_distributions": {
+    "NEO_H_V": {
+      "n": 2284306,
+      "mean": 27.11154504028142,
+      "std": 0.8822819958408581,
+      "pct": {
+        "min": 15.210374012622339,
+        "p1": 24.07780046427277,
+        "p5": 25.391764390342217,
+        "p25": 26.768305940268917,
+        "p50": 27.372589937501708,
+        "p75": 27.741964530983545,
+        "p95": 27.94876070900844,
+        "p99": 27.989846563972716,
+        "max": 27.999999897577034
+      }
+    },
+    "NEO_H_r": {
+      "n": 2284306,
+      "mean": 26.782948546124867,
+      "std": 0.8830406610854779,
+      "pct": {
+        "min": 14.94235949871316,
+        "p1": 23.749616308204956,
+        "p5": 25.06255690037352,
+        "p25": 26.437022001768057,
+        "p50": 27.044049702930014,
+        "p75": 27.410625574778777,
+        "p95": 27.62039386475164,
+        "p99": 27.689834830135037,
+        "max": 27.7494042849475
+      }
+    },
+    "MBA_H_r": {
+      "n": 2773597,
+      "mean": 20.38121637856467,
+      "std": 1.845860723669595,
+      "pct": {
+        "min": 5.0766198165154455,
+        "p1": 15.016606997942688,
+        "p5": 16.89991149749768,
+        "p25": 19.38893669449505,
+        "p50": 20.59613052039303,
+        "p75": 21.6773489908251,
+        "p95": 22.93839947811357,
+        "p99": 23.770511379216305,
+        "max": 26.3975529307701
+      }
+    },
+    "TNO_H_r": {
+      "n": 9770,
+      "mean": 7.449100640104846,
+      "std": 0.8851911827304472,
+      "pct": {
+        "min": 2.1841829006644167,
+        "p1": 4.848385121986802,
+        "p5": 5.786549971938428,
+        "p25": 6.963581606532108,
+        "p50": 7.572858852238699,
+        "p75": 8.056596169249488,
+        "p95": 8.640701335638242,
+        "p99": 9.18041208621846,
+        "max": 9.853129025875402
+      }
+    },
+    "Trojans_H_r": {
+      "n": 36207,
+      "mean": 16.257846563904394,
+      "std": 1.1749812996995226,
+      "pct": {
+        "min": 7.928636722714707,
+        "p1": 12.518258758026276,
+        "p5": 14.050816000664444,
+        "p25": 15.53082860674267,
+        "p50": 16.548111714557425,
+        "p75": 17.203008026289865,
+        "p95": 17.57973184072397,
+        "p99": 17.663529505131418,
+        "max": 17.741672428784337
+      }
+    }
+  },
+  "photometry": {
+    "recipe": "H_r = H(V) - (johnson V - LSST r); colours sampled from CDS_colors.parquet",
+    "GS": 0.15,
+    "identical_to": "neomod/pipeline/prep_s3m_sorcha_inputs.py"
+  },
+  "outputs": {
+    "orbits": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/sorcha_test_inputs/sorcha_test_orbits.csv",
+      "rows": 5103880,
+      "sha256": "03dbdc2b3e39ec61ac95964db3515bc927f316d3ab12b756058a17a68f322e20"
+    },
+    "phys": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/sorcha_test_inputs/sorcha_test_phys.csv",
+      "rows": 5103880,
+      "sha256": "6b1f81586dd21588394ad8d6ebcade120445395e7d79d2194dbdaf5b1db66f2b"
+    }
+  },
+  "objid_namespace": {
+    "non_neo": "S3M native (S...)",
+    "neo": "NM3T########"
+  },
+  "neo_shard_regeneration_check": {
+    "shard_00": {
+      "stored": 2713,
+      "found": 2713,
+      "frac": 1.0
+    },
+    "shard_15": {
+      "stored": 2777,
+      "found": 2777,
+      "frac": 1.0
+    },
+    "shard_29": {
+      "stored": 2745,
+      "found": 2745,
+      "frac": 1.0
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "common_scorable": {
+    "in_domain": 1016790,
+    "scorable": 1016609,
+    "coverage_pct": 99.98219888079151,
+    "neos": 11657,
+    "metrics": [
+      {
+        "classifier": "VDP (variant C + Platt)",
+        "ROC_AUC": 0.9706144117454667,
+        "stdpAUC": 0.8029514448523003,
+        "maxF1": 0.6704751176730901
+      },
+      {
+        "classifier": "digest2 (repeatable)",
+        "ROC_AUC": 0.975034602996139,
+        "stdpAUC": 0.8647058889556896,
+        "maxF1": 0.7387326330057606
+      }
+    ]
+  },
+  "operational": {
+    "n_neo_all_in_domain": 11838,
+    "coverage_by_population": [
+      {
+        "population": "MBA",
+        "n": 976734,
+        "scored": 976734,
+        "abstained": 0,
+        "coverage_%": 100.0
+      },
+      {
+        "population": "NEO",
+        "n": 11838,
+        "scored": 11657,
+        "abstained": 181,
+        "coverage_%": 98.47102551106606
+      },
+      {
+        "population": "TNO",
+        "n": 7670,
+        "scored": 7670,
+        "abstained": 0,
+        "coverage_%": 100.0
+      },
+      {
+        "population": "Trojans",
+        "n": 20548,
+        "scored": 20548,
+        "abstained": 0,
+        "coverage_%": 100.0
+      }
+    ],
+    "vdp_frozen_thresholds": [
+      {
+        "rule": "CAL <=5%",
+        "threshold": 0.6293106015875919,
+        "selected": 13097,
+        "TP": 8286,
+        "FP": 4811,
+        "completeness_pct": 69.99493157627978,
+        "contamination_pct": 36.73360311521723
+      },
+      {
+        "rule": "CAL <=10%",
+        "threshold": 0.4172454855015239,
+        "selected": 15791,
+        "TP": 8998,
+        "FP": 6793,
+        "completeness_pct": 76.00946105761108,
+        "contamination_pct": 43.01817490975872
+      },
+      {
+        "rule": "best-F1 (diag)",
+        "threshold": 0.3998476392484485,
+        "selected": 16090,
+        "TP": 9052,
+        "FP": 7038,
+        "completeness_pct": 76.46561919243115,
+        "contamination_pct": 43.74145431945308
+      }
+    ],
+    "digest2_equal_completeness": [
+      {
+        "rule": "match VDP <=5% completeness",
+        "selected": 10650,
+        "TP": 8286,
+        "FP": 2364,
+        "completeness_pct": 69.99493157627978,
+        "contamination_pct": 22.197183098591548
+      },
+      {
+        "rule": "match VDP <=10% completeness",
+        "selected": 14112,
+        "TP": 8998,
+        "FP": 5114,
+        "completeness_pct": 76.00946105761108,
+        "contamination_pct": 36.23866213151928
+      }
+    ]
+  }
+}

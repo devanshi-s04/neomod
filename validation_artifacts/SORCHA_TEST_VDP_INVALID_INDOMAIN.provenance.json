@@ -1,0 +1,13 @@
+{
+  "parquet": "outputs/sorcha_production/SORCHA_TEST_VDP_INVALID_INDOMAIN.parquet",
+  "parquet_sha256": "5869dfb5a7060ca376dddebd5506d19e4e0028266c85b6b915a1b7054eb89404",
+  "rows": 181,
+  "csv_committed": "SORCHA_TEST_VDP_INVALID_INDOMAIN.csv",
+  "note": "parquet is .gitignore'd (*.parquet); CSV committed instead, parquet retained on disk",
+  "populations": {
+    "NEO": 181
+  },
+  "mechanisms": {
+    "velocity_out_of_domain": 181
+  }
+}

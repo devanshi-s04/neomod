@@ -1,0 +1,24 @@
+{
+  "artifact": "SORCHA_TEST_TRACKLETS_SCORED_production.parquet",
+  "rows": 1191204,
+  "sha256": "308cdc8a0320b7e5247f368b0468891d306fd9bf85aac9cf0c3c982eae0fe916",
+  "uid_unique": true,
+  "missing_vs_input": 0,
+  "extra_vs_input": 0,
+  "vdp_invalid": 23769,
+  "digest2_invalid": 0,
+  "both_valid": 1167435,
+  "digest2_genuine_zeros": 409750,
+  "d2_status_counts": {
+    "ok": 1191204
+  },
+  "samples": {
+    "sample_main_mag245": 1016609,
+    "sample_full_map": 1167435,
+    "sample_case1_linked": 1180877,
+    "in_domain_mag245": 1016790,
+    "in_domain_map": 1167616
+  },
+  "shard_job": "38203287 (79 shards) + 38263818 (shard 79, 16 sub-jobs)",
+  "determinism": "digest2 repeatable + --cpu 1, verified on live processes"
+}

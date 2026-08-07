@@ -1,0 +1,15 @@
+{
+  "selection": "case1",
+  "source_config": "s3m_case1_tk1_sep05.ini",
+  "applied": "downstream, to preserved raw detections",
+  "params": {
+    "SSP_detection_efficiency": "0.95",
+    "SSP_number_observations": "2",
+    "SSP_separation_threshold": "0.5",
+    "SSP_maximum_time": "0.0625",
+    "SSP_number_tracklets": "1",
+    "SSP_track_window": "15",
+    "SSP_night_start_utc": "16.0"
+  },
+  "note": "SSP_detection_efficiency is a stochastic drop; the downstream step must declare its seed."
+}
