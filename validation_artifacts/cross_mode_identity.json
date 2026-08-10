@@ -1,0 +1,38 @@
+{
+  "n_centers": 667,
+  "n_cells": 16226,
+  "input_hashes": {
+    "epoch_cache": "b3b2240376a87adfe4f9d067bf8e66b5d946acff7e33b8053bcb7c18ec63d28e",
+    "split_manifest": "7c119b435de077bb78666a0d2d54b18efa74f64820214639ab926ab21f413766",
+    "split_provenance": "0fec47029143690a3363fff6cb4cbdf4ea25d22def4c9e0143f0ebff91f6d6f8",
+    "map_build_seal": "c30cc29d24ead70da1111782092b37557f21d6b90f581609bf2490907a474960"
+  },
+  "sealed_module_sha256": "a6de18c2197cbcb9f93014712aaad232272578150e2222f28eae723b339f923a",
+  "grid": [
+    [
+      -5.0,
+      4.999999999999787
+    ],
+    0.01,
+    1001
+  ],
+  "gaussian_smoothing_disabled_everywhere": true,
+  "identical_sample_counts_across_modes": true,
+  "modes": [
+    "hist_all",
+    "bayes_all",
+    "bayes_nonneo"
+  ],
+  "total_gen_sample_map_memberships": 211442237,
+  "membership_note": "counts are SAMPLE-MAP MEMBERSHIPS, not unique objects: the 30-degree patches overlap, so one object is a member of many maps",
+  "source_selection_digest": {
+    "definition": "SHA256 over sorted records (ObjID, population, center, magnitude_bin, physical_weight)",
+    "n_cells": 16226,
+    "n_centers": 667,
+    "literal_sha256_equality_across_modes": true,
+    "cells_with_mismatch": 0,
+    "experiment_digest_sha256": "5e58765953bd0d75cf67001a9d31c1279ef6d99d2efcf9a16b0fcd6dca5b3dc0",
+    "neo_identifier_note": "NEO rows come from the NEOMOD3 GEN cache and carry no S3M ObjID; they are identified by an ordered orbital record (a,e,i,H,vlam,vbeta)",
+    "method": "selection stage rerun independently once per density_mode; no map rebuilt"
+  }
+}
