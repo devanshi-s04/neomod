@@ -1,0 +1,52 @@
+{
+  "fixed_nonneo_sha256": {
+    "MBA": "a85c2965191dbc22a9d0c5f645433b5808c1139380a207f47de12a9959b32c3c",
+    "TNO": "38b539cf4745de621235fdc94f7258d5df58962fd2a45741ab59eb8479d95825",
+    "Trojans": "a1cccf6827c26aca76aca0788b1310077894e415417bd34277d2ec2e939e5de4"
+  },
+  "identical_nonneo_arrays_across_all_cases": true,
+  "per_case": {
+    "BASE_k010": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "BASE_k025": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "BASE_k050": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "BASE_k100": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "HIGH_k010": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "HIGH_k025": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "HIGH_k050": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "HIGH_k100": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    }
+  },
+  "source_production_map": "/mmfs1/gscratch/dirac/ds2004/sorcha/prob_maps_grid_neomod3_GEN_final/prob_maps_grid_dlon+000_lat+00.npz",
+  "magnitude_bin": "mag24+"
+}

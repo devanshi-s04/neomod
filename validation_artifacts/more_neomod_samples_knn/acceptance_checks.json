@@ -1,0 +1,19 @@
+{
+  "all_eight_cases_exist": true,
+  "base_is_literal_current_source_realisation": true,
+  "high_has_at_least_200000_rows": true,
+  "high_is_nested_on_base": true,
+  "no_duplicate_generated_orbital_records": true,
+  "seeds_non_overlapping_with_original_cache": true,
+  "weight_totals_agree": true,
+  "weight_relative_difference": 0.0071972191766296436,
+  "weight_tolerance": 0.02,
+  "one_source_hash_per_row": true,
+  "requested_k_reached_estimator": true,
+  "gaussian_smoothing_false_everywhere": true,
+  "identical_n_d0_grid": true,
+  "identical_nonneo_arrays_across_all_cases": true,
+  "posterior_sums_to_one_where_defined": true,
+  "max_posterior_sum_deviation": 3.3306690738754696e-16,
+  "ALL_PASS": true
+}
