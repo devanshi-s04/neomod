@@ -8,7 +8,10 @@ smoothness and structure of the NEO velocity-density map?
 
 Controlled: ONE sky center (dlon+000_lat+00), ONE magnitude bin (mag24+), the frozen production
 epoch/geometry, the +-5 deg/day grid at 0.01 spacing, Gaussian smoothing OFF, no support masking.
-Varied: NEO source count (BASE / HIGH) and k (10 / 25 / 50 / 100).
+Varied: NEO source count (BASE / HIGH) and k (10 / 25 / 50 / 100 / 150 / 200 / 250).
+
+k = 150, 200, 250 were added later as an incremental extension: they reuse the identical frozen
+source parquets (no new NEOMOD3 draws) and the original four k values were not rebuilt.
 
 The NEO source is frozen to a parquet ONCE per case; every k in a row reads the same file, so the
 only difference within a row is k. `_load_neomod3_cache` is replaced by a loader that returns the
@@ -28,9 +31,12 @@ Stages
     export-base   freeze the literal current GEN selection for this map/bin
     draw-high     shard: draw NEW NEOMOD3 orbits (recorded, non-overlapping seeds), select
     merge-high    source_high = source_base + all draw-high shards (nested)
-    map           one (source, k) density map -> NPZ
-    posterior     P(NEO) for all 8 cases against byte-identical fixed non-NEO densities
-    checks        acceptance_checks.json
+    map                one (source, k) density map -> NPZ
+    integration-check  quadrature accuracy at given k against the exact closed form
+    posterior          P(NEO) against byte-identical fixed non-NEO densities (--ks to subset)
+    finalize           provenance.json + acceptance_checks.json
+    bundle             full deliverable tarball
+    bundle-highk       incremental tarball for the k = 150/200/250 extension
 
 Writes only under outputs/more_neomod_samples_knn/. Never writes any production map directory.
 """
@@ -57,7 +63,9 @@ MAG_BIN = {"label": "mag24+", "mag_min": 24.0, "mag_max": 25.0}
 MAX_SEP_DEG = 30.0
 GRID_LIM = (-5.0, 5.0)
 GRID_STEP = 0.01
-K_VALUES = (10, 25, 50, 100)
+K_VALUES = (10, 25, 50, 100, 150, 200, 250)
+K_VALUES_INITIAL = (10, 25, 50, 100)          # built by the original 8-task array
+K_VALUES_HIGHK = (150, 200, 250)              # incremental extension, 6-task array
 SOURCES = ("BASE", "HIGH")
 SMOOTH_DENSITY_MAPS = False          # explicit: Gaussian smoothing OFF everywhere
 NONNEO_POPS = ("MBA", "TNO", "Trojans")
@@ -74,8 +82,10 @@ NONNEO_POPS = ("MBA", "TNO", "Trojans")
 #     100   1.1e-02    6.0e-15    4.0e-15
 # 400 is converged at k=10 (which is why the production maps are unaffected) but NOT at k=50/100,
 # where it would inject a k-dependent numerical bias into exactly the comparison this experiment
-# makes. 8000 is converged at every k and is applied IDENTICALLY to all eight cases, so quadrature
-# resolution is a controlled variable rather than a function of k.
+# makes. 8000 is converged at every k and is applied IDENTICALLY to all cases, so quadrature
+# resolution is a controlled variable rather than a function of k. Re-verified at the extension
+# values by `integration-check`: max relative deviation 1.8e-14 at k=250 (see
+# integration_check_k150_200_250.json).
 N_D0_GRID = 8000
 
 # HIGH draw budget. BASE selects 27,781 rows from 1e8 draws (rate 2.7781e-4), so ~6.4e8 additional
@@ -402,9 +412,20 @@ def posterior(a):
         hashes[p] = sha256_array(arr)
         print(f"fixed {p:8s} sha256 {hashes[p]}  sum {arr.sum():.6e}", flush=True)
 
-    rec, per_case_hashes = {}, {}
+    ks = tuple(int(x) for x in a.ks.split(",")) if getattr(a, "ks", None) else K_VALUES
+    prev = {}
+    pj = OUT / "posterior_provenance.json"
+    if pj.exists():
+        old = json.load(open(pj))
+        prev = old.get("per_case", {})
+        if old.get("fixed_nonneo_sha256") and old["fixed_nonneo_sha256"] != hashes:
+            raise RuntimeError("fixed non-NEO hashes changed since the previous posterior run; "
+                               "the earlier cases would no longer share identical arrays")
+    print(f"building posteriors for k in {ks}", flush=True)
+
+    rec, per_case_hashes = dict(prev), {}
     for src in SOURCES:
-        for k in K_VALUES:
+        for k in ks:
             z = np.load(npz_path(src, k), allow_pickle=True)
             neo = np.asarray(z["density_neo_physical"], dtype=float)
             tot = neo + fixed["MBA"] + fixed["TNO"] + fixed["Trojans"]
@@ -430,14 +451,67 @@ def posterior(a):
             print(f"  {key}: defined {int(ok.sum()):,}  undefined {int((~ok).sum()):,}  "
                   f"max|sum-1| {maxdev:.3e}", flush=True)
 
+    # every case built in THIS run used `hashes`; earlier cases are guarded by the equality check
+    # above, so identity holds across the union rather than just the freshly built subset
     ident = all(per_case_hashes[k2] == hashes for k2 in per_case_hashes)
     json.dump({"fixed_nonneo_sha256": hashes,
                "identical_nonneo_arrays_across_all_cases": bool(ident),
+               "n_cases": len(rec),
                "per_case": rec,
                "source_production_map": str(PROD_MAPS / f"prob_maps_grid_{CENTER_LABEL}.npz"),
                "magnitude_bin": lab},
               open(OUT / "posterior_provenance.json", "w"), indent=2)
-    print(f"\nidentical non-NEO arrays across all 8 cases: {ident}", flush=True)
+    print(f"\nidentical non-NEO arrays across all {len(rec)} cases: {ident}", flush=True)
+
+
+# ---- stage: integration-check -----------------------------------------------------------------
+def integration_check(a):
+    """Bounded check that N_D0_GRID is still accurate at the requested k values.
+
+    The sealed posterior is  p(d0) ~ d0^{-k(k+1)} exp(-S/d0^2)  with  S = sum_j d_j^2, so the
+    posterior mean of n0 = 1/(pi d0^2) has the exact closed form
+
+        n0 = (k(k+1)/2 - 1/2) / (pi S).
+
+    Comparing the sealed quadrature against that closed form measures the discretisation error
+    directly. This is a numerical accuracy check only -- no map is built and no policy is changed.
+    """
+    os.chdir(W / "neomod")
+    import velocity_density_pipeline_neomod_clone_only as base
+    from scipy.spatial import cKDTree
+    ks = tuple(int(x) for x in a.ks.split(","))
+    rng = np.random.default_rng(int(a.seed))
+    gp = np.column_stack([rng.uniform(-2, 2, int(a.n_points)),
+                          rng.uniform(-2, 2, int(a.n_points))])
+    res, worst = {}, 0.0
+    for src in SOURCES:
+        s = pd.read_parquet(source_path(src), columns=["vlam", "vbeta"])
+        tree = cKDTree(np.column_stack([s.vlam.to_numpy(float), s.vbeta.to_numpy(float)]))
+        for k in ks:
+            d, _ = tree.query(gp, k=int(k), workers=int(a.n_jobs))
+            S = (d ** 2).sum(axis=1)
+            exact = (k * (k + 1) / 2.0 - 0.5) / (np.pi * S)
+            v = base.evaluate_density_map_full_posterior_2d(
+                tree, gp, k=int(k), n_d0_grid=int(N_D0_GRID), show_progress=False,
+                n_jobs=int(a.n_jobs))
+            rel = np.abs(v - exact) / np.abs(exact)
+            res[f"{src}_k{k:03d}"] = {"k": int(k), "source": src,
+                                      "max_rel_error": float(rel.max()),
+                                      "median_rel_error": float(np.median(rel))}
+            worst = max(worst, float(rel.max()))
+            print(f"  {src:4s} k={k:3d}   max rel err {rel.max():.3e}   "
+                  f"median {np.median(rel):.3e}", flush=True)
+    out = {"n_d0_grid": int(N_D0_GRID), "k_values_checked": list(ks),
+           "n_evaluation_points": int(a.n_points), "seed": int(a.seed),
+           "evaluation_domain": "uniform in [-2,2]^2 deg/day",
+           "reference": "exact closed form n0 = (k(k+1)/2 - 1/2) / (pi * sum_j d_j^2)",
+           "per_case": res, "max_rel_error_overall": worst,
+           "source_base_sha256": sha256_file(source_path("BASE")),
+           "source_high_sha256": sha256_file(source_path("HIGH"))}
+    p = OUT / f"integration_check_k{'_'.join(str(k) for k in ks)}.json"
+    json.dump(out, open(p, "w"), indent=2)
+    print(f"\nmaximum relative error over all checked cases: {worst:.3e}", flush=True)
+    print(f"wrote {p}", flush=True)
 
 
 # ---- stage: finalize --------------------------------------------------------------------------
@@ -514,7 +588,8 @@ def finalize(a):
         "n_d0_grid": N_D0_GRID,
         "n_d0_grid_note": ("production default 400 is converged at k=10 but not at k=50/100 "
                            "(2.6e-4 / 1.1e-2 vs the exact closed form); 8000 is converged to "
-                           "<=4e-15 at every k and is used identically in all eight cases"),
+                           "<=4e-15 at every k and is used identically in all cases; re-verified at "
+                           "k=150/200/250 (max 1.8e-14)"),
         "weight_tolerance": WEIGHT_TOLERANCE,
         "source_base": {"path": str(source_path("BASE")), "sha256": sha256_file(source_path("BASE")),
                         "n_rows": nb_rows, "effective_factor": effb, "n_draws": ndb,
@@ -531,7 +606,8 @@ def finalize(a):
 
     src_hashes = {s: {cases[f"{s}_k{k:03d}"]["source_sha256"] for k in K_VALUES} for s in SOURCES}
     checks = {
-        "all_eight_cases_exist": all(npz_path(s, k).exists() for s in SOURCES for k in K_VALUES),
+        "n_cases": len(cases),
+        "all_cases_exist": all(npz_path(s, k).exists() for s in SOURCES for k in K_VALUES),
         "base_is_literal_current_source_realisation": base_proof["identical_support_histogram"],
         "high_has_at_least_200000_rows": nh_rows >= 200_000,
         "high_is_nested_on_base": bool(man["nested"]),
@@ -586,7 +662,7 @@ def bundle(a):
 
     readme = f"""# NEOMOD3 sample count x kNN neighbour count — NEO velocity-density maps
 
-One sky map, one magnitude bin, two NEO source counts, four k values: eight NEO density maps.
+One sky map, one magnitude bin, two NEO source counts, seven k values: fourteen NEO density maps.
 
 **Question.** How do the NEOMOD3 Monte Carlo sample count and the kNN neighbour count change the
 smoothness and structure of the NEO velocity-density map?
@@ -633,8 +709,8 @@ The sealed posterior integrand is `p(d0) ~ d0^-k(k+1) exp(-S/d0^2)` with `S = su
 peak narrows sharply as k grows. Measured against the exact closed form
 `n0 = (k(k+1)/2 - 1/2) / (pi S)`, the production default of 400 quadrature nodes gives max relative
 deviation 7.1e-16 at k=10 but **2.6e-04 at k=50 and 1.1e-02 at k=100**. Left at 400, that error
-would grow with k and show up as a structural difference between panels. All eight cases therefore
-use {prov['n_d0_grid']} nodes, converged to <= 4e-15 at every k. Production maps at k=10 are unaffected.
+would grow with k and show up as a structural difference between panels. All cases therefore
+use {prov['n_d0_grid']} nodes, converged to <= 4e-15 at every k and re-verified at k=150/200/250. Production maps at k=10 are unaffected.
 
 ## k-th neighbour distance, central [-1,+1] deg/day window (deg/day; pixel = 0.01)
 
@@ -647,12 +723,12 @@ use {prov['n_d0_grid']} nodes, converged to <= 4e-15 at every k. Production maps
 - `more_neomod_samples_knn_maps.ipynb` — executed notebook (the deliverable to read first)
 - `source_base.parquet` — sha256 `{b['sha256']}`
 - `source_high.parquet` — sha256 `{h['sha256']}`
-- `maps/density_{{BASE,HIGH}}_k{{010,025,050,100}}.npz` — eight NEO density maps
-- `maps/posterior_{{BASE,HIGH}}_k{{010,025,050,100}}.npz` — P(NEO) per case
+- `maps/density_{{BASE,HIGH}}_k{{010,025,050,100,150,200,250}}.npz` — fourteen NEO density maps
+- `maps/posterior_{{BASE,HIGH}}_k{{010,025,050,100,150,200,250}}.npz` — P(NEO) per case
 - `provenance.json`, `acceptance_checks.json`
 
 `P(NEO) = rho_NEO / (rho_NEO + rho_MBA + rho_TNO + rho_Trojan)` uses the fixed production non-NEO
-densities, byte-identical across all eight cases (hashes in `provenance.json`). Undefined pixels
+densities, byte-identical across all fourteen cases (hashes in `provenance.json`). Undefined pixels
 are NaN, never 0. Max |sum of four class probabilities - 1| over defined pixels:
 {chk['max_posterior_sum_deviation']:.3e}.
 
@@ -667,6 +743,8 @@ Code commit `{prov['code_commit']}`.
 """
     (OUT / "README.md").write_text(readme)
     print(f"wrote {OUT/'README.md'}", flush=True)
+    if getattr(a, "readme_only", False):
+        return
 
     tar_path = W / "outputs" / "more_neomod_samples_knn_bundle.tar.gz"
     items = [(NOTEBOOK, f"more_neomod_samples_knn/{NOTEBOOK.name}")]
@@ -690,6 +768,66 @@ Code commit `{prov['code_commit']}`.
     print(f"members: {len(items)}  (high_shards/ deliberately excluded)", flush=True)
 
 
+def bundle_highk(a):
+    """Incremental bundle for the k = 150, 200, 250 extension only."""
+    import tarfile
+    prov = json.load(open(OUT / "provenance.json"))
+    ic_path = OUT / f"integration_check_k{'_'.join(str(k) for k in K_VALUES_HIGHK)}.json"
+    ic = json.load(open(ic_path))
+
+    manifest = {
+        "extension": "incremental k = %s" % ", ".join(str(k) for k in K_VALUES_HIGHK),
+        "created_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "reused_sources_unchanged": True,
+        "new_neomod3_draws_generated": 0,
+        "k_values_initial_not_rerun": list(K_VALUES_INITIAL),
+        "k_values_new": list(K_VALUES_HIGHK),
+        "source_base": {"path": str(source_path("BASE")),
+                        "sha256": sha256_file(source_path("BASE"))},
+        "source_high": {"path": str(source_path("HIGH")),
+                        "sha256": sha256_file(source_path("HIGH"))},
+        "integration_check": {"n_d0_grid": ic["n_d0_grid"],
+                              "max_rel_error_overall": ic["max_rel_error_overall"],
+                              "per_case": ic["per_case"],
+                              "reference": ic["reference"]},
+        "configuration": {
+            "center_label": prov["center_label"], "magnitude_bin": prov["magnitude_bin"],
+            "epoch": prov["epoch"], "grid_lim": prov["grid_lim"],
+            "grid_step": prov["grid_step"], "max_sep_deg": prov["max_sep_deg"],
+            "gaussian_smoothing": prov["gaussian_smoothing"],
+            "support_masking": prov["support_masking"], "n_d0_grid": prov["n_d0_grid"],
+            "sealed_module_sha256": prov["sealed_module_sha256"],
+            "code_commit": prov["code_commit"],
+            "fixed_nonneo_sha256": prov["fixed_nonneo"]["fixed_nonneo_sha256"]},
+        "new_cases": {f"{s}_k{k:03d}": prov["cases"][f"{s}_k{k:03d}"]
+                      for s in SOURCES for k in K_VALUES_HIGHK},
+    }
+    mp = OUT / "highk_manifest.json"
+    json.dump(manifest, open(mp, "w"), indent=2)
+    print(f"wrote {mp}", flush=True)
+
+    items = [(NOTEBOOK, f"more_neomod_samples_knn_highk/{NOTEBOOK.name}"),
+             (mp, "more_neomod_samples_knn_highk/highk_manifest.json"),
+             (ic_path, f"more_neomod_samples_knn_highk/{ic_path.name}"),
+             (OUT / "provenance.json", "more_neomod_samples_knn_highk/provenance.json")]
+    for s in SOURCES:
+        for k in K_VALUES_HIGHK:
+            d = npz_path(s, k)
+            p2 = OUT / "maps" / f"posterior_{s}_k{k:03d}.npz"
+            items.append((d, f"more_neomod_samples_knn_highk/maps/{d.name}"))
+            items.append((p2, f"more_neomod_samples_knn_highk/maps/{p2.name}"))
+    missing = [str(s) for s, _ in items if not Path(s).exists()]
+    if missing:
+        raise RuntimeError(f"cannot bundle, missing: {missing}")
+    tar_path = W / "outputs" / "more_neomod_samples_knn_highk_bundle.tar.gz"
+    with tarfile.open(tar_path, "w:gz") as tf:
+        for s, arc in items:
+            tf.add(s, arcname=arc)
+    print(f"wrote {tar_path}  ({tar_path.stat().st_size/1e6:.1f} MB)", flush=True)
+    print(f"tarball sha256 {sha256_file(tar_path)}", flush=True)
+    print(f"members: {len(items)}  (6 density + 6 posterior maps, notebook, manifests)", flush=True)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -703,9 +841,22 @@ def main():
     m.add_argument("--k", type=int, required=True)
     m.add_argument("--n-jobs", type=int, default=1)
     m.set_defaults(func=build_map)
-    s.add_parser("posterior").set_defaults(func=posterior)
+    po = s.add_parser("posterior")
+    po.add_argument("--ks", default=None,
+                    help="comma-separated k values to build; default all of K_VALUES")
+    po.set_defaults(func=posterior)
+    ic = s.add_parser("integration-check")
+    ic.add_argument("--ks", default="150,200,250")
+    ic.add_argument("--n-points", type=int, default=2000)
+    ic.add_argument("--seed", type=int, default=7)
+    ic.add_argument("--n-jobs", type=int, default=1)
+    ic.set_defaults(func=integration_check)
     s.add_parser("finalize").set_defaults(func=finalize)
-    s.add_parser("bundle").set_defaults(func=bundle)
+    bu = s.add_parser("bundle")
+    bu.add_argument("--readme-only", action="store_true",
+                    help="regenerate README.md without rebuilding the tarball")
+    bu.set_defaults(func=bundle)
+    s.add_parser("bundle-highk").set_defaults(func=bundle_highk)
     a = p.parse_args()
     a.func(a)
 

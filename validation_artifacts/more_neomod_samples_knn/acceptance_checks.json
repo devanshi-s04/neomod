@@ -1,5 +1,6 @@
 {
-  "all_eight_cases_exist": true,
+  "n_cases": 14,
+  "all_cases_exist": true,
   "base_is_literal_current_source_realisation": true,
   "high_has_at_least_200000_rows": true,
   "high_is_nested_on_base": true,

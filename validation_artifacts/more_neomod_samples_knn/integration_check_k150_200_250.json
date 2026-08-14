@@ -1,0 +1,53 @@
+{
+  "n_d0_grid": 8000,
+  "k_values_checked": [
+    150,
+    200,
+    250
+  ],
+  "n_evaluation_points": 2000,
+  "seed": 7,
+  "evaluation_domain": "uniform in [-2,2]^2 deg/day",
+  "reference": "exact closed form n0 = (k(k+1)/2 - 1/2) / (pi * sum_j d_j^2)",
+  "per_case": {
+    "BASE_k150": {
+      "k": 150,
+      "source": "BASE",
+      "max_rel_error": 8.350387904420335e-15,
+      "median_rel_error": 7.451028440501889e-16
+    },
+    "BASE_k200": {
+      "k": 200,
+      "source": "BASE",
+      "max_rel_error": 1.6990760771706084e-14,
+      "median_rel_error": 1.2869932798765707e-15
+    },
+    "BASE_k250": {
+      "k": 250,
+      "source": "BASE",
+      "max_rel_error": 1.8358237537604405e-14,
+      "median_rel_error": 1.887562292195593e-15
+    },
+    "HIGH_k150": {
+      "k": 150,
+      "source": "HIGH",
+      "max_rel_error": 8.170070735871035e-15,
+      "median_rel_error": 7.649360843574151e-16
+    },
+    "HIGH_k200": {
+      "k": 200,
+      "source": "HIGH",
+      "max_rel_error": 1.5481181666650523e-14,
+      "median_rel_error": 1.2795565508865965e-15
+    },
+    "HIGH_k250": {
+      "k": 250,
+      "source": "HIGH",
+      "max_rel_error": 1.8054359998930532e-14,
+      "median_rel_error": 1.908410647370967e-15
+    }
+  },
+  "max_rel_error_overall": 1.8358237537604405e-14,
+  "source_base_sha256": "03dd6e13a3a4896c1d5d478d3490dc4a7ef515f0a407ccb7b74b46631d04801c",
+  "source_high_sha256": "40490b3bc4ffaec122919981396168299c1e84a384dd345c46f8a7adb20fc297"
+}

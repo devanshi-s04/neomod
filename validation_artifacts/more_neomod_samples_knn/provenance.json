@@ -1,10 +1,10 @@
 {
   "experiment": "NEOMOD3 sample count x kNN neighbour count, NEO velocity-density maps",
-  "created_utc": "2026-08-13T02:36:00Z",
-  "code_commit": "4960d32e12c2cd2150d5481b626e3b12be5b5f97",
+  "created_utc": "2026-08-14T00:46:13Z",
+  "code_commit": "26e88437e7feee3796e04d0d2812bd41bae863e4",
   "sealed_module_sha256": "a6de18c2197cbcb9f93014712aaad232272578150e2222f28eae723b339f923a",
   "runner": "neomod/pipeline/knn_sample_experiment.py",
-  "runner_sha256": "fa8db4295802ccd7451860d0ce7713ad9ddc6ae8730f4ce986e9e3de536bf3df",
+  "runner_sha256": "998150c29c3e8b50da015cdd41d28d966c4aa7b637b67a0dbc4bfb2f5f61390b",
   "center_label": "dlon+000_lat+00",
   "center_lon_deg": 331.20299994543427,
   "center_lat_deg": 0.0,
@@ -24,7 +24,10 @@
     10,
     25,
     50,
-    100
+    100,
+    150,
+    200,
+    250
   ],
   "sources": [
     "BASE",
@@ -33,7 +36,7 @@
   "gaussian_smoothing": false,
   "support_masking": false,
   "n_d0_grid": 8000,
-  "n_d0_grid_note": "production default 400 is converged at k=10 but not at k=50/100 (2.6e-4 / 1.1e-2 vs the exact closed form); 8000 is converged to <=4e-15 at every k and is used identically in all eight cases",
+  "n_d0_grid_note": "production default 400 is converged at k=10 but not at k=50/100 (2.6e-4 / 1.1e-2 vs the exact closed form); 8000 is converged to <=4e-15 at every k and is used identically in all cases; re-verified at k=150/200/250 (max 1.8e-14)",
   "weight_tolerance": 0.02,
   "source_base": {
     "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/more_neomod_samples_knn/source_base.parquet",
@@ -403,6 +406,7 @@
       "Trojans": "a1cccf6827c26aca76aca0788b1310077894e415417bd34277d2ec2e939e5de4"
     },
     "identical_nonneo_arrays_across_all_cases": true,
+    "n_cases": 14,
     "per_case": {
       "BASE_k010": {
         "max_abs_sum_deviation": 3.3306690738754696e-16,
@@ -440,6 +444,36 @@
         "n_undefined": 0
       },
       "HIGH_k100": {
+        "max_abs_sum_deviation": 3.3306690738754696e-16,
+        "n_defined": 1002001,
+        "n_undefined": 0
+      },
+      "BASE_k150": {
+        "max_abs_sum_deviation": 3.3306690738754696e-16,
+        "n_defined": 1002001,
+        "n_undefined": 0
+      },
+      "BASE_k200": {
+        "max_abs_sum_deviation": 3.3306690738754696e-16,
+        "n_defined": 1002001,
+        "n_undefined": 0
+      },
+      "BASE_k250": {
+        "max_abs_sum_deviation": 3.3306690738754696e-16,
+        "n_defined": 1002001,
+        "n_undefined": 0
+      },
+      "HIGH_k150": {
+        "max_abs_sum_deviation": 3.3306690738754696e-16,
+        "n_defined": 1002001,
+        "n_undefined": 0
+      },
+      "HIGH_k200": {
+        "max_abs_sum_deviation": 3.3306690738754696e-16,
+        "n_defined": 1002001,
+        "n_undefined": 0
+      },
+      "HIGH_k250": {
         "max_abs_sum_deviation": 3.3306690738754696e-16,
         "n_defined": 1002001,
         "n_undefined": 0
@@ -545,6 +579,78 @@
         0.2230971543608721
       ]
     },
+    "BASE_k150": {
+      "k": 150,
+      "estimator_k_observed": 150,
+      "n_source_rows": 27781,
+      "total_physical_weight": 3176.1789340843366,
+      "effective_factor": 8.746673464103498,
+      "n_draws": 100000000,
+      "source_sha256": "03dd6e13a3a4896c1d5d478d3490dc4a7ef515f0a407ccb7b74b46631d04801c",
+      "gaussian_smoothing": false,
+      "n_d0_grid": 8000,
+      "npz_sha256": "d1ce18fda9087e9bbfb1b06cc577e1de9530641d7cde8850bc2a9be414519231",
+      "dk_quantiles_full_grid": [
+        0.3553005473582197,
+        1.7304840629906693,
+        3.4052613606286246,
+        4.550361748115374
+      ],
+      "dk_quantiles_central_1deg": [
+        0.06935447145700499,
+        0.12327196112745269,
+        0.19329741571722742,
+        0.2695491413806807
+      ]
+    },
+    "BASE_k200": {
+      "k": 200,
+      "estimator_k_observed": 200,
+      "n_source_rows": 27781,
+      "total_physical_weight": 3176.1789340843366,
+      "effective_factor": 8.746673464103498,
+      "n_draws": 100000000,
+      "source_sha256": "03dd6e13a3a4896c1d5d478d3490dc4a7ef515f0a407ccb7b74b46631d04801c",
+      "gaussian_smoothing": false,
+      "n_d0_grid": 8000,
+      "npz_sha256": "d78471e22790cc7c89fbfcf82374e0db95c7d2619da2e1e353d7c78081a96bf9",
+      "dk_quantiles_full_grid": [
+        0.4082160050374742,
+        1.8663625531931292,
+        3.527963376671252,
+        4.670878964887393
+      ],
+      "dk_quantiles_central_1deg": [
+        0.07987004024561949,
+        0.14191142096636805,
+        0.22215131047490672,
+        0.3068128698059418
+      ]
+    },
+    "BASE_k250": {
+      "k": 250,
+      "estimator_k_observed": 250,
+      "n_source_rows": 27781,
+      "total_physical_weight": 3176.1789340843366,
+      "effective_factor": 8.746673464103498,
+      "n_draws": 100000000,
+      "source_sha256": "03dd6e13a3a4896c1d5d478d3490dc4a7ef515f0a407ccb7b74b46631d04801c",
+      "gaussian_smoothing": false,
+      "n_d0_grid": 8000,
+      "npz_sha256": "2d444f5c1a81f2c65ca06040e14c8f2a8a6e45d0ecd0cb296a95ffc38ae8985d",
+      "dk_quantiles_full_grid": [
+        0.45389365926202996,
+        1.9747887851575872,
+        3.6258942026797927,
+        4.7628159512261075
+      ],
+      "dk_quantiles_central_1deg": [
+        0.08920171159884772,
+        0.15841820361142817,
+        0.24734362275917443,
+        0.34172575409805794
+      ]
+    },
     "HIGH_k010": {
       "k": 10,
       "estimator_k_observed": 10,
@@ -639,6 +745,78 @@
         0.036869476762141015,
         0.059268169429949544,
         0.08497053008231609
+      ]
+    },
+    "HIGH_k150": {
+      "k": 150,
+      "estimator_k_observed": 150,
+      "n_source_rows": 207059,
+      "total_physical_weight": 3199.0385900171354,
+      "effective_factor": 64.72538363436588,
+      "n_draws": 740000000,
+      "source_sha256": "40490b3bc4ffaec122919981396168299c1e84a384dd345c46f8a7adb20fc297",
+      "gaussian_smoothing": false,
+      "n_d0_grid": 8000,
+      "npz_sha256": "1c7775aa8dd413ea8f521ae9fd63a65d07fb88fdf0c1516b1bc9aa6ce80b04d4",
+      "dk_quantiles_full_grid": [
+        0.13130730735068116,
+        0.9255624313645869,
+        2.634905510432247,
+        3.796253417932887
+      ],
+      "dk_quantiles_central_1deg": [
+        0.02563608107766786,
+        0.0451877553094176,
+        0.07249519739461534,
+        0.10429620241700994
+      ]
+    },
+    "HIGH_k200": {
+      "k": 200,
+      "estimator_k_observed": 200,
+      "n_source_rows": 207059,
+      "total_physical_weight": 3199.0385900171354,
+      "effective_factor": 64.72538363436588,
+      "n_draws": 740000000,
+      "source_sha256": "40490b3bc4ffaec122919981396168299c1e84a384dd345c46f8a7adb20fc297",
+      "gaussian_smoothing": false,
+      "n_d0_grid": 8000,
+      "npz_sha256": "c1672d3b7cf05862daef183d540dc5c6317b89cd94c7f8617dffaccf856e7655",
+      "dk_quantiles_full_grid": [
+        0.15129054443601755,
+        1.0253143845594213,
+        2.7371727619886594,
+        3.9040210936096185
+      ],
+      "dk_quantiles_central_1deg": [
+        0.029599853370259176,
+        0.052199696509743494,
+        0.08361602041758788,
+        0.12040707520124228
+      ]
+    },
+    "HIGH_k250": {
+      "k": 250,
+      "estimator_k_observed": 250,
+      "n_source_rows": 207059,
+      "total_physical_weight": 3199.0385900171354,
+      "effective_factor": 64.72538363436588,
+      "n_draws": 740000000,
+      "source_sha256": "40490b3bc4ffaec122919981396168299c1e84a384dd345c46f8a7adb20fc297",
+      "gaussian_smoothing": false,
+      "n_d0_grid": 8000,
+      "npz_sha256": "ef77387f6689e395407b19156623f0861f3ab37d46e2480b0b6b744f7a1ace8b",
+      "dk_quantiles_full_grid": [
+        0.16906173745774195,
+        1.1070319987418695,
+        2.8204045034689353,
+        3.986986926694353
+      ],
+      "dk_quantiles_central_1deg": [
+        0.03310677335069141,
+        0.05840518720593877,
+        0.0933946177458406,
+        0.13435246901243536
       ]
     }
   }

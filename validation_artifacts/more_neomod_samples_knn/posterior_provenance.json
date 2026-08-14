@@ -5,6 +5,7 @@
     "Trojans": "a1cccf6827c26aca76aca0788b1310077894e415417bd34277d2ec2e939e5de4"
   },
   "identical_nonneo_arrays_across_all_cases": true,
+  "n_cases": 14,
   "per_case": {
     "BASE_k010": {
       "max_abs_sum_deviation": 3.3306690738754696e-16,
@@ -42,6 +43,36 @@
       "n_undefined": 0
     },
     "HIGH_k100": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "BASE_k150": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "BASE_k200": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "BASE_k250": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "HIGH_k150": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "HIGH_k200": {
+      "max_abs_sum_deviation": 3.3306690738754696e-16,
+      "n_defined": 1002001,
+      "n_undefined": 0
+    },
+    "HIGH_k250": {
       "max_abs_sum_deviation": 3.3306690738754696e-16,
       "n_defined": 1002001,
       "n_undefined": 0
