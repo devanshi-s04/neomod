@@ -1,0 +1,148 @@
+{
+  "center": "dlon+000_lat+00",
+  "results": [
+    {
+      "check": "44 bins over 14<=V<25, step 0.25",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "V=23.4 selects exactly one bin",
+      "pass": true,
+      "detail": "V023.25_023.50"
+    },
+    {
+      "check": "V=23.4 -> [23.25, 23.50)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "V=25.00 is out of range (not folded into top bin)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "selected V range contained in its 0.25 slice",
+      "pass": true,
+      "detail": "24.2500..24.5000 in [24.25,24.5)"
+    },
+    {
+      "check": "NEO k=150 and non-NEO k=10 as requested",
+      "pass": true,
+      "detail": "[('MBA', 10.0), ('NEO', 150.0), ('TNO', 10.0)]"
+    },
+    {
+      "check": "no cell silently reduced k",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Gaussian smoothing off",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "support masking off",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "no smoothing arrays present in output",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "NEO source hash is the HIGH realization",
+      "pass": true,
+      "detail": "40490b3bc4ffaec1"
+    },
+    {
+      "check": "NEO effective_factor is the HIGH value (7.4e8 draws)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "GEN/CAL/TEST are pairwise disjoint",
+      "pass": true,
+      "detail": "GEN 8,469,839 CAL 2,822,512 TEST 2,819,574"
+    },
+    {
+      "check": "total physical weight == n / effective_factor for every valid cell",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "NEO physical weight uses 1/64.725384 per sample",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "every defined posterior sums to 1 within 1e-12",
+      "pass": true,
+      "detail": "max 2.220e-16"
+    },
+    {
+      "check": "all defined P in [0,1] and finite",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "invalid cells are absent, not stored as zeros",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "closed_form vs sealed_quadrature agree < 1e-9",
+      "pass": true,
+      "detail": "max 7.358e-15 median 7.552e-16"
+    },
+    {
+      "check": "projected storage for 667 centers fits in free space",
+      "pass": true,
+      "detail": "need 0.420 TB, free 1.266 TB"
+    },
+    {
+      "check": "projected storage leaves >20% headroom",
+      "pass": true,
+      "detail": "33.2% of free space"
+    }
+  ],
+  "build_seconds": 120.0,
+  "bins_built": 4,
+  "bytes": 57238536,
+  "projected_bytes_per_center_44bins": 629623896.0,
+  "projected_bytes_667_centers": 419959138632.0,
+  "free_bytes": 1266008719360,
+  "equivalence": {
+    "max_rel": 7.358132178702808e-15,
+    "median_rel": 7.552110645333025e-16,
+    "closed_form_s": 0.0102386474609375,
+    "sealed_quadrature_s": 6.376822233200073,
+    "speedup": 622.8188105439642,
+    "n_points": 3000,
+    "k": 150
+  },
+  "coverage_summary": [
+    {
+      "population": "MBA",
+      "valid": true,
+      "n": 4
+    },
+    {
+      "population": "NEO",
+      "valid": true,
+      "n": 4
+    },
+    {
+      "population": "TNO",
+      "valid": true,
+      "n": 4
+    },
+    {
+      "population": "Trojans",
+      "valid": false,
+      "n": 4
+    }
+  ],
+  "ALL_PASS": true
+}
