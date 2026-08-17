@@ -1,0 +1,4 @@
+population,test_split_parents,eligible_test_parents,overlap_GEN,overlap_CAL,overlap_prior_TEST,prior_TEST_used,remaining_after_exclusions
+MBA,2773597,614710,0,0,614710,614710,0
+TNO,9770,7575,0,0,7575,7575,0
+Trojans,36207,16516,0,0,14516,14516,2000

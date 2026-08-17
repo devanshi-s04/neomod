@@ -1,0 +1,584 @@
+{
+  "created_utc": "2026-08-17T11:58:09Z",
+  "n_rows": 688688,
+  "checks": [
+    {
+      "check": "TEST2 has exactly 688,688 rows",
+      "pass": true,
+      "detail": "688688"
+    },
+    {
+      "check": "tracklet_uid unique",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "new_vdp: 32/32 shard files",
+      "pass": true,
+      "detail": "32"
+    },
+    {
+      "check": "new_vdp: contributed 688,688 rows",
+      "pass": true,
+      "detail": "688,688"
+    },
+    {
+      "check": "new_vdp: unique tracklet_uid",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "new_vdp: no missing or extra IDs",
+      "pass": true,
+      "detail": "missing 0 extra 0"
+    },
+    {
+      "check": "legacy_vdp: 32/32 shard files",
+      "pass": true,
+      "detail": "32"
+    },
+    {
+      "check": "legacy_vdp: contributed 688,688 rows",
+      "pass": true,
+      "detail": "688,688"
+    },
+    {
+      "check": "legacy_vdp: unique tracklet_uid",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "legacy_vdp: no missing or extra IDs",
+      "pass": true,
+      "detail": "missing 0 extra 0"
+    },
+    {
+      "check": "digest2: 32/32 shard files",
+      "pass": true,
+      "detail": "32"
+    },
+    {
+      "check": "digest2: contributed 688,688 rows",
+      "pass": true,
+      "detail": "688,688"
+    },
+    {
+      "check": "digest2: unique tracklet_uid",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "digest2: no missing or extra IDs",
+      "pass": true,
+      "detail": "missing 0 extra 0"
+    },
+    {
+      "check": "merged row count preserved",
+      "pass": true,
+      "detail": "688688"
+    },
+    {
+      "check": "truth labels unchanged",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "w_phys finite and positive",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "NEO weight is the sealed value",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "non-NEO weight is 1.0",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "digest2 used the sealed input hashes",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "digest2 values are integers in 0..100",
+      "pass": true,
+      "detail": "n=688,604 levels=101"
+    },
+    {
+      "check": "valid new-VDP rows all have n_pops_new == 4",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "valid four-class probabilities sum to one",
+      "pass": true,
+      "detail": "4.44e-16"
+    },
+    {
+      "check": "no partial-denominator row is valid",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "P_NEO_new: valid in [0,1] and finite",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "P_NEO_new: invalid rows are NaN",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "P_NEO_legacy_raw: valid in [0,1] and finite",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "P_NEO_legacy_raw: invalid rows are NaN",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "P_NEO_digest2: valid in [0,1] and finite",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "P_NEO_digest2: invalid rows are NaN",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "invalid new-VDP rows carry a non-ok reason",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "ALL_PASS": true,
+  "coverage_definitions": {
+    "neo_cell_availability_raw": 0.9933,
+    "four_density_coverage_raw": 0.4396,
+    "four_density_coverage_weighted": 0.4506
+  },
+  "view_a_coverage": [
+    {
+      "population": "NEO",
+      "classifier": "new_vdp",
+      "rows": 49887,
+      "valid": 14027,
+      "raw": 0.2811754565317618,
+      "weighted": 0.2811754565317616
+    },
+    {
+      "population": "NEO",
+      "classifier": "legacy_vdp",
+      "rows": 49887,
+      "valid": 47299,
+      "raw": 0.9481227574317959,
+      "weighted": 0.9481227574317955
+    },
+    {
+      "population": "NEO",
+      "classifier": "digest2",
+      "rows": 49887,
+      "valid": 49886,
+      "raw": 0.9999799546976166,
+      "weighted": 0.9999799546976167
+    },
+    {
+      "population": "MBA",
+      "classifier": "new_vdp",
+      "rows": 614710,
+      "valid": 268682,
+      "raw": 0.4370874070700005,
+      "weighted": 0.4370874070700005
+    },
+    {
+      "population": "MBA",
+      "classifier": "legacy_vdp",
+      "rows": 614710,
+      "valid": 614710,
+      "raw": 1.0,
+      "weighted": 1.0
+    },
+    {
+      "population": "MBA",
+      "classifier": "digest2",
+      "rows": 614710,
+      "valid": 614696,
+      "raw": 0.9999772250329424,
+      "weighted": 0.9999772250329424
+    },
+    {
+      "population": "TNO",
+      "classifier": "new_vdp",
+      "rows": 7575,
+      "valid": 3930,
+      "raw": 0.5188118811881188,
+      "weighted": 0.5188118811881188
+    },
+    {
+      "population": "TNO",
+      "classifier": "legacy_vdp",
+      "rows": 7575,
+      "valid": 7575,
+      "raw": 1.0,
+      "weighted": 1.0
+    },
+    {
+      "population": "TNO",
+      "classifier": "digest2",
+      "rows": 7575,
+      "valid": 7506,
+      "raw": 0.9908910891089109,
+      "weighted": 0.9908910891089109
+    },
+    {
+      "population": "Trojans",
+      "classifier": "new_vdp",
+      "rows": 16516,
+      "valid": 16096,
+      "raw": 0.9745701138290143,
+      "weighted": 0.9745701138290143
+    },
+    {
+      "population": "Trojans",
+      "classifier": "legacy_vdp",
+      "rows": 16516,
+      "valid": 16516,
+      "raw": 1.0,
+      "weighted": 1.0
+    },
+    {
+      "population": "Trojans",
+      "classifier": "digest2",
+      "rows": 16516,
+      "valid": 16516,
+      "raw": 1.0,
+      "weighted": 1.0
+    }
+  ],
+  "new_vdp_reason_counts": [
+    {
+      "population": "MBA",
+      "new_vdp_reason": "missing_population_density:Trojans",
+      "n": 302467
+    },
+    {
+      "population": "MBA",
+      "new_vdp_reason": "ok",
+      "n": 268682
+    },
+    {
+      "population": "MBA",
+      "new_vdp_reason": "missing_population_density:TNO,Trojans",
+      "n": 28320
+    },
+    {
+      "population": "MBA",
+      "new_vdp_reason": "missing_population_density:TNO",
+      "n": 10867
+    },
+    {
+      "population": "MBA",
+      "new_vdp_reason": "missing_population_density:NEO,TNO,Trojans",
+      "n": 4223
+    },
+    {
+      "population": "MBA",
+      "new_vdp_reason": "missing_population_density:NEO,TNO",
+      "n": 88
+    },
+    {
+      "population": "MBA",
+      "new_vdp_reason": "missing_population_density:NEO,MBA,TNO,Trojans",
+      "n": 63
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "missing_population_density:Trojans",
+      "n": 25134
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "ok",
+      "n": 14027
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "missing_population_density:TNO,Trojans",
+      "n": 8025
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "missing_population_density:TNO",
+      "n": 1979
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "outside_velocity_grid",
+      "n": 507
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "missing_population_density:NEO,TNO,Trojans",
+      "n": 178
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "missing_population_density:NEO,MBA,TNO,Trojans",
+      "n": 24
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "missing_population_density:MBA,TNO,Trojans",
+      "n": 11
+    },
+    {
+      "population": "NEO",
+      "new_vdp_reason": "missing_population_density:NEO,TNO",
+      "n": 2
+    },
+    {
+      "population": "TNO",
+      "new_vdp_reason": "ok",
+      "n": 3930
+    },
+    {
+      "population": "TNO",
+      "new_vdp_reason": "missing_population_density:Trojans",
+      "n": 3605
+    },
+    {
+      "population": "TNO",
+      "new_vdp_reason": "missing_population_density:TNO,Trojans",
+      "n": 20
+    },
+    {
+      "population": "TNO",
+      "new_vdp_reason": "missing_population_density:TNO",
+      "n": 19
+    },
+    {
+      "population": "TNO",
+      "new_vdp_reason": "missing_population_density:NEO,TNO,Trojans",
+      "n": 1
+    },
+    {
+      "population": "Trojans",
+      "new_vdp_reason": "ok",
+      "n": 16096
+    },
+    {
+      "population": "Trojans",
+      "new_vdp_reason": "missing_population_density:TNO",
+      "n": 390
+    },
+    {
+      "population": "Trojans",
+      "new_vdp_reason": "missing_population_density:NEO,TNO,Trojans",
+      "n": 21
+    },
+    {
+      "population": "Trojans",
+      "new_vdp_reason": "missing_population_density:TNO,Trojans",
+      "n": 7
+    },
+    {
+      "population": "Trojans",
+      "new_vdp_reason": "missing_population_density:NEO,MBA,TNO,Trojans",
+      "n": 1
+    },
+    {
+      "population": "Trojans",
+      "new_vdp_reason": "missing_population_density:NEO,TNO",
+      "n": 1
+    }
+  ],
+  "view_b_common_scorable": {
+    "n": 302666,
+    "frac_of_test2": 0.4394820295983087,
+    "n_neo": 14026,
+    "metrics": {
+      "new_vdp": {
+        "auc": 0.938135802515007,
+        "pauc_fpr01": 0.7147609173634876,
+        "auc_ci95": [
+          0.9349739622537613,
+          0.9409484534081001
+        ],
+        "completeness_at_5pct_contam": 0.4252103236845991,
+        "completeness_at_10pct_contam": 0.5390702980179838
+      },
+      "legacy_vdp_raw": {
+        "auc": 0.9369480838542565,
+        "pauc_fpr01": 0.7200722148335346,
+        "auc_ci95": [
+          0.933456504815603,
+          0.9401165820432479
+        ],
+        "completeness_at_5pct_contam": 0.5506202766291348,
+        "completeness_at_10pct_contam": 0.5986738913446648
+      },
+      "legacy_vdp_cal": {
+        "auc": 0.9369480838542565,
+        "pauc_fpr01": 0.7200722148335346,
+        "auc_ci95": [
+          0.933456504815603,
+          0.9401165820432479
+        ],
+        "completeness_at_5pct_contam": 0.5506202766291348,
+        "completeness_at_10pct_contam": 0.5986738913446648
+      },
+      "digest2": {
+        "auc": 0.9247401717457014,
+        "pauc_fpr01": 0.634910263165861,
+        "auc_ci95": [
+          0.9213880187205546,
+          0.9275711427864861
+        ],
+        "completeness_at_5pct_contam": 0.5368601169257264,
+        "completeness_at_10pct_contam": 0.5368601169257264
+      }
+    },
+    "paired_new_minus_legacy_raw": {
+      "n": 302666,
+      "mean": -0.005774525964430554,
+      "median": -5.027420659433788e-05,
+      "p05": -0.0019292009225947292,
+      "p95": 0.00046186842232486984,
+      "frac_new_higher": 0.396945808250679
+    }
+  },
+  "view_c_broader_valid_sets": {
+    "legacy_vdp_raw": {
+      "n": 686100,
+      "auc": 0.9653617088069476,
+      "pauc_fpr01": 0.8133125824976458
+    },
+    "digest2": {
+      "n": 688604,
+      "auc": 0.9644882207032844,
+      "pauc_fpr01": 0.7260922134949503
+    }
+  },
+  "neo_included_vs_abstained": {
+    "included": 14027,
+    "abstained": 35860,
+    "included_median_V": 24.284245729458977,
+    "abstained_median_V": 24.235102329631538,
+    "included_median_absv": 0.826053818846412,
+    "abstained_median_absv": 1.022786472613856
+  },
+  "digest2_operating_points": {
+    "n_levels": 101,
+    "levels": [
+      0.0,
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0,
+      10.0,
+      11.0,
+      12.0,
+      13.0,
+      14.0,
+      15.0,
+      16.0,
+      17.0,
+      18.0,
+      19.0,
+      20.0,
+      21.0,
+      22.0,
+      23.0,
+      24.0,
+      25.0,
+      26.0,
+      27.0,
+      28.0,
+      29.0,
+      30.0,
+      31.0,
+      32.0,
+      33.0,
+      34.0,
+      35.0,
+      36.0,
+      37.0,
+      38.0,
+      39.0,
+      40.0,
+      41.0,
+      42.0,
+      43.0,
+      44.0,
+      45.0,
+      46.0,
+      47.0,
+      48.0,
+      49.0,
+      50.0,
+      51.0,
+      52.0,
+      53.0,
+      54.0,
+      55.0,
+      56.0,
+      57.0,
+      58.0,
+      59.0,
+      60.0,
+      61.0,
+      62.0,
+      63.0,
+      64.0,
+      65.0,
+      66.0,
+      67.0,
+      68.0,
+      69.0,
+      70.0,
+      71.0,
+      72.0,
+      73.0,
+      74.0,
+      75.0,
+      76.0,
+      77.0,
+      78.0,
+      79.0,
+      80.0,
+      81.0,
+      82.0,
+      83.0,
+      84.0,
+      85.0,
+      86.0,
+      87.0,
+      88.0,
+      89.0,
+      90.0,
+      91.0,
+      92.0,
+      93.0,
+      94.0,
+      95.0,
+      96.0,
+      97.0,
+      98.0,
+      99.0,
+      100.0
+    ]
+  },
+  "caveat": "four-density availability is geometrically selected and only ~28% for NEO because many narrow TNO/Trojan 0.25-mag cells are unavailable; VIEW B is NOT performance over the whole TEST2 population"
+}

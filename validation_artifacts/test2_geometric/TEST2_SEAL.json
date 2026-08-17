@@ -1,0 +1,77 @@
+{
+  "created_utc": "2026-08-17T08:48:01Z",
+  "design": "fresh independent TEST2 NEOs + frozen REUSED prior-TEST S3M non-NEOs",
+  "fresh_nonneo_gate": "FAILED (see TEST2_LEAKAGE_AUDIT.json) \u2014 reuse is intentional",
+  "limitation": "non-NEO parents were used in the previously inspected TEST, so absolute contamination/precision/FPR are not independent of that look; the paired classifier comparison on identical rows is the valid quantity",
+  "epoch": "2027-08-25T00:00:00",
+  "dt_days": 0.020833333333333332,
+  "v_range": [
+    14.0,
+    25.0
+  ],
+  "dlon_limit": 140.0,
+  "mag_step": 0.25,
+  "neo": {
+    "seed_base": 777000000,
+    "n_shards": 150,
+    "n_draws": 300000000,
+    "n_clones_allsky": 655167,
+    "w_new": 0.03810972648074027,
+    "role_fraction": 0.19980080676449175,
+    "expected_physical_neo": 4988.6735302931465,
+    "oversample_factor": 10,
+    "n_sampled": 49887,
+    "w_phys": 0.09999946940672212,
+    "sample_seed": 777123,
+    "sampling": "without replacement"
+  },
+  "nonneo": {
+    "source": "epoch_state_cache, split=TEST",
+    "w_phys": 1.0,
+    "gen_leakage": 0,
+    "cal_leakage": 0
+  },
+  "counts": [
+    {
+      "population": "MBA",
+      "rows": 614710,
+      "weight": 614710.0
+    },
+    {
+      "population": "NEO",
+      "rows": 49887,
+      "weight": 4988.6735302931465
+    },
+    {
+      "population": "TNO",
+      "rows": 7575,
+      "weight": 7575.0
+    },
+    {
+      "population": "Trojans",
+      "rows": 16516,
+      "weight": 16516.0
+    }
+  ],
+  "coverage": {
+    "raw": 0.9933177287828451,
+    "weighted": 0.9931368891527411
+  },
+  "v_out_of_range_rows": 0,
+  "artifacts": {
+    "TEST2_PARENT_MANIFEST.parquet": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test2_geometric/TEST2_PARENT_MANIFEST.parquet",
+      "sha256": "5b77824f0a83d468fcc3c26dcd04a3951414d46a394c8502e7f11ab1dfc0acb9"
+    },
+    "TEST2_TRACKLETS.parquet": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test2_geometric/TEST2_TRACKLETS.parquet",
+      "sha256": "e374547893e2945a3ea6dfcd3ae80c1fa4a91ac45a6ce6ebce7be23a552cc09b"
+    },
+    "TEST2_MPC80.parquet": {
+      "path": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test2_geometric/TEST2_MPC80.parquet",
+      "sha256": "179a64ab8b22cba2b48156e8011af88c1867983a1701168aa547982d22bbe552"
+    }
+  },
+  "map_root": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/neomod3_mag025_k150_maps_v2",
+  "scoring_seal": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test2_geometric/SCORING_SEAL.json"
+}

@@ -1,0 +1,89 @@
+{
+  "neo_cell_availability_raw": 0.9933177287828451,
+  "four_density_coverage_raw": 0.43958222010547593,
+  "four_density_coverage_weighted": 0.45062961474127633,
+  "note": "the 99.33% figure is NEO-cell availability, NOT four-density scoring coverage; only all-four rows yield a valid P(NEO)",
+  "categories": [
+    {
+      "category": "all_four_densities_available",
+      "rows": 302735,
+      "raw_frac": 0.43958222010547593,
+      "weight": 290110.6925573681,
+      "weighted_frac": 0.45062961474127633
+    },
+    {
+      "category": "exactly_three_available",
+      "rows": 344461,
+      "raw_frac": 0.5001698882512836,
+      "weight": 320059.28561402444,
+      "weighted_frac": 0.4971488341199127
+    },
+    {
+      "category": "exactly_two_available",
+      "rows": 36463,
+      "raw_frac": 0.05294560091071719,
+      "weight": 29238.69574092776,
+      "weighted_frac": 0.04541653422397113
+    },
+    {
+      "category": "exactly_one_available",
+      "rows": 4434,
+      "raw_frac": 0.006438329112747717,
+      "weight": 4263.8998997178705,
+      "weighted_frac": 0.006623125649618291
+    },
+    {
+      "category": "neo_density_unavailable",
+      "rows": 4602,
+      "raw_frac": 0.006682271217154938,
+      "weight": 4418.3998917589715,
+      "weighted_frac": 0.006863110847258823
+    },
+    {
+      "category": "outside_velocity_grid_or_v_range",
+      "rows": 2588,
+      "raw_frac": 0.0037578700369398045,
+      "weight": 258.79862682459685,
+      "weighted_frac": 0.00040199251007777965
+    }
+  ],
+  "by_population": [
+    {
+      "population": "NEO",
+      "rows": 49887,
+      "neo_cell_availability_raw": 0.9959107583137892,
+      "four_density_raw": 0.2811754565317618,
+      "four_density_weighted": 0.2811754565317616,
+      "missing_TNO": 10219,
+      "missing_Trojans": 33372
+    },
+    {
+      "population": "MBA",
+      "rows": 614710,
+      "neo_cell_availability_raw": 0.9928844495778497,
+      "four_density_raw": 0.4370874070700005,
+      "four_density_weighted": 0.4370874070700005,
+      "missing_TNO": 43561,
+      "missing_Trojans": 335073
+    },
+    {
+      "population": "TNO",
+      "rows": 7575,
+      "neo_cell_availability_raw": 0.9998679867986798,
+      "four_density_raw": 0.5188118811881188,
+      "four_density_weighted": 0.5188118811881188,
+      "missing_TNO": 40,
+      "missing_Trojans": 3626
+    },
+    {
+      "population": "Trojans",
+      "rows": 16516,
+      "neo_cell_availability_raw": 0.9986074109953984,
+      "four_density_raw": 0.9745701138290143,
+      "four_density_weighted": 0.9745701138290143,
+      "missing_TNO": 420,
+      "missing_Trojans": 29
+    }
+  ],
+  "center_shard_manifest_sha256": "2b15c2a6241c5581716d043b7d0ad3a7fa1272c7d45c168d2b6943d859f983d8"
+}

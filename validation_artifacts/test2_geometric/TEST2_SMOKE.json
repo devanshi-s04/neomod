@@ -1,0 +1,16 @@
+{
+  "n": 713,
+  "all_pass": true,
+  "new_valid": 182,
+  "legacy_valid": 703,
+  "digest2_valid": 713,
+  "digest2_zeros": 52,
+  "reasons": {
+    "missing_population_density:Trojans": 379,
+    "ok": 182,
+    "missing_population_density:NEO,TNO,Trojans": 79,
+    "missing_population_density:TNO,Trojans": 61,
+    "missing_population_density:TNO": 11,
+    "missing_population_density:NEO,TNO": 1
+  }
+}
