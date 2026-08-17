@@ -1,7 +1,7 @@
 # NEOMOD3 0.25-mag / k=150 full-grid build — living runbook
 
-Status: **GATE PASSED (22/22). BLOCKED ON THE NEO SOURCE, NOT ON STORAGE.** The 667-center build
-is not launched: the specified HIGH NEO realization does not exist all-sky. See §13.2.
+Status: **ALL-SKY GEN SOURCE BUILT AND VALIDATED (16/16). READY TO LAUNCH 667 MAPS.**
+Stopped here by instruction to report before launching the full build. See §16.
 
 Last updated: 2026-08-16.
 
@@ -329,7 +329,7 @@ Additional storage required by other parts of this task:
 - all-sky HIGH NEO cache (§13.2): ~58 GB, plus ~58 GB for the by-pixel copy;
 - TEST2 evaluation realization: tens of GB.
 
-### 13.2 The HIGH NEO source does not exist all-sky (**ACTIVE BLOCKER**)
+### 13.2 The HIGH NEO source did not exist all-sky — **RESOLVED, see §16**
 
 `outputs/more_neomod_samples_knn/source_high.parquet` contains 207,059 rows **selected for one
 center (`dlon+000_lat+00`) and one bin (24 <= V < 25)**. The 6.4e8 additional draws behind it were
@@ -403,3 +403,145 @@ is no longer the bottleneck (§12.1).
 All four Trojan cells at this center/bin were INVALID (`insufficient_support` / `no_samples`) — the
 same emptiness the v1 `mag24+` map showed. This is recorded in the coverage table with `n`,
 `k_requested`, `k_effective`, `valid`, `reason`; it is not zero-filled.
+
+
+---
+
+## 16. All-sky HIGH GEN source (built, validated)
+
+One **global** realization that all 667 centers query. Orbits are not drawn per center: each shard
+projects ALL-SKY (`max_sep_deg=180`, center 0,0 — the projection is epoch-dependent and
+center-independent) and retains every map-eligible row. Per-center selection happens later by
+slicing this one cache.
+
+    total draws      = 1e8 (BASE, seeds 42..141) + 6.4e8 (HIGH, seeds 1000000..1000319) = 7.4e8
+    effective_factor = 7.4e8 / 11,432,917.944222081 = 64.725384
+    physical weight  = 1/64.725384 = 0.0154498890042305 per row, one global factor for every NEO row
+
+### 16.1 Retention
+
+Kept iff the projection is valid and `14.0 <= apparent V < 25.0` — the union of all 44 map bins.
+**No sky-center filter and no one-magnitude filter anywhere.** Retention rate is 0.287–0.288%: the
+NEOMOD3 draw spans H 15–28 and most draws are fainter than V=25 at this epoch, which is why the
+cache is 2.0M rows rather than ~620M.
+
+### 16.2 Artifacts
+
+| path | contents |
+|---|---|
+| `outputs/neomod3_projection_cache_high_allsky/allsky/` | 420 canonical shards (320 HIGH + 100 BASE) + per-shard meta |
+| `outputs/neomod3_projection_cache_high_allsky/by_pixel/` | HEALPix nside=8 hive `pix=`, **768 files, one per pixel** |
+| `outputs/neomod3_projection_cache_high_allsky/manifest.json` | schema, seed ranges, totals |
+| `outputs/neomod3_projection_cache_high_allsky/validation_report.json` | all 16 checks |
+
+Retained columns: draw identity (`source`, `seed`, `draw_index`), orbital elements
+(`a, e, i, node, argperi, t_p, q`), `H`, apparent V (`mag_app`), sky coordinates
+(`ra_deg, dec_deg, lam_deg, beta_deg`), rates (`dra_deg_day, ddec_deg_day`), `vlam`, `vbeta`,
+`M_obs_deg`, physical weight (`w_phys`), validity (`valid`), and spatial pixel (`pix`).
+
+### 16.3 Row counts and storage
+
+| | rows |
+|---|---|
+| HIGH (6.4e8 draws) | 1,767,290 |
+| BASE (1e8 draws) | 275,538 |
+| **total retained** | **2,042,828** |
+
+On disk: **508 MB** total (allsky shards + by_pixel).
+
+### 16.4 Validation — 16/16 PASS
+
+All 320 HIGH and 100 BASE shards present; HIGH seeds exactly 1000000..1000319 and BASE exactly
+42..141, disjoint; `(source, seed, draw_index)` unique globally; V window [14.0517, 25.0000);
+**all 44 0.25-mag bins populated** (sparsest 7 rows); **all 768 HEALPix pixels present**; single
+global weight; 848,945 rows below V=24 (no hidden one-magnitude filter); full-sky spread (no hidden
+center filter).
+
+Featured-center reproduction against the frozen single-cell HIGH source — **exact on all four**:
+
+| bin | expected | got |
+|---|---|---|
+| [24.00, 24.25) | 35,580 | **35,580** |
+| [24.25, 24.50) | 44,721 | **44,721** |
+| [24.50, 24.75) | 56,294 | **56,294** |
+| [24.75, 25.00) | 70,464 | **70,464** |
+| combined | 207,059 | **207,059** |
+
+### 16.5 Commands
+
+```bash
+sbatch --array=0-319%160 --export=ALL,STAGE=draw   neomod/pipeline/slurm/build_neomod3_high_allsky.sbatch
+sbatch --array=0-99%100  --export=ALL,STAGE=rebase neomod/pipeline/slurm/build_neomod3_high_allsky.sbatch
+sbatch neomod/pipeline/slurm/partition_validate_high_allsky.sbatch   # partition + validate
+```
+
+### 16.6 Timings and job IDs
+
+| stage | job | wall |
+|---|---|---|
+| smoke draw / rebase | 38581069 / 38581070 | 1:36 / 0:46 |
+| draw array (319) | 38581158 | all COMPLETED |
+| rebase array (99) | 38581159 | all COMPLETED |
+| partition (fragmented, superseded) | 38581772 | 15:15 |
+| **partition (compacted) + validate** | **38582271** | **10:21** |
+| full 44-bin timing center | 38582511 | **3:46** |
+
+No shard failed; none required retry.
+
+### 16.7 Seed reservation
+
+Seeds 42..141 (BASE) and 1,000,000..1,000,319 (HIGH) are **reserved for map-building GEN**.
+`manifest.json` records `TEST2_must_use_independent_seeds: true`. TEST2 must not reuse them.
+
+---
+
+## 17. Measured map-build cost (one full 44-bin center, job 38582511)
+
+    dlon+000_lat+00, all 44 bins, all 4 populations, NEO k=150 / others k=10
+    wall 137.1 s      output 393.9 MB      85 of 176 cells valid
+
+| population | valid bins of 44 |
+|---|---|
+| MBA | 43 |
+| NEO | 28 |
+| TNO | 17 |
+| Trojans | 1 |
+
+**Projection for 667 centers**
+
+| quantity | value |
+|---|---|
+| wall per center | 137 s |
+| total at `%100` concurrency | **~15 min** |
+| total at `%160` concurrency | ~10 min |
+| storage | **393.9 MB x 667 = 263 GB** |
+| free space | 1.266 TB → 21% consumed |
+
+The ~1 min/center target is not met (137 s), and the residual is the fixed per-task load of the
+2.6 GB epoch-state cache plus the S3M scorer, not the density estimator — the estimator is now
+~0.2–0.5 s per cell. Because 667 x 137 s at high concurrency is only ~10–15 min wall, further
+optimization was not pursued.
+
+---
+
+## 18. Optimizations attempted (continued)
+
+### 18.1 `by_pixel` file compaction — **RETAINED, required**
+
+- **Old:** `partition` looped over shards and called `write_dataset` once per shard, producing
+  **337 files per pixel / 289,949 files total**. A map task touching 104 pixels then had to open
+  ~35,000 tiny Parquet files.
+- **Symptom:** the full-center timing job (38582086) produced **no output in 11 minutes** and was
+  cancelled — it never got past the NEO read.
+- **New:** single-pass compaction to **one `part-0.parquet` per pixel, 768 files**, matching the
+  original cache layout. The retained cache is 2.0M rows / 0.21 GB in memory, three orders of
+  magnitude below the "hundreds of millions of rows" the streaming rule targets, so a single pass
+  is appropriate; the *generation* stage still streams shard-by-shard.
+- **Commands / resources:** `sbatch neomod/pipeline/slurm/partition_validate_high_allsky.sbatch`,
+  `cpu-g2`, `--cpus-per-task=32 --mem=200G`. Concatenate 84 s, write 286 s.
+- **Before / after wall time:** NEO read >11 min (never completed) → full 44-bin center in
+  **137 s total** including that read.
+- **Numerical equivalence:** validation re-run after compaction; all 16 checks pass and the
+  featured-center counts still reproduce **exactly** (35,580 / 44,721 / 56,294 / 70,464; 207,059).
+  Same rows, same partitioning function, different file grouping only.
+- **Retained:** yes.

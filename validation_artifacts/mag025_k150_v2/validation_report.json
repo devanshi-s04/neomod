@@ -1,0 +1,153 @@
+{
+  "created_utc": "2026-08-17T02:41:53Z",
+  "git_commit": "c60d39a77da1a7a4e779ca1e2ce0a45b8d602933",
+  "epoch": "2027-08-25T00:00:00",
+  "total_draws": 740000000,
+  "effective_factor_NEO": 64.725384,
+  "physical_weight_per_row": 0.015449889026537099,
+  "retention_rule": "valid projection AND 14.0 <= apparent V < 25.0",
+  "n_rows_high": 1767290,
+  "n_rows_base": 275538,
+  "n_rows_total": 2042828,
+  "v_min": 14.051673889160156,
+  "v_max": 24.999998092651367,
+  "rows_per_025_bin": [
+    7,
+    14,
+    21,
+    42,
+    44,
+    42,
+    48,
+    85,
+    144,
+    169,
+    254,
+    352,
+    449,
+    588,
+    757,
+    992,
+    1321,
+    1682,
+    2110,
+    2557,
+    3210,
+    4079,
+    4848,
+    6228,
+    7687,
+    9381,
+    11456,
+    13871,
+    17055,
+    21045,
+    25143,
+    30778,
+    37387,
+    45146,
+    55220,
+    67770,
+    84057,
+    103590,
+    129039,
+    160277,
+    203052,
+    256223,
+    322962,
+    411646
+  ],
+  "n_healpix_pixels": 768,
+  "bytes_on_disk": 453438965,
+  "featured_center_counts": {
+    "V024.00_024.25": 35580,
+    "V024.25_024.50": 44721,
+    "V024.50_024.75": 56294,
+    "V024.75_025.00": 70464
+  },
+  "featured_center_expected": {
+    "V024.00_024.25": 35580,
+    "V024.25_024.50": 44721,
+    "V024.50_024.75": 56294,
+    "V024.75_025.00": 70464
+  },
+  "featured_center_total": 207059,
+  "checks": [
+    {
+      "check": "all 320 HIGH shards present",
+      "pass": true,
+      "detail": "320"
+    },
+    {
+      "check": "all 100 BASE shards present",
+      "pass": true,
+      "detail": "100"
+    },
+    {
+      "check": "HIGH seeds are exactly 1000000..1000319",
+      "pass": true,
+      "detail": "320"
+    },
+    {
+      "check": "BASE seeds are exactly 42..141",
+      "pass": true,
+      "detail": "100"
+    },
+    {
+      "check": "BASE and HIGH seed ranges disjoint",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "draw_index unique within every (source, seed) shard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "draw identity (source, seed, draw_index) unique globally",
+      "pass": true,
+      "detail": "seeds disjoint + per-shard uniqueness"
+    },
+    {
+      "check": "apparent-V window is [14, 25)",
+      "pass": true,
+      "detail": "14.0517..25.0000"
+    },
+    {
+      "check": "every 0.25-mag bin from 14 to 25 is populated",
+      "pass": true,
+      "detail": "44/44 populated, min 7"
+    },
+    {
+      "check": "full-sky HEALPix coverage (all 768 pixels)",
+      "pass": true,
+      "detail": "768/768"
+    },
+    {
+      "check": "physical weight is the single global 1/64.725384",
+      "pass": true,
+      "detail": "{0.0154498890042305}"
+    },
+    {
+      "check": "rows exist outside 24<=V<25 (no hidden one-magnitude filter)",
+      "pass": true,
+      "detail": "848,945 rows below V=24"
+    },
+    {
+      "check": "rows span the whole sky, not one patch (no hidden center filter)",
+      "pass": true,
+      "detail": "768 pixels"
+    },
+    {
+      "check": "featured-center 0.25-mag counts reproduce the frozen HIGH source",
+      "pass": true,
+      "detail": "{\"V024.00_024.25\": 35580, \"V024.25_024.50\": 44721, \"V024.50_024.75\": 56294, \"V024.75_025.00\": 70464}"
+    },
+    {
+      "check": "featured-center combined [24,25) contains 207,059 rows",
+      "pass": true,
+      "detail": "207059"
+    }
+  ],
+  "ALL_PASS": true
+}

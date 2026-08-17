@@ -1,0 +1,48 @@
+{
+  "allsky_dir": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/neomod3_projection_cache_high_allsky/allsky",
+  "by_pixel_dir": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/neomod3_projection_cache_high_allsky/by_pixel",
+  "n_shards_high": 320,
+  "n_shards_base": 100,
+  "schema": [
+    "a",
+    "e",
+    "i",
+    "node",
+    "argperi",
+    "t_p",
+    "q",
+    "H",
+    "ra_deg",
+    "dec_deg",
+    "dra_deg_day",
+    "ddec_deg_day",
+    "lam_deg",
+    "beta_deg",
+    "vlam",
+    "vbeta",
+    "mag_app",
+    "M_obs_deg",
+    "source",
+    "seed",
+    "draw_index",
+    "w_phys",
+    "valid"
+  ],
+  "seed_ranges": {
+    "BASE": [
+      42,
+      141
+    ],
+    "HIGH": [
+      1000000,
+      1000319
+    ]
+  },
+  "reserved_for_map_building_GEN": true,
+  "TEST2_must_use_independent_seeds": true,
+  "total_draws": 740000000,
+  "effective_factor_NEO": 64.725384,
+  "n_rows_total": 2042828,
+  "bytes_on_disk": 453438965,
+  "git_commit": "c60d39a77da1a7a4e779ca1e2ce0a45b8d602933"
+}

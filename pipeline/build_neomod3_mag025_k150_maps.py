@@ -187,7 +187,30 @@ def build_one_center(a):
     _, scorer = base.load_s3m_population("neo", verbose=False)
     neo_meta = json.load(open(W / "outputs/neomod3_projection_cache/cache_metadata.json"))
 
-    if a.neo_source == "high_cell":
+    if a.neo_source == "allsky_v2":
+        # ONE global realization (BASE 1e8 + HIGH 6.4e8 = 7.4e8 draws), sliced per center.
+        # Conservative HEALPix superset; the exact 30 deg cut runs downstream, as in production.
+        import healpy as hp
+        import pyarrow.dataset as pads, pyarrow.compute as pc
+        from astropy.time import Time
+        from astropy.coordinates import SkyCoord, GCRS, GeocentricTrueEcliptic
+        import astropy.units as u
+        bypix = Path(a.neo_allsky_dir) / "by_pixel"
+        t_obs = Time(epoch, scale="tdb")
+        c = SkyCoord(lon=clon * u.deg, lat=clat * u.deg, distance=1.0 * u.AU,
+                     frame=GeocentricTrueEcliptic(obstime=t_obs)).transform_to(GCRS(obstime=t_obs))
+        vec = hp.ang2vec(float(c.ra.deg), float(c.dec.deg), lonlat=True)
+        rad = np.radians(MAX_SEP_DEG + np.degrees(hp.max_pixrad(8)))
+        want = hp.query_disc(8, vec, rad, inclusive=True).tolist()
+        dset = pads.dataset(str(bypix), format="parquet", partitioning="hive")
+        neo_df = dset.to_table(filter=pc.field("pix").isin(want),
+                               use_threads=True).to_pandas()
+        man = json.load(open(Path(a.neo_allsky_dir) / "manifest.json"))
+        eff_neo = float(man["effective_factor_NEO"])
+        neo_src_hash = sha256_file(Path(a.neo_allsky_dir) / "validation_report.json")
+        neo_src_desc = (f"all-sky GEN realization {bypix} ({len(want)} pixels, "
+                        f"{man['total_draws']:,} draws)")
+    elif a.neo_source == "high_cell":
         neo_df = pd.read_parquet(a.neo_source_path)
         eff_neo = float(a.neo_effective_factor)
         neo_src_hash = sha256_file(a.neo_source_path)
@@ -347,7 +370,10 @@ def main():
     p.add_argument("--n-jobs", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", 1)))
     p.add_argument("--density-engine", choices=("closed_form", "sealed_quadrature"),
                    default="closed_form")
-    p.add_argument("--neo-source", choices=("by_pixel", "high_cell"), default="by_pixel")
+    p.add_argument("--neo-source", choices=("by_pixel", "high_cell", "allsky_v2"),
+                   default="allsky_v2")
+    p.add_argument("--neo-allsky-dir", default=str(
+        W / "outputs/neomod3_projection_cache_high_allsky"))
     p.add_argument("--neo-source-path", default=str(
         W / "outputs/more_neomod_samples_knn/source_high.parquet"))
     p.add_argument("--neo-effective-factor", type=float, default=64.725384)
