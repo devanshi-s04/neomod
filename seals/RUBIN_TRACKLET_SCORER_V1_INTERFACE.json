@@ -1,0 +1,87 @@
+{
+  "interface_version": "rubin_vdp_scorer_v1",
+  "interface_revision": "v1.0.1",
+  "created_utc": "2026-08-25T08:11:30Z",
+  "supersedes_validation_seal": false,
+  "validation_seal_path": "/mmfs1/gscratch/dirac/ds2004/sorcha/neomod/seals/RUBIN_TRACKLET_SCORER_V1_SEAL.json",
+  "validation_seal_sha256": "0e61ec37e263e9a4f9e81ed4ef25ef8fa069f630b8d2003f2ce29ce37de9eaeb",
+  "validation_commit": "988e82cea3a3200de630728fe214eee43a340ab9",
+  "scorer_seal_id_at_validation": "0e61ec37e263e9a4f9e81ed4ef25ef8fa069f630b8d2003f2ce29ce37de9eaeb",
+  "map_seal_sha256": "a010bb1bf2e421a3258ff007f7bc4034369918a3877418620cd14e3f0b9d19ab",
+  "git_commit": "988e82cea3a3200de630728fe214eee43a340ab9",
+  "interface_source": "pipeline/score_rubin_tracklets.py",
+  "interface_source_sha256": "42ca08fa18f76c1b7fcf13d0ab9ec9f83dc98a6f9a5a1801746b33c842a61649",
+  "interface_source_sha256_at_validation": "19272487e46e0fb866c30325924c6798d84d8168ce893ac9e7b24dde305f3149",
+  "digest2_adapter": "pipeline/export_mpc80_for_digest2.py",
+  "digest2_adapter_sha256": "e4b27bfdb09bd7340335e27c201b89b20de6fc1acb60ec1c55a6e231ea66b2e3",
+  "scientific_sources_unchanged": {
+    "src/rubin_vdp_scorer_v1.py": {
+      "sha256": "d599fa7eb1393a5aec471fc255b0f1c9d22058274d30e2b07a6c80ee19f6ba03",
+      "matches_validation_seal": true
+    },
+    "pipeline/score_test2.py": {
+      "sha256": "73ae6f872123441a6e7ad5e09d857cbea1613194fd0177fb8a154288ccc3433c",
+      "matches_validation_seal": true
+    },
+    "src/velocity_density_pipeline_neomod_clone_only.py": {
+      "sha256": "a6de18c2197cbcb9f93014712aaad232272578150e2222f28eae723b339f923a",
+      "matches_validation_seal": true
+    }
+  },
+  "change": {
+    "what": "removed --input-format mpc80 and parse_mpc80 from the VDP CLI; MPC-80 emission moved to pipeline/export_mpc80_for_digest2.py for the digest2 branch only",
+    "why": "MPC-80 is a lossy transport; the VDP branch must never ingest the rounded representation. The native-CSV path is the validated one.",
+    "cannot_affect": [
+      "probabilities",
+      "densities",
+      "geometry results",
+      "map selection",
+      "magnitude-bin assignment",
+      "validation outputs"
+    ],
+    "rationale": "only an input path was removed; the scoring call and every scientific source are byte-identical to the validation seal"
+  },
+  "completed_regression": {
+    "rerun_required": false,
+    "jobs": [
+      "38808527",
+      "38808528"
+    ],
+    "rows": 688688,
+    "precomputed_geometry": {
+      "center_label_mismatch": 0,
+      "magnitude_bin_mismatch": 0,
+      "valid_mismatch": 0,
+      "reason_mismatch": 0,
+      "P_NEO_max_abs": 3.552713678800501e-15,
+      "within_sealed_tolerance": true
+    },
+    "derived_geometry": {
+      "center_label_mismatch": 295,
+      "magnitude_bin_mismatch": 0,
+      "coverage_v1": 0.4395793160328044
+    },
+    "artifacts": {
+      "TEST2_V1_REGRESSION.json": "a138563a43951c9d3af25a6e6792e6dcc472bd8a093104f0c6444766076931fc",
+      "TEST2_V1_SUMMARY_derived.json": "6c40d96ccf395463eae16eb2db5c9bc325a7c58028ab871769171ccb468977a0",
+      "TEST2_V1_SUMMARY_precomputed.json": "5d8d36ad3a43eb86dc45a3a5dd58419c230c33d4dc06c19e8391a569fb80ed3c",
+      "invariance_inv_A.json": "961141488ba9fdeae0344c93b9f82c334fbcef15e767e9df0f9cf96e3d5a945a",
+      "invariance_inv_B.json": "5a3374c5a04c15c958f06b7ae574327b9a79cf2fc7a6fa08447f4905d018b82f",
+      "invariance_inv_C.json": "59e9701b8360f7496657d98b9afd8fc9a0a051fc8558cfb353f4d310e9244d65"
+    }
+  },
+  "wording_corrections": {
+    "note": "the validation seal is immutable and is NOT rewritten; these corrections live here and in RUBIN_TRACKLET_SCORER_V1.md, which supersede the seal's prose",
+    "geometry": {
+      "superseded_text": "seal field geometry_divergence_from_TEST2 says v1 derives coordinates 'the only quantity a survey supplies', implying the ecliptic coordinates themselves are unobservable",
+      "corrected_text": "ecliptic lambda,beta ARE derivable from observed RA/Dec, and v1 derives them that way. What Rubin cannot supply is TEST2's particular CACHED MODEL-FRAME lambda,beta from the epoch-state cache. The 295-row difference is cached-model versus observation-derived geometry, not observable versus unobservable ecliptic coordinates.",
+      "numbers_unchanged": true
+    },
+    "mpc80": {
+      "corrected_text": "the measured 12.56% MPC-80 round-trip magnitude-bin change is provenance about the representation digest2 receives. It is NOT a VDP magnitude-bin limitation and did NOT affect the completed native-CSV regression, in which magnitude-bin assignment reproduced the oracle 688,688/688,688 exactly.",
+      "numbers_unchanged": true
+    }
+  },
+  "operational_coverage_raw": 0.4395793160328044,
+  "coverage_warning": "four-density coverage is 43.96%; v1 is an engineering baseline, not an operational-readiness claim"
+}

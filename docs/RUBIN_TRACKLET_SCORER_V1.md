@@ -48,12 +48,7 @@ python neomod/pipeline/score_rubin_tracklets.py \
     --model-seal neomod/seals/RUBIN_TRACKLET_SCORER_V1_SEAL.json
 ```
 
-```bash
-python neomod/pipeline/score_rubin_tracklets.py \
-    --input  nightly_tracklets.mpc --input-format mpc80 \
-    --output nightly_tracklets_scored.csv \
-    --model-seal neomod/seals/RUBIN_TRACKLET_SCORER_V1_SEAL.json
-```
+**Native full-precision CSV only.** MPC-80 ingest was removed from this path; see §5.
 
 `--model-seal` is **required**. The scorer never searches for, or auto-selects, "the latest" maps.
 It verifies the sealed map root, the `MAP_BUILD_SEAL_V2.json` hash, and the hash of every scoring
@@ -99,40 +94,51 @@ V < 14 or V >= 25  ->  INVALID, reason `v_out_of_range`; never clipped into an e
 
 ---
 
-## 5. MPC-80 input and its pairing rule
+## 5. digest2 comparison branch — MPC-80 lives here, not in the VDP path
 
-Tracklet key = **columns 1–12 verbatim** (packed number + designation). Observations sharing a key
-are sorted by time ascending; **exactly two** form a tracklet.
+The VDP scorer reads only the native CSV. MPC-80 emission is a **separate adapter** used solely to
+feed the unmodified digest2 binary:
 
-| condition | behaviour |
-|---|---|
-| exactly 2 observations | tracklet formed |
-| 1 observation | row emitted, `mpc80_bad_pair_count:1` |
-| 3 or more | row emitted, `mpc80_bad_pair_count:N` — never truncated to the first two |
-| band not in `{V}` | row emitted, `unsupported_magnitude_band:<bands>` |
-| line shorter than 80 columns | hard error, exit 2 |
-| unparseable field | hard error, exit 2, with line number |
+```
+native Rubin CSV ──> frozen VDP scorer ──> VDP scores
+       │
+       └──> export_mpc80_for_digest2.py ──> unmodified digest2 ──> digest2 scores
+                                                                 │
+                    merge by tracklet_id  <──────────────────────┘
+```
 
-### MPC-80 is lossy for this scorer — measured
+```bash
+python neomod/pipeline/export_mpc80_for_digest2.py \
+    --input   nightly_tracklets.csv \
+    --output-mpc nightly_tracklets.mpc \
+    --mapping nightly_tracklets_digest2_mapping.csv \
+    --audit-roundtrip
+```
 
-Verified by round-tripping 5,000 sealed TEST2 tracklets:
+`--mapping` writes an auditable `tracklet_id` ↔ MPC-80 designation correspondence with both emitted
+lines and their sha256, so any digest2 result traces back to the original `tracklet_id` and to the
+exact bytes digest2 received. Merge the two branches on `tracklet_id`.
 
-| quantity | max error |
-|---|---|
-| MJD | 0 (exact) |
-| RA | 2.1e-05 deg |
-| Dec | 2.7e-05 deg |
-| magnitude | 5.0e-02 mag |
-| **derived `vlam`** | **1.29e-02 deg/day** (≈1.3 velocity grid cells) |
-| **magnitude bin** | **87.44% identical — 12.56% reassigned** |
+**Rows that cannot be represented in 80 columns** (non-finite time/position/magnitude, out-of-range
+coordinates) are **excluded and recorded with a reason** in the mapping — never silently dropped,
+and never emitted with a placeholder digest2 would treat as a real measurement.
 
-MPC-80 records magnitudes to 0.1, so `mean_V` resolves to 0.05 — against 0.25-mag boundaries this
-reassigns roughly one tracklet in eight. On a 30-minute baseline the 0.01-second RA quantisation
-also propagates to a velocity error of order one grid cell.
+Designations are `D000000`…, 7 characters. MPC-80 truncates the identifier to 12 columns and 5 are
+leading spaces, so only 7 survive; the adapter asserts that the designations actually *emitted* are
+unique and identical across a tracklet's two detections. (An 8-character key silently collided once,
+and digest2 returned nothing usable.)
 
-**Use the canonical CSV with full-precision values for operations.** MPC-80 is supported for
-compatibility and diagnostics, and its precision loss is a property of the format, not a defect of
-the scorer.
+### 5.1 MPC-80 round-trip loss is provenance about digest2's input — not a VDP limitation
+
+Round-tripping 5,000 sealed TEST2 tracklets through MPC-80 changes the 0.25-mag bin for **12.56%**
+of them and perturbs a 30-minute-baseline velocity by up to 1.3 grid cells, because the format
+stores magnitudes to 0.1 and RA to 0.01 s.
+
+That figure describes **the representation digest2 receives**. It is **not** a limitation of the VDP
+magnitude-bin assignment, and it **did not affect the completed native-CSV regression**: reading the
+native full-precision CSV, magnitude-bin assignment reproduced the oracle **688,688 / 688,688
+exactly** (§12.1). Keeping MPC-80 out of the VDP path makes that separation structural rather than
+a matter of discipline.
 
 ---
 
@@ -171,25 +177,30 @@ interface_version, scorer_seal, map_seal, input_hash
 
 ---
 
-## 7. Geometry: a documented divergence from TEST2
+## 7. Geometry: cached-model vs observation-derived λ, β
 
-TEST2 assigned each row to a sky centre using ecliptic coordinates carried in the **epoch-state
-cache** — the model frame produced during n-body propagation. A real Rubin tracklet supplies only
-**observed RA/Dec**.
+Ecliptic λ, β **are** derivable from observed RA/Dec, and v1 derives them that way. What Rubin
+cannot supply is TEST2's *particular cached model-frame* λ, β, which were carried in the
+epoch-state cache and produced during n-body propagation rather than from the apparent position.
 
-v1 therefore derives ecliptic coordinates from the observed positions. Measured difference against
-TEST2's stored values:
+The 295-row difference below is therefore **cached-model geometry versus observation-derived
+geometry** — not "observable versus unobservable ecliptic coordinates". (An earlier draft of this
+document, and the `geometry_divergence_from_TEST2` note inside the immutable validation seal, used
+that looser phrasing; this section is the corrected wording. The seal is not rewritten — see
+`RUBIN_TRACKLET_SCORER_V1_INTERFACE.json`.)
+
+Measured against TEST2's stored values:
 
 | quantity | result |
 |---|---|
-| `lam`/`beta` | median 1.8e-03 deg (~6.5 arcsec) |
+| λ / β | median 1.8e-03 deg (~6.5 arcsec) |
 | **`center_label`** | **688,393 / 688,688 identical — 295 reassigned (0.043%)** |
 | `magnitude_bin` | 688,688 / 688,688 identical |
-| `vlam`/`vbeta` re-derived from detections | max 3.4e-08 deg/day (median 2.3e-11) |
+| `vlam` / `vbeta` re-derived from the two detections | max 3.4e-08 deg/day (median 2.3e-11) |
 
-`--geometry-source precomputed` consumes `lam_deg`, `beta_deg`, `vlam`, `vbeta` columns and exists
-**only** to isolate this effect in the regression test. It is not for operational use — those
-columns are not observable.
+v1 uses the observation-derived values because those are what a survey provides.
+`--geometry-source precomputed` consumes stored `lam_deg`, `beta_deg`, `vlam`, `vbeta` columns and
+exists **only** to isolate this effect in the regression; it is not for operational use.
 
 ---
 
@@ -238,7 +249,10 @@ neomod/pipeline/make_rubin_scorer_v1_seal.py         seal builder
 neomod/seals/RUBIN_TRACKLET_SCORER_V1_SEAL.json      immutable seal
 neomod/examples/rubin_tracklets_v1.csv               example input
 neomod/examples/rubin_tracklets_v1_scored.csv        example output
-neomod/examples/rubin_tracklets_v1.mpc               example MPC-80 input
+neomod/pipeline/export_mpc80_for_digest2.py          digest2 branch adapter (NOT the VDP path)
+neomod/seals/RUBIN_TRACKLET_SCORER_V1_INTERFACE.json interface metadata -> validation seal
+neomod/examples/rubin_tracklets_v1_for_digest2.mpc   example MPC-80 export
+neomod/examples/rubin_tracklets_v1_digest2_mapping.csv  auditable id <-> designation mapping
 ```
 
 ---
@@ -279,9 +293,9 @@ every assignment and reason matching exactly.
 | within sealed tolerance | **FALSE — correctly flagged** |
 
 All 295 are one-cell hops between adjacent centres (`dlon+120_lat-08 → dlon+110_lat-08`, etc.),
-consistent with the ~6.5 arcsec frame difference nudging boundary rows. This is **expected and
-documented** (§7), not a defect: v1 uses the observable definition because a survey cannot supply
-the model-frame coordinate TEST2 used.
+consistent with the ~6.5 arcsec difference nudging boundary rows. This is **expected and
+documented** (§7), not a defect: v1 derives λ, β from the observed RA/Dec, whereas TEST2 used the
+cached model-frame values that a survey does not carry.
 
 ---
 
