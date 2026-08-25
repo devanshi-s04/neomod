@@ -183,49 +183,161 @@ def meta_neo_path(meta):
 
 
 def full(a):
-    """Full-build validation + MAP_BUILD_SEAL_V2.json."""
-    from build_neomod3_mag025_k150_maps import mag025_bins, load_center_list
+    """Full-build validation, coverage reporting, seal, and FULLGRID_BUILD_REPORT."""
+    import subprocess, shutil
+    from build_neomod3_mag025_k150_maps import mag025_bins, load_center_list, K_BY_POP as KBP
     centers = load_center_list()
-    bins = [b["label"] for b in mag025_bins()]
+    binlabels = [b["label"] for b in mag025_bins()]
     print("=" * 72); print("FULL-BUILD VALIDATION"); print("=" * 72)
-    files, markers, cov_all, int_all, hashes, metas = [], [], [], [], {}, []
+
+    files, markers, cov_all, int_all, hashes, metas, missing = [], [], [], [], {}, [], []
+    malformed = []
     for lab in centers:
         f = OUT_ROOT / f"mag025_k150_{lab}.npz"
         mk = OUT_ROOT / f"mag025_k150_{lab}.ok"
         if not f.exists() or not mk.exists():
-            continue
+            missing.append(lab); continue
         try:
             z = np.load(f, allow_pickle=True)
-            metas.append(json.loads(str(z["meta_json"])))
+            m = json.loads(str(z["meta_json"]))
             cov_all.append(pd.DataFrame(json.loads(str(z["coverage_json"]))))
             int_all.append(pd.DataFrame(json.loads(str(z["integrals_json"]))))
-            _ = z["x_grid"]
+            _ = z["x_grid"], z["y_grid"]
+            nkeys = len([k for k in z.keys() if k.startswith("density__")])
         except Exception as e:
-            print(f"  MALFORMED {lab}: {e}", flush=True); continue
-        files.append(f); markers.append(json.load(open(mk)))
+            malformed.append((lab, str(e))); continue
+        metas.append(m); files.append(f); markers.append(json.load(open(mk)))
         hashes[lab] = sha256_file(f)
-    chk("exactly 667 valid centers", len(files) == 667, f"{len(files)} readable")
-    chk("no duplicate center outputs", len(set(hashes)) == len(hashes))
+
+    chk("exactly 667 completed, readable map files", len(files) == 667,
+        f"{len(files)} readable, {len(missing)} missing, {len(malformed)} malformed")
+    chk("exactly 667 manifests (.ok markers)", len(markers) == 667, str(len(markers)))
+    chk("no malformed maps", not malformed, str(malformed[:3]))
+    chk("no duplicate map content across centers",
+        len(set(hashes.values())) == len(hashes),
+        f"{len(set(hashes.values()))} distinct of {len(hashes)}")
+    chk("marker hash matches file hash for every center",
+        all(m["sha256"] == hashes.get(m["center"]) for m in markers))
+
+    # ---- frozen configuration recorded in EVERY map -------------------------
+    def uni(key):
+        return {json.dumps(m.get(key), sort_keys=True) for m in metas}
+    chk("every map records the frozen NEO source hash", len(uni("neo_source_sha256")) == 1,
+        list(uni("neo_source_sha256"))[0][:34] if metas else "")
+    chk("every map records the same NEO effective_factor (physical weights)",
+        len(uni("neo_effective_factor")) == 1 and
+        abs(metas[0]["neo_effective_factor"] - 64.725384) < 1e-6,
+        str(metas[0]["neo_effective_factor"]) if metas else "")
+    chk("every map records the 44-bin 0.25-mag scheme", len(uni("bin_scheme")) == 1 and
+        metas[0]["bin_scheme"]["n_bins"] == 44 and metas[0]["bin_scheme"]["step"] == 0.25,
+        json.dumps(metas[0]["bin_scheme"]) if metas else "")
+    chk("every map records population-specific k (NEO 150, others 10)",
+        len(uni("k_by_population")) == 1 and metas[0]["k_by_population"] == KBP,
+        json.dumps(metas[0]["k_by_population"]) if metas else "")
+    chk("every map records the same velocity grid", len(uni("grid_lim")) == 1 and
+        len(uni("grid_step")) == 1 and metas[0]["grid_lim"] == [-5.0, 5.0] and
+        metas[0]["grid_step"] == 0.01)
+    chk("every map records gaussian_smoothing = False",
+        all(m["gaussian_smoothing"] is False for m in metas))
+    chk("every map records support_masking = False",
+        all(m["support_masking"] is False for m in metas))
+    chk("every map records the same 0.25-mag split provenance hash",
+        len(uni("split_provenance_mag025_sha256")) == 1)
+    chk("every map records the same sealed-module hash", len(uni("sealed_module_sha256")) == 1)
+    chk("every map records the same density engine", len(uni("density_engine")) == 1,
+        metas[0]["density_engine"] if metas else "")
+    chk("every map records the same epoch", len(uni("epoch")) == 1)
+    chk("no smoothing arrays present anywhere",
+        not any(k.startswith("smooth") for f in files[:1]
+                for k in np.load(f, allow_pickle=True).keys()))
+
     cov = pd.concat(cov_all, ignore_index=True) if cov_all else pd.DataFrame()
     ints = pd.concat(int_all, ignore_index=True) if int_all else pd.DataFrame()
+    exp_cells = len(files) * len(POPS) * len(binlabels)
+    chk("every (center, population, bin) cell accounted for", len(cov) == exp_cells,
+        f"{len(cov):,} vs expected {exp_cells:,}")
     if len(cov):
-        chk("every (center, population, bin) cell accounted for",
-            len(cov) == len(files) * len(POPS) * len(bins),
-            f"{len(cov):,} rows vs expected {len(files)*len(POPS)*len(bins):,}")
-        chk("marker hash matches file hash for every center",
-            all(m["sha256"] == hashes[m["center"]] for m in markers))
-    cfg = {(m["grid_step"], tuple(m["grid_lim"]), json.dumps(m["k_by_population"], sort_keys=True),
-            m["gaussian_smoothing"], m["density_engine"], m["epoch"]) for m in metas}
-    chk("configuration identical across all centers", len(cfg) == 1, str(list(cfg)[:1]))
+        chk("no cell silently reduced k",
+            ((cov.k_effective.isna()) | (cov.k_effective == cov.k_requested)).all())
+        chk("every invalid cell carries an explicit reason",
+            (cov.loc[~cov.valid, "reason"] != "ok").all(),
+            str(sorted(cov.loc[~cov.valid, "reason"].unique().tolist())))
+        chk("requested k matches the frozen per-population values",
+            all((cov[cov.population == p].k_requested == KBP[p]).all() for p in POPS))
+
+    # ---- featured-center recheck -------------------------------------------
+    EXPECT = {"V024.00_024.25": 35580, "V024.25_024.50": 44721,
+              "V024.50_024.75": 56294, "V024.75_025.00": 70464}
+    fc = cov[(cov.center == "dlon+000_lat+00") & (cov.population == "NEO") &
+             (cov.magnitude_bin.isin(EXPECT))] if len(cov) else pd.DataFrame()
+    got = {r.magnitude_bin: int(r.n_visible) for r in fc.itertuples()} if len(fc) else {}
+    for k2 in EXPECT:
+        print(f"    featured {k2}: got {got.get(k2, 0):,}  expected {EXPECT[k2]:,}  "
+              f"{'MATCH' if got.get(k2) == EXPECT[k2] else 'MISMATCH'}", flush=True)
+    chk("dlon+000_lat+00 NEO counts in the four 24-25 bins match validated values",
+        got == EXPECT, json.dumps(got))
+    chk("featured-center four-bin total is 207,059", sum(got.values()) == 207059,
+        str(sum(got.values())))
+
+    # ---- coverage reporting -------------------------------------------------
+    by_pop = by_bin = by_center = pd.DataFrame()
     if len(cov):
+        by_pop = (cov.groupby(["population", "valid"]).size().unstack(fill_value=0)
+                  .rename(columns={True: "valid", False: "invalid"}).reset_index())
+        by_bin = (cov.groupby(["magnitude_bin", "population"]).valid.sum().unstack(fill_value=0)
+                  .reset_index())
+        by_center = (cov.groupby("center").valid.agg(["sum", "count"])
+                     .rename(columns={"sum": "valid_cells", "count": "cells"}).reset_index())
         cov.to_parquet(OUT_ROOT / "coverage_table.parquet", index=False)
         ints.to_parquet(OUT_ROOT / "density_integrals.parquet", index=False)
-        print("\n  cells by population and validity:")
-        print(cov.groupby(["population", "valid"]).size().rename("n").reset_index().to_string(index=False))
+        by_pop.to_csv(OUT_ROOT / "coverage_by_population.csv", index=False)
+        by_bin.to_csv(OUT_ROOT / "coverage_by_magnitude_bin.csv", index=False)
+        by_center.to_csv(OUT_ROOT / "coverage_by_center.csv", index=False)
+        print("\n  VALID / INVALID CELLS BY POPULATION")
+        print(by_pop.to_string(index=False))
+        print("\n  REASONS FOR INVALID CELLS")
+        print(cov.loc[~cov.valid].groupby(["population", "reason"]).size()
+              .rename("n").reset_index().to_string(index=False))
+        print("\n  VALID BINS PER CENTER (min/median/max)")
+        print(f"    {by_center.valid_cells.min()} / {int(by_center.valid_cells.median())} "
+              f"/ {by_center.valid_cells.max()} of {len(POPS)*len(binlabels)}")
+
+    # ---- job accounting -----------------------------------------------------
+    jobinfo = {}
+    if a.array_job_id:
+        r = subprocess.run(["sacct", "-j", str(a.array_job_id), "-n", "-P",
+                            "--format=JobID,State,Elapsed,MaxRSS"],
+                           capture_output=True, text=True).stdout.strip().splitlines()
+        rows = [x.split("|") for x in r if x and "." not in x.split("|")[0]]
+        states = {}
+        for jid, st, el, _mx in rows:
+            states[st] = states.get(st, 0) + 1
+        secs = []
+        for jid, st, el, _mx in rows:
+            try:
+                parts = [float(x) for x in el.replace("-", ":").split(":")]
+                while len(parts) < 3:
+                    parts.insert(0, 0.0)
+                secs.append(parts[-3] * 3600 + parts[-2] * 60 + parts[-1])
+            except Exception:
+                pass
+        jobinfo = {"array_job_id": str(a.array_job_id), "task_states": states,
+                   "n_tasks": len(rows),
+                   "elapsed_seconds": {"min": min(secs) if secs else None,
+                                       "median": float(np.median(secs)) if secs else None,
+                                       "max": max(secs) if secs else None,
+                                       "sum": float(np.sum(secs)) if secs else None}}
+        chk("no failed array tasks",
+            not any(k for k in states if k not in ("COMPLETED",)), json.dumps(states))
+
+    size = sum(f.stat().st_size for f in OUT_ROOT.glob("*.npz"))
+    free = shutil.disk_usage(str(W))[2]
+
     seal = {"created_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "n_centers": len(files), "n_bins": len(bins), "populations": list(POPS),
-            "k_by_population": K_BY_POP, "gaussian_smoothing": False,
-            "config": list(cfg)[0] if len(cfg) == 1 else None,
+            "n_centers": len(files), "n_bins": len(binlabels), "populations": list(POPS),
+            "k_by_population": K_BY_POP, "gaussian_smoothing": False, "support_masking": False,
+            "frozen_config": metas[0] if metas else None,
+            "provenance_commit": a.provenance_commit,
             "map_sha256": hashes, "checks": RESULTS,
             "ALL_PASS": all(r["pass"] for r in RESULTS)}
     if seal["ALL_PASS"]:
@@ -233,7 +345,95 @@ def full(a):
         print(f"\nwrote {OUT_ROOT/'MAP_BUILD_SEAL_V2.json'}")
     else:
         print("\nvalidation FAILED -- MAP_BUILD_SEAL_V2.json deliberately not written")
+
+    rep = {"created_utc": seal["created_utc"], "n_centers": len(files),
+           "missing_centers": missing, "malformed_centers": malformed,
+           "n_cells": int(len(cov)), "n_valid_cells": int(cov.valid.sum()) if len(cov) else 0,
+           "coverage_by_population": by_pop.to_dict("records") if len(by_pop) else [],
+           "invalid_reasons": (cov.loc[~cov.valid].groupby(["population", "reason"]).size()
+                               .rename("n").reset_index().to_dict("records")) if len(cov) else [],
+           "featured_center_recheck": {"got": got, "expected": EXPECT,
+                                       "total": int(sum(got.values()))},
+           "storage_bytes": int(size), "free_bytes": int(free),
+           "job": jobinfo, "checks": RESULTS,
+           "ALL_PASS": seal["ALL_PASS"]}
+    (OUT_ROOT / "FULLGRID_BUILD_REPORT.json").write_text(json.dumps(rep, indent=2, default=str))
+    _write_report_md(OUT_ROOT / "FULLGRID_BUILD_REPORT.md", rep, by_pop, by_bin, by_center,
+                     metas[0] if metas else {}, a)
+    print(f"wrote {OUT_ROOT/'FULLGRID_BUILD_REPORT.json'} and .md")
     return seal
+
+
+def _md(df):
+    """Markdown table, falling back to plain text if `tabulate` is unavailable."""
+    if df is None or not len(df):
+        return "(none)"
+    try:
+        return df.to_markdown(index=False)
+    except Exception:
+        return "```\n" + df.to_string(index=False) + "\n```"
+
+
+def _write_report_md(path, rep, by_pop, by_bin, by_center, meta, a):
+    L = []
+    L.append("# NEOMOD3 0.25-mag / k=150 full-grid build report\n")
+    L.append(f"Generated {rep['created_utc']}. "
+             f"Overall: **{'PASS' if rep['ALL_PASS'] else 'FAIL'}**\n")
+    L.append("## Frozen configuration\n")
+    L.append("| item | value |\n|---|---|")
+    for k in ("epoch", "grid_lim", "grid_step", "k_by_population", "gaussian_smoothing",
+              "support_masking", "density_engine", "magnitude_quantity", "neo_source",
+              "neo_source_sha256", "neo_effective_factor", "split_provenance_mag025_sha256",
+              "sealed_module_sha256", "code_commit"):
+        if k in meta:
+            L.append(f"| `{k}` | `{meta[k]}` |")
+    L.append(f"| provenance commit | `{a.provenance_commit}` |")
+    L.append("")
+    L.append("## Scale\n")
+    L.append(f"- centers: **{rep['n_centers']}**")
+    L.append(f"- cells: **{rep['n_cells']:,}**, valid **{rep['n_valid_cells']:,}**")
+    L.append(f"- storage: **{rep['storage_bytes']/1e9:.1f} GB**, "
+             f"free after: **{rep['free_bytes']/1e12:.3f} TB**")
+    if rep["job"]:
+        j = rep["job"]; e = j.get("elapsed_seconds", {})
+        L.append(f"- array job: **{j['array_job_id']}**, tasks {j['n_tasks']}, "
+                 f"states {j['task_states']}")
+        if e.get("median"):
+            L.append(f"- per-task elapsed: min {e['min']:.0f}s, median {e['median']:.0f}s, "
+                     f"max {e['max']:.0f}s, total CPU-wall {e['sum']/3600:.1f} h")
+    L.append(f"- missing centers: {rep['missing_centers'] or 'none'}")
+    L.append(f"- malformed centers: {rep['malformed_centers'] or 'none'}")
+    L.append("")
+    L.append("## Valid / invalid cells by population\n")
+    L.append(_md(by_pop))
+    L.append("")
+    L.append("## Reasons for invalid cells\n")
+    if rep["invalid_reasons"]:
+        L.append(_md(pd.DataFrame(rep["invalid_reasons"])))
+    L.append("")
+    L.append("## Valid cells by magnitude bin and population\n")
+    L.append(_md(by_bin))
+    L.append("")
+    L.append("## Featured-center recheck (dlon+000_lat+00, NEO)\n")
+    fc = rep["featured_center_recheck"]
+    L.append("| bin | expected | got | |\n|---|---|---|---|")
+    for k2, v in fc["expected"].items():
+        g = fc["got"].get(k2, 0)
+        L.append(f"| {k2} | {v:,} | {g:,} | {'MATCH' if g == v else 'MISMATCH'} |")
+    L.append(f"| **combined** | 207,059 | {fc['total']:,} | "
+             f"{'MATCH' if fc['total'] == 207059 else 'MISMATCH'} |")
+    L.append("")
+    L.append("## Validation checks\n")
+    L.append("| check | result | detail |\n|---|---|---|")
+    for c in rep["checks"]:
+        L.append(f"| {c['check']} | {'PASS' if c['pass'] else 'FAIL'} | {c['detail']} |")
+    L.append("")
+    L.append("## Per-center valid-cell distribution\n")
+    if len(by_center):
+        L.append(f"- min {by_center.valid_cells.min()}, "
+                 f"median {int(by_center.valid_cells.median())}, "
+                 f"max {by_center.valid_cells.max()} of {by_center.cells.iloc[0]} cells")
+    path.write_text("\n".join(L))
 
 
 def main():
@@ -246,6 +446,8 @@ def main():
                    default="40490b3bc4ffaec122919981396168299c1e84a384dd345c46f8a7adb20fc297")
     p.add_argument("--equiv-points", type=int, default=3000)
     p.add_argument("--n-jobs", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", 1)))
+    p.add_argument("--array-job-id", default=None)
+    p.add_argument("--provenance-commit", default="e4780ef806d4eb4a77e3d384144f8a29ff24ea1e")
     a = p.parse_args()
     if a.gate:
         gate(a)

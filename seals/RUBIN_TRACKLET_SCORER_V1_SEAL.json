@@ -1,0 +1,119 @@
+{
+  "interface_version": "rubin_vdp_scorer_v1",
+  "created_utc": "2026-08-24T12:14:24Z",
+  "purpose": "frozen engineering baseline of the exact classifier that produced the accepted TEST2 P_NEO_new column; NOT an operational-readiness claim",
+  "git_commit": "c9a42834f57aa60d908f8ceca0e73b153cd90808",
+  "git_dirty_tracked": "M docs/NEOMOD3_MAG025_K150_FULLGRID_RUNBOOK.md\n M pipeline/validate_neomod3_mag025_k150_maps.py",
+  "git_dirty_patch_sha256": "c11afcf146b4470b5d0eee965c8eb9eb28c706548160242659ce7dba87d48a2f",
+  "baseline_commit_for_scorer": "87f6bd82d190e946f99ab128ff8ffff380d09a7a",
+  "scorer_sources": {
+    "src/rubin_vdp_scorer_v1.py": "d599fa7eb1393a5aec471fc255b0f1c9d22058274d30e2b07a6c80ee19f6ba03",
+    "pipeline/score_rubin_tracklets.py": "19272487e46e0fb866c30325924c6798d84d8168ce893ac9e7b24dde305f3149",
+    "pipeline/score_test2.py": "73ae6f872123441a6e7ad5e09d857cbea1613194fd0177fb8a154288ccc3433c",
+    "src/velocity_density_pipeline_neomod_clone_only.py": "a6de18c2197cbcb9f93014712aaad232272578150e2222f28eae723b339f923a"
+  },
+  "map_set_id": "neomod3_mag025_k150_maps_v2",
+  "map_root": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/neomod3_mag025_k150_maps_v2",
+  "map_build_seal": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/neomod3_mag025_k150_maps_v2/MAP_BUILD_SEAL_V2.json",
+  "map_build_seal_sha256": "a010bb1bf2e421a3258ff007f7bc4034369918a3877418620cd14e3f0b9d19ab",
+  "n_map_files": 667,
+  "map_content_hashes_location": "per-centre sha256 for all 667 maps are carried inside MAP_BUILD_SEAL_V2.json, which is itself hashed above",
+  "scientific_configuration": {
+    "epoch": "2027-08-25T00:00:00",
+    "n_centers": 667,
+    "center_grid": {
+      "lon_step_deg": 10.0,
+      "dlon_limit_deg": 140.0,
+      "lat_base_deg": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        8,
+        12,
+        18,
+        25,
+        35,
+        50
+      ],
+      "assignment": "nearest centre in (dlon_from_antisun, ecliptic_latitude)"
+    },
+    "magnitude": {
+      "quantity": "apparent V (HG, G=0.15)",
+      "lo": 14.0,
+      "hi": 25.0,
+      "step": 0.25,
+      "n_bins": 44,
+      "semantics": "half-open [lo, lo+step); outside [14,25) -> invalid, never clipped",
+      "cross_bin_interpolation": false
+    },
+    "k_by_population": {
+      "NEO": 150,
+      "MBA": 10,
+      "TNO": 10,
+      "Trojans": 10
+    },
+    "estimator": "Bayesian kNN, closed-form posterior mean",
+    "gaussian_smoothing": false,
+    "support_masking": false,
+    "velocity_grid": {
+      "limit_deg_day": 5.0,
+      "step_deg_day": 0.01,
+      "n": 1001,
+      "interpolation": "bilinear in velocity only"
+    },
+    "normalization": {
+      "neo_effective_factor": 64.725384,
+      "posterior": "P(c) = rho_c / sum_all rho"
+    },
+    "validity_policy": "a probability requires ALL FOUR population densities present and finite; partial denominators return NaN with reason missing_population_density:<pops>; missing densities are never replaced by zero or epsilon",
+    "platt_calibration": false,
+    "supported_magnitude_bands": [
+      "V"
+    ],
+    "geometry_source_operational": "derived",
+    "geometry_divergence_from_TEST2": "TEST2 assigned centres using epoch-state-cache ecliptic coordinates (model frame). v1 derives them from observed RA/Dec, the only quantity a survey supplies. Median difference 1.8e-03 deg (~6.5 arcsec); 295 of 688,688 TEST2 rows (0.043%) change centre as a result."
+  },
+  "coverage_note": {
+    "four_density_coverage_raw_TEST2": 0.4396,
+    "four_density_coverage_weighted_TEST2": 0.4506,
+    "neo_cell_availability_TEST2": 0.9933,
+    "warning": "~43.96% of in-domain TEST2 tracklets receive a probability; the remainder return NaN with an explicit reason. v1 freezes this limitation rather than papering over it."
+  },
+  "regression_oracle": {
+    "tracklets": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test2_geometric/TEST2_TRACKLETS.parquet",
+    "tracklets_sha256": "e374547893e2945a3ea6dfcd3ae80c1fa4a91ac45a6ce6ebce7be23a552cc09b",
+    "scored": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test2_geometric/TEST2_SCORED.parquet",
+    "scored_sha256": "8b6e1de609bf4831dc111f658f29a4535dffabaa2cf2dd3fec0c19e0e02ba503",
+    "mpc80": "/mmfs1/gscratch/dirac/ds2004/sorcha/outputs/test2_geometric/TEST2_MPC80.parquet",
+    "mpc80_sha256": "179a64ab8b22cba2b48156e8011af88c1867983a1701168aa547982d22bbe552",
+    "oracle_columns": [
+      "P_NEO_new",
+      "center_label",
+      "magnitude_bin",
+      "new_vdp_valid",
+      "new_vdp_reason",
+      "vlam",
+      "vbeta",
+      "mean_mag_V"
+    ]
+  },
+  "numerical_tolerance": {
+    "assignments_and_reasons": "must match EXACTLY",
+    "probability_abs": 1e-12,
+    "probability_rel": 1e-09,
+    "velocity_abs_deg_day": 1e-07,
+    "justification": "velocity is re-derived from the two detections rather than read from the model state; measured max |dv| = 3.4e-08 deg/day, which is 3.4e-06 of one 0.01 deg/day grid cell"
+  },
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Linux-4.18.0-553.147.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "scipy": "1.17.1",
+    "pyarrow": "23.0.1",
+    "astropy": "7.2.0"
+  }
+}

@@ -545,3 +545,36 @@ optimization was not pursued.
   featured-center counts still reproduce **exactly** (35,580 / 44,721 / 56,294 / 70,464; 207,059).
   Same rows, same partitioning function, different file grouping only.
 - **Retained:** yes.
+
+
+### 18.2 Array shape: 64 -> 16 CPUs per task — **RETAINED, 4.1x concurrency**
+
+- **Symptom:** the first full-grid array (`38582732`, `--cpus-per-task=64 --mem=150G --array=0-666%100`)
+  ran only **9 tasks concurrently**. `squeue -t PD -o %r` gave the reason: **`AssocGrpCpuLimit`**.
+  The `astro` association caps *total CPUs* (~592), not task count, so `%100` was never reachable:
+  9 x 64 = 576 CPUs exhausted the budget.
+- **Why 64 was the wrong shape:** most of a per-center task is *serial* — loading the 2.6 GB
+  epoch-state cache, the S3M scorer and the GEN parent frames — during which 63 of the 64 cores
+  idle. Only the `cKDTree.query` calls use the workers. Measured split at
+  `dlon+000_lat+00`: ~107 s serial + ~30 s parallel at 64 workers.
+- **New:** `--cpus-per-task=16 --mem=80G --array=0-666%400`
+  (`build_neomod3_mag025_k150_array_wide.sbatch`). Under a fixed CPU cap `C`, throughput is
+  `(C/w) / (serial + parallel*64/w)`, which improves as `w` falls until the parallel term
+  dominates.
+- **Before / after:** **9 concurrent -> 37 concurrent** (592 CPUs in use), i.e. **4.1x**.
+  Projected completion fell from ~7 h to ~1.5-2 h.
+- **Numerical equivalence:** none needed — `n_jobs` only sets `cKDTree.query(workers=...)` and
+  joblib batching, neither of which changes results. The closed-form density is a pure function of
+  the k nearest distances. Centers completed under the 64-CPU array were kept and skipped by the
+  marker check, and centers are byte-identical regardless of worker count.
+- **Retained:** yes.
+- **Procedure note:** the replacement array was submitted and confirmed to schedule (1 task
+  running) *before* the old array was cancelled, per the "submit first, cancel second" rule in §11.
+  The old array's 15 completed centers were not rebuilt — the `.ok` marker + open-and-read check
+  skips them.
+
+### 18.3 `tabulate` is not installed — **fixed before it could bite**
+
+`DataFrame.to_markdown()` raises `ImportError` in this environment. The full-build report writer
+used it, which would have failed *after* the entire 667-center build. `_md()` now falls back to a
+fenced `to_string()` table.
