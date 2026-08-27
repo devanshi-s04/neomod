@@ -1,8 +1,8 @@
 {
   "notebook": "neomod3_new_vs_legacy_score_regime.ipynb",
-  "created_utc": "2026-08-25T10:21:38Z",
+  "created_utc": "2026-08-26T08:58:58Z",
   "purpose": "locate where legacy outperforms new; does NOT identify the mechanism",
-  "git_commit": "6277cff6b283a04247e83c5b32d05643f221157a",
+  "git_commit": "7e98c057d7b2a52abe7bec7e0507f3a0d6b83c02",
   "scorer_seal_sha256": "0e61ec37e263e9a4f9e81ed4ef25ef8fa069f630b8d2003f2ce29ce37de9eaeb",
   "map_seal_sha256": "a010bb1bf2e421a3258ff007f7bc4034369918a3877418620cd14e3f0b9d19ab",
   "inputs": {
@@ -98,8 +98,8 @@
   },
   "headline_reproduced": true,
   "delta_auc_point": 0.0011876594682591612,
-  "n_metrics_favouring_legacy_significantly": 12,
-  "n_metrics_tied": 8,
+  "n_metrics_favouring_legacy_significantly": 9,
+  "n_metrics_tied": 6,
   "outputs": [
     "RUN_RECEIPT.json",
     "bootstrap_intervals.csv",
@@ -120,7 +120,7 @@
     "fpr_operating_points.csv",
     "global_metrics.csv",
     "headline_reproduction.csv",
-    "pauc_convention.csv",
+    "pauc_by_interval.csv",
     "row_flow.csv",
     "score_quantiles.csv",
     "stratification.csv"

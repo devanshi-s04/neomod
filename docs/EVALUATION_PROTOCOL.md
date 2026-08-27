@@ -1,4 +1,4 @@
-# EVALUATION PROTOCOL v1.3 — FROZEN 2026-08-04
+# EVALUATION PROTOCOL v1.4 — FROZEN 2026-08-04, amended 2026-08-26
 
 **Status: FROZEN before reading any further results.** Amendments require a version bump (v1.1, …)
 with a dated changelog entry. No metric, cut, or dataset in this document may be changed to
@@ -250,8 +250,28 @@ correlate with the negative class — the exact bug found in the digest2 audit (
 Report these first, always:
 
 1. **ROC AUC**
-2. **Partial AUC at low FPR** — FPR ∈ [0, 0.01] and [0, 0.001], standardised (McClish). This is the
-   regime a survey actually operates in.
+2. **Partial AUC at low FPR** — **unnormalised raw** partial area over each explicitly stated FPR
+   interval: FPR ∈ [0, 0.001], [0, 0.005], [0, 0.01], [0, 0.02], [0, 0.05]. This is the regime a
+   survey actually operates in.
+
+   Report the interval with every value. A raw pAUC over `[0, L]` has maximum `L`, so **raw pAUC
+   values computed over different intervals must never be compared with each other.**
+
+   **Superseded (v1.4, 2026-08-26):** this item previously required McClish standardisation, obtained
+   from `sklearn.metrics.roc_auc_score(..., max_fpr=L)`. That standardisation is **dropped**. It
+   rescales the raw area onto a 0.5-baseline scale that adds no information beyond the raw area over
+   a stated interval, and it obscures how small the absolute differences are. **Do not reintroduce
+   it**, and do not add any other rescaling of the partial area to new analyses.
+
+   `raw / L` — "historical normalised pAUC" — is permitted for exactly one purpose: reproducing
+   historical values produced by `pauc_std()` in `pipeline/test2_merge_evaluate.py`, notably
+   `0.71476` (new) and `0.72007` (legacy) at FPR ≤ 0.01 on TEST2 `COMMON_THREEWAY`. It must be
+   labelled "historical normalised pAUC", never "standardised", and must not drive a conclusion.
+
+   Pipelines written before v1.4 (`e0_*`, `e1_interpolation_ablation`, `calibration_stage`,
+   `test_final_*`, `support_*`, `map_resolution_comparison`, `tno_exact_query_*`) call
+   `roc_auc_score(max_fpr=…)` and therefore report the superseded quantity. Their existing recorded
+   results stand as historical record; new analyses report raw partial area.
 3. **TPR at fixed FPR** — FPR = 10⁻⁴, 10⁻³, 10⁻², 10⁻¹
 4. **FPR at fixed TPR** — TPR = 0.60, 0.70, 0.80, 0.85, 0.90, 0.95
 
@@ -407,7 +427,8 @@ Ablation A–D on the sealed 667-map grid, full CAL v2, identical technical-vali
 - **symmetric unmasked posterior**, `P = ρ_NEO / Σ_c ρ_c` formed **after** interpolation
 - **technical-only abstention** (out of bounds, non-finite, zero total density) → NaN
 
-C beats A on standardized partial AUC (+1.07e-03), F1 (+2.31e-03) and Brier (−4.11e-05), all with
+C beats A on standardized partial AUC (+1.07e-03; pre-v1.4 McClish quantity, retained as the
+historical record of a frozen decision — see §4.1), F1 (+2.31e-03) and Brier (−4.11e-05), all with
 paired 95% CIs excluding zero. D is significantly worse than C on pAUC (−9.38e-04) and Brier
 (+8.78e-06); its advantage over A is unresolved on every ranking metric.
 
@@ -426,6 +447,7 @@ Cause to be tested during calibration; no attribution made.
 
 | version | date | change |
 |---|---|---|
+| v1.4 | 2026-08-26 | §4.1 metric policy changed: partial AUC is reported as **unnormalised raw area over an explicitly stated FPR interval**. McClish standardisation is **dropped and must not be reintroduced**; `raw/L` is retained only as "historical normalised pAUC" for reproducing sealed pre-v1.4 values. Applied first in `notebooks/validation/neomod3_new_vs_legacy_score_regime.ipynb`. |
 | v1.0 | 2026-08-01 | initial freeze |
 | v1.3 | 2026-08-04 | §11 added: E1 interpolation variant **C** selected and frozen; hull census recorded with an explicit non-causal caveat. |
 | v1.2 | 2026-08-03 | Support threshold expressed as integer 2.0 raw clones (exactly equivalent; counts are integers). TEST seal split into `TEST_DATA_SEAL.json` (frozen now) and `MODEL_SEAL.json` (written after CAL). E0 pilot preregistered in `E0_PILOT_PREREGISTRATION.md`. §10 added: login-node JAX SIGABRT and node-local `/tmp`. |

@@ -9,6 +9,11 @@
 *.png
 *.pdf
 
+# Exception: the score-regime proof notebook's figures are durable deliverables required by the
+# staging list in docs/gorica_24_aug_ legacy_vs_new.md. Without this negation the *.png rule above
+# would exclude them and they could only be added with --force.
+!outputs/neomod3_new_vs_legacy_score_regime/figures/*.png
+
 # Python cache
 __pycache__/
 *.pyc
