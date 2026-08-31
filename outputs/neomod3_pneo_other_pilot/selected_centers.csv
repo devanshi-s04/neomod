@@ -1,0 +1,4 @@
+map_center_id,n_old_valid,rank,n_rows_total,frac_valid,selection_rule,TEST2_SCORED_sha256
+dlon-130_lat+08,2212,1,2336,0.946917808219178,top-3 by n_old_valid; ties broken by ascending map_center_id,8b6e1de609bf4831dc111f658f29a4535dffabaa2cf2dd3fec0c19e0e02ba503
+dlon-120_lat+08,2174,2,2288,0.9501748251748252,top-3 by n_old_valid; ties broken by ascending map_center_id,8b6e1de609bf4831dc111f658f29a4535dffabaa2cf2dd3fec0c19e0e02ba503
+dlon+130_lat+08,2098,3,2242,0.935771632471008,top-3 by n_old_valid; ties broken by ascending map_center_id,8b6e1de609bf4831dc111f658f29a4535dffabaa2cf2dd3fec0c19e0e02ba503

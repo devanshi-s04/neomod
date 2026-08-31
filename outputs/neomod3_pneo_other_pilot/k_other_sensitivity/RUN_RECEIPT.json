@@ -1,0 +1,24 @@
+{
+  "created_utc": "2026-08-31T11:09:10Z",
+  "purpose": "k_OTHER sensitivity, contained; k_OTHER is the only quantity varied",
+  "k_values": [
+    10,
+    30
+  ],
+  "centers": [
+    "dlon+130_lat+08",
+    "dlon-120_lat+08",
+    "dlon-130_lat+08"
+  ],
+  "rows": 6866,
+  "map_epoch": "2027-08-25T00:00:00",
+  "k10_reproduces_original_pilot_maps_bit_for_bit": true,
+  "builder_sha256": "c0c1127aacacf7264bc8f36375ed674f9d85d211caa11e0713c7c1b0f6df0358",
+  "scorer_sha256": "6fb4706f5900e16825a443808c4cd97a906275270578ad25d271b2a3d7516fbf",
+  "no_map_rebuild_of_frozen_root": true,
+  "no_new_population": true,
+  "no_digest2_change": true,
+  "no_v1_scorer_change": true,
+  "no_zero_filling": true,
+  "no_epsilon_floor": true
+}

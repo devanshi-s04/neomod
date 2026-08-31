@@ -1,0 +1,26 @@
+{
+  "created_utc": "2026-08-31T11:12:32Z",
+  "purpose": "does the NEO-vs-OTHER coverage gain persist outside the best-covered centres",
+  "centers": [
+    "dlon-060_lat+00",
+    "dlon-060_lat-05"
+  ],
+  "k_OTHER": 10,
+  "map_epoch": "2027-08-25T00:00:00",
+  "rows": 2464,
+  "n_old_valid": 265,
+  "n_new_valid": 2425,
+  "frac_old": 0.1075487012987013,
+  "frac_new": 0.984172077922078,
+  "n_new_valid_old_invalid": 2160,
+  "n_old_valid_new_invalid": 0,
+  "spearman_paired": 0.9991617121706496,
+  "builder_sha256": "c0c1127aacacf7264bc8f36375ed674f9d85d211caa11e0713c7c1b0f6df0358",
+  "scorer_sha256": "6fb4706f5900e16825a443808c4cd97a906275270578ad25d271b2a3d7516fbf",
+  "no_full_grid_build": true,
+  "no_new_population": true,
+  "no_digest2_change": true,
+  "no_v1_scorer_change": true,
+  "no_zero_filling": true,
+  "no_epsilon_floor": true
+}

@@ -1,0 +1,3 @@
+map_center_id,n_rows,n_old_valid,frac_valid,in_counts_file,selection_rule
+dlon-060_lat+00,996,105,0.10542168674698796,True,lowest old four-population valid FRACTION among centres present in center_valid_counts_all.csv with >= 200 TEST2 rows; ties broken by ascending map_center_id
+dlon-060_lat-05,1468,160,0.10899182561307902,True,lowest old four-population valid FRACTION among centres present in center_valid_counts_all.csv with >= 200 TEST2 rows; ties broken by ascending map_center_id
